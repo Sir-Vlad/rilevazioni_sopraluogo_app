@@ -28,7 +28,7 @@ const CommentsButton = ({saveComment}: CommentsButtonProps) => {
         </span>
         </div>
         { isOpenModal && <div className="fixed inset-0 bg-opacity-50 flex justify-center items-center z-10">
-            <div className="bg-white rounded-lg w-5/12 h-4/10 p-6 border-gray-800 shadow-2xl">
+            <div className="bg-white rounded-lg w-5/12 h-3/10 p-6 border-gray-800 shadow-2xl">
                 <h2 className="text-xl font-bold mb-4">Aggiungi un commento</h2>
                 <textarea
                     rows={ 5 }

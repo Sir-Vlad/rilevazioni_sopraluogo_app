@@ -1,13 +1,13 @@
-import Label                   from "../../components/Label.tsx";
-import * as React              from "react";
-import { useState }            from "react";
-import Input                   from "../../components/Input.tsx";
-import Select, { SingleValue } from "react-select";
-import { useTypes }            from "../../context/TypesProvider.tsx";
-import { useInfissi }          from "../../context/InfissiProvider.tsx";
-import { IInfisso }            from "../../models/models.tsx";
-import { toast }               from "react-toastify";
-import CommentsButton          from "../../components/CommentsButton.tsx";
+import Label                     from "../../components/Label.tsx";
+import * as React                from "react";
+import { ChangeEvent, useState } from "react";
+import Input                     from "../../components/Input.tsx";
+import Select, { SingleValue }   from "react-select";
+import { useTypes }              from "../../context/TypesProvider.tsx";
+import { useInfissi }            from "../../context/InfissiProvider.tsx";
+import { IInfisso }              from "../../models/models.tsx";
+import { toast }                 from "react-toastify";
+import CommentsButton            from "../../components/CommentsButton.tsx";
 
 
 const nextAlphabeticalID = (prevID: string | null) => {
@@ -51,6 +51,23 @@ const FormInfisso = () => {
             ...prev,
             tipo: value
         }));
+    };
+
+    const handleInputNumericChange = (e: ChangeEvent<HTMLInputElement>) => {
+        const {
+                  name,
+                  value
+              } = e.target;
+        setFormData((prev) => {
+            let newValue = 0;
+            if (value.length > 0) {
+                newValue = /^\d*$/.test(value[value.length - 1]) ? Number(value) : Number(prev[name as keyof IInfisso]);
+            }
+            return {
+                ...prev,
+                [name]: newValue
+            };
+        });
     };
 
     const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
@@ -121,23 +138,13 @@ const FormInfisso = () => {
                     <Label htmlFor="altezza" className="col-span-2"> Altezza </Label>
                     <Input name="altezza"
                            value={ formData.altezza }
-                           onChange={ (e) => {
-                               setFormData((prev) => ({
-                                   ...prev,
-                                   altezza: Number(e.target.value)
-                               }));
-                           } }
-                           className="col-span-4"
+                           onChange={ handleInputNumericChange }
+                           className="col-span-4 decoration-none"
                     />
                     <Label htmlFor="larghezza" className="col-span-2">Larghezza</Label>
                     <Input name="larghezza"
                            value={ formData.larghezza }
-                           onChange={ (e) => {
-                               setFormData((prev) => ({
-                                   ...prev,
-                                   larghezza: Number(e.target.value)
-                               }));
-                           } }
+                           onChange={ handleInputNumericChange }
                            className="col-span-4"
                     />
                 </div>
