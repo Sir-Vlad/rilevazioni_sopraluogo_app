@@ -1,9 +1,9 @@
 use calamine::{open_workbook, Reader, Xlsx};
 use dirs_next::document_dir;
 use polars::frame::DataFrame;
+use polars::prelude::*;
 use std::fs;
 use std::fs::File;
-use polars::prelude::*;
 
 const NAME_DIR_DATABASE: &str = "Dati_Sopralluogo";
 
@@ -51,20 +51,23 @@ pub fn get_all_name_database() -> Result<Vec<String>, String> {
 }
 
 #[tauri::command]
-pub fn elaborate_file(path: String) -> Result<(), String> {
+pub fn elaborate_file(path: String) -> Result<String, String> {
     let mut workbook: Xlsx<_> = open_workbook(path).expect("Cannot open file");
-    let sheet = workbook.worksheet_range("Sheet1").ok().unwrap();
+    let name_sheet = workbook.sheet_names()[0].clone();
+    let sheet = match workbook.worksheet_range(name_sheet.as_str()) {
+        Ok(sheet) => sheet,
+        Err(e) => return Err(e.to_string()),
+    };
     let headers: Vec<String> = sheet
         .rows()
-        .next()
-        .ok_or("Foglio vuoto")?
+        .nth(5)
+        .unwrap()
         .iter()
-        .map(|cell| cell.to_string())
+        .map(|cell| cell.to_string().to_ascii_lowercase().replace(" ", "_"))
         .collect();
 
     let mut column_data: Vec<Vec<String>> = vec![Vec::new(); headers.len()];
-
-    for row in sheet.rows().skip(1) {
+    for row in sheet.rows().skip(8).take(sheet.height() - (1 + 8)) {
         for (i, cell) in row.iter().enumerate() {
             if i < column_data.len() {
                 column_data[i].push(cell.to_string());
@@ -79,7 +82,48 @@ pub fn elaborate_file(path: String) -> Result<(), String> {
     }
 
     let df = DataFrame::new(columns).ok().unwrap();
-    println!("{}", df);
+    let cleaned_df = df
+        .select([
+            "fascicolo",
+            "piano",
+            "id_spazio",
+            "cod_stanza",
+            "destinazione_uso",
+        ])
+        .unwrap();
+    let mut unique_df = cleaned_df
+        .unique_stable(None, UniqueKeepStrategy::First, None)
+        .unwrap();
+
+    let mut buffer = Vec::new();
+    JsonWriter::new(&mut buffer)
+        .with_json_format(JsonFormat::Json)
+        .finish(&mut unique_df)
+        .expect("Errore nella creazione del json");
+
+    let json_str = String::from_utf8(buffer).map_err(|e| e.to_string())?;
+    Ok(json_str)
+}
+
+#[tauri::command]
+pub fn create_new_file_database(name_file: String) -> Result<(), String> {
+    println!("Creating database {}", name_file);
+    if let Some(mut path) = document_dir() {
+        path.push(NAME_DIR_DATABASE);
+        if !path.exists() {
+            match std::fs::create_dir_all(&path) {
+                Ok(()) => println!("Cartella creata correttamente"),
+                Err(e) => println!("Errore nella creazione della cartella: {}", e),
+            }
+        }
+        path.push(format!("{}.db", name_file));
+        if !path.exists() {
+            match File::create(&path) {
+                Ok(_) => println!("Database creato correttamente"),
+                Err(e) => println!("Errore nella creazione del database: {}", e),
+            }
+        }
+    }
 
     Ok(())
 }

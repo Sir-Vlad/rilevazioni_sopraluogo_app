@@ -1,10 +1,17 @@
 import { Link } from "react-router-dom";
 import "./Header.css";
 
+import { useDatabase } from "../context/UseDatabase.tsx";
+
 const Header = () => {
+    const {databaseName} = useDatabase();
+
     return (<header className="bg-blue-600 text-white p-4 h-16 flex items-center">
         <div className="flex justify-between items-center w-full">
             <Link className="text-white text-lg font-bold" to="/">Dashboard</Link>
+            <div className="w-full md:flex md:w-auto justify-center align-middle">
+                <p>Stai lavorando su <b>{ databaseName }</b></p>
+            </div>
             <div className="w-full md:flex md:w-auto hidden justify-end">
                 <ul className="flex flex-col md:flex-row">
                     <li>

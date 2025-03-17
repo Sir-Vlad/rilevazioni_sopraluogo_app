@@ -1,6 +1,6 @@
 mod database;
 
-use database::{elaborate_file, get_all_name_database, get_db_path};
+use database::{create_new_file_database, elaborate_file, get_all_name_database, get_db_path};
 use tauri_plugin_sql::Builder;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -18,7 +18,12 @@ pub fn run() {
             }
             Ok(())
         })
-        .invoke_handler(tauri::generate_handler![get_db_path, get_all_name_database, elaborate_file])
+        .invoke_handler(tauri::generate_handler![
+            get_db_path,
+            get_all_name_database,
+            elaborate_file,
+            create_new_file_database
+        ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

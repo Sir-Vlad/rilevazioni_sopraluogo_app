@@ -1,7 +1,7 @@
 import * as React                                                  from "react";
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
-import { useDatabase }                                             from "./DatabaseProvider.tsx";
 import { IInfisso }                                                from "../models/models.tsx";
+import { useDatabase }                                             from "./UseDatabase.tsx";
 
 interface InfissiContextType {
     data: IInfisso[];

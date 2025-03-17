@@ -1,11 +1,14 @@
-import Label          from "../../components/Label.tsx";
-import * as React     from "react";
-import { useState }   from "react";
-import Input          from "../../components/Input.tsx";
-import Select         from "../../components/Select.tsx";
-import { useTypes }   from "../../context/TypesProvider.tsx";
-import { useInfissi } from "../../context/InfissiProvider.tsx";
-import { IInfisso }   from "../../models/models.tsx";
+import Label                   from "../../components/Label.tsx";
+import * as React              from "react";
+import { useState }            from "react";
+import Input                   from "../../components/Input.tsx";
+import Select, { SingleValue } from "react-select";
+import { useTypes }            from "../../context/TypesProvider.tsx";
+import { useInfissi }          from "../../context/InfissiProvider.tsx";
+import { IInfisso }            from "../../models/models.tsx";
+import { toast }               from "react-toastify";
+import CommentsButton          from "../../components/CommentsButton.tsx";
+
 
 const nextAlphabeticalID = (prevID: string | null) => {
     if (!prevID || prevID === "") return "A";
@@ -30,6 +33,7 @@ const nextAlphabeticalID = (prevID: string | null) => {
 
 const FormInfisso = () => {
     const [ formData, setFormData ] = useState<IInfisso>({
+        tipo     : "Finestra",
         altezza  : 0,
         larghezza: 0,
         materiale: "",
@@ -40,6 +44,14 @@ const FormInfisso = () => {
               vetroInfissiType
           }                         = useTypes();
     const infissi                   = useInfissi();
+
+    const handleTipoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const {value} = e.target;
+        setFormData((prev) => ({
+            ...prev,
+            tipo: value
+        }));
+    };
 
     const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
@@ -65,16 +77,46 @@ const FormInfisso = () => {
         };
         console.log(newInfisso);
         infissi.updateInfissi(newInfisso);
+        toast.success("Infisso inserito con successo");
     };
 
     return (<form onSubmit={ handleSubmit } className="space-y-4">
-        <h2 className="text-2xl font-bold text-gray-800 mb-6 border-b pb-3">
-            Inserimento nuovo infisso
-        </h2>
+        <div className="border-b flex justify-start items-center gap-2.5 mb-6 pb-3">
+            <span className="text-2xl font-bold text-gray-800">
+                Inserimento nuovo infisso
+            </span>
+            {/* todo: add function to save comment */ }
+            <CommentsButton saveComment={ () => {
+            } } />
+        </div>
 
         <div className="grid grid-cols-12 gap-8">
-            {/* Altezza e Larghezza */ }
+            {/* Tipo */ }
             <div className="row-start-1 col-span-12">
+                <div className="grid grid-cols-12 items-center">
+                    <Label htmlFor="tipo" className="col-span-2">Tipo</Label>
+                    <div className="col-span-2 flex items-center gap-2 px-3 py-2">
+                        <input type="radio" id="chk_finestra"
+                               name="check_tipo" value="Finestra"
+                               className="h-4 w-4 accent-blue-500"
+                               checked={ formData.tipo === "Finestra" }
+                               onChange={ handleTipoChange }
+                        />
+                        <label htmlFor="chk_finestra">Finestra</label>
+                    </div>
+                    <div className="col-span-2 flex items-center gap-2 px-3 py-2">
+                        <input type="radio" id="chk_finestra"
+                               name="check_tipo" value="Porta"
+                               className="h-4 w-4 accent-blue-500"
+                               checked={ formData.tipo === "Porta" }
+                               onChange={ handleTipoChange }
+                        />
+                        <label htmlFor="chk_porta">Porta</label>
+                    </div>
+                </div>
+            </div>
+            {/* Altezza e Larghezza */ }
+            <div className="row-start-2 col-span-12">
                 <div className="grid grid-cols-12 items-center gap-5">
                     <Label htmlFor="altezza" className="col-span-2"> Altezza </Label>
                     <Input name="altezza"
@@ -101,34 +143,40 @@ const FormInfisso = () => {
                 </div>
             </div>
             {/* Materiale e Vetro */ }
-            <div className="row-start-2 col-span-12">
+            <div className="row-start-3 col-span-12">
                 <div className="grid grid-cols-12 items-center gap-5">
                     <Label htmlFor="materiale" className="col-span-2">Materiale</Label>
                     <Select name="materiale"
-                            value={ formData.materiale }
-                            onChange={ (e) => {
-                                setFormData((prev) => ({
-                                    ...prev,
-                                    materiale: e.target.value
-                                }));
+                            onChange={ (newValue: SingleValue<{ label: string, value: string }>) => {
+                                if (newValue?.value) {
+                                    setFormData((prev) => ({
+                                        ...prev,
+                                        materiale: newValue.value
+                                    }));
+                                }
                             } }
                             className="col-span-4"
-                    >
-                        { materialiInfissiType.map((item, index) => (<option key={ index }>{ item }</option>)) }
-                    </Select>
+                            options={ materialiInfissiType.map((item) => ({
+                                label: item,
+                                value: item
+                            })) }
+                    />
                     <Label htmlFor="vetro" className="col-span-2">Vetro</Label>
                     <Select name="vetro"
-                            value={ formData.vetro }
-                            onChange={ (e) => {
-                                setFormData((prev) => ({
-                                    ...prev,
-                                    vetro: e.target.value
-                                }));
+                            onChange={ (newValue: SingleValue<{ label: string, value: string }>) => {
+                                if (newValue?.value) {
+                                    setFormData((prev) => ({
+                                        ...prev,
+                                        vetro: newValue.value
+                                    }));
+                                }
                             } }
                             className="col-span-4"
-                    >
-                        { vetroInfissiType.map((item, index) => (<option key={ index }>{ item }</option>)) }
-                    </Select>
+                            options={ vetroInfissiType.map((item) => ({
+                                label: item,
+                                value: item
+                            })) }
+                    />
                 </div>
             </div>
         </div>

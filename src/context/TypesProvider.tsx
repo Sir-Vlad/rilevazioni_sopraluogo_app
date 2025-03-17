@@ -1,6 +1,6 @@
-import { useDatabase }                                             from "./DatabaseProvider.tsx";
 import * as React                                                  from "react";
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
+import { useDatabase }                                             from "./UseDatabase.tsx";
 
 interface TypeContextType {
     materialiInfissiType: string[];

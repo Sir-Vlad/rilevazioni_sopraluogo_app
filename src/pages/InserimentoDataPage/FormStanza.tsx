@@ -1,16 +1,16 @@
-import * as React     from "react";
-import { useState }   from "react";
-import Label          from "../../components/Label";
-import Input          from "../../components/Input.tsx";
-import Select         from "../../components/Select.tsx";
-import { useTypes }   from "../../context/TypesProvider.tsx";
-import { useInfissi } from "../../context/InfissiProvider.tsx";
+import * as React              from "react";
+import { useState }            from "react";
+import Label                   from "../../components/Label";
+import Input                   from "../../components/Input.tsx";
+import Select, { SingleValue } from "react-select";
+import { useTypes }            from "../../context/TypesProvider.tsx";
+import CommentsButton          from "../../components/CommentsButton.tsx";
+import DynamicSelectsInfissi   from "../../components/DynamicSelectsInfissi.tsx";
 
 interface RoomSpecifications {
     stanza: string,
     altezza: number,
     spessoreMuro: number,
-    infisso: string,
     riscaldamento: string,
     altroRiscaldamento?: string,
     raffreddamento: string,
@@ -21,16 +21,17 @@ interface RoomSpecifications {
 
 
 const FormStanza = () => {
-    const [ formData, setFormData ] = useState<RoomSpecifications>({
+    const [ formData, setFormData ]           = useState<RoomSpecifications>({
         stanza        : "",
         altezza       : 0,
         spessoreMuro  : 0,
-        infisso       : "",
         riscaldamento : "",
         raffreddamento: "",
         illuminazione : ""
     });
-    const [ altro, setAltro ]       = useState({
+    const [ infissiValues, setInfissiValues ] = useState<string[]>([ "" ]);
+
+    const [ altro, setAltro ]        = useState({
         riscaldamento : true,
         raffreddamento: true,
         illuminazione : true
@@ -38,9 +39,25 @@ const FormStanza = () => {
     const {
               illuminazioneType,
               climatizzazioneType
-          }                         = useTypes();
-    const infissi                   = useInfissi();
-
+          }                          = useTypes();
+    const illuminazioneTypeOptions   = [
+        ...illuminazioneType.map((item) => ({
+            value: item,
+            label: item
+        })), {
+            value: "altro",
+            label: "Altro"
+        }
+    ];
+    const climatizzazioneTypeOptions = [
+        ...climatizzazioneType.map((item) => ({
+            value: item,
+            label: item
+        })), {
+            value: "altro",
+            label: "Altro"
+        }
+    ];
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const {
@@ -53,33 +70,35 @@ const FormStanza = () => {
         }));
     };
 
-    const handleSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
-        const {
-                  name,
-                  value
-              } = e.target;
-        console.log(name, value);
-        setAltro((prev) => ({
-            ...prev,
-            [name]: value !== "altro"
-        }));
-        setFormData((prev) => ({
-            ...prev,
-            [name]: value
-        }));
-
+    const handleSelect = (newValue: SingleValue<{ label: string, value: string }>, name: string) => {
+        if (newValue?.value) {
+            setAltro((prev) => ({
+                ...prev,
+                [name]: newValue.value !== "altro"
+            }));
+            setFormData((prev) => ({
+                ...prev,
+                [name]: newValue.value
+            }));
+        }
     };
 
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         console.log("Form submitted:", formData);
+        console.log("Infissi:", infissiValues);
     };
 
     return <form onSubmit={ handleSubmit } className="space-y-4">
-        <h2 className="text-2xl font-bold text-gray-800 mb-6 border-b pb-3">
-            Dati Stanza
-        </h2>
+        <div className="border-b flex justify-start items-center gap-2.5 mb-6 pb-3">
+            <h2 className="text-2xl font-bold text-gray-800">
+                Dati Stanza
+            </h2>
+            {/* todo: add function to save comment */ }
+            <CommentsButton saveComment={ () => {
+            } } />
+        </div>
 
         <div className="grid grid-cols-12 gap-5">
             {/* Stanza */ }
@@ -89,21 +108,28 @@ const FormStanza = () => {
                     <Input name="stanza"
                            value={ formData.stanza }
                            onChange={ handleChange }
-                           placeholder="Inserisci il tuo nome"
-                           className="col-span-10"
+                           placeholder="Inserisci il numero della stanza"
+                           className="col-span-4"
+                    />
+                    <Label htmlFor="stanza" className="col-span-2"> Destinazione D'uso </Label>
+                    <Input name="stanza"
+                           value={ formData.stanza }
+                           onChange={ handleChange }
+                           placeholder="Inserisci la destinazione d'uso"
+                           className="col-span-4"
                     />
                 </div>
             </div>
             {/* Altezza */ }
             <div className="row-start-2 col-span-12">
                 <div className="grid grid-cols-12 items-center gap-5">
-                    <Label htmlFor="altezza" className="col-span-2"> Altezza </Label>
+                    <Label htmlFor="altezza" className="col-span-2"> Altezza (cm) </Label>
                     <Input name="altezza"
                            value={ formData.altezza }
                            onChange={ handleChange }
                            className="col-span-4"
                     />
-                    <Label htmlFor="spessoreMuro" className="col-span-2">Spessore Muro</Label>
+                    <Label htmlFor="spessoreMuro" className="col-span-2">Spessore Muro (cm)</Label>
                     <Input name="spessoreMuro"
                            value={ formData.spessoreMuro }
                            onChange={ handleChange }
@@ -113,15 +139,11 @@ const FormStanza = () => {
             </div>
             {/* Infissi */ }
             <div className="row-start-3 col-span-12">
-                <div className="grid grid-cols-12 items-center gap-5">
+                <div className="grid grid-cols-12 items-baseline gap-5">
                     <Label htmlFor="infisso" className="col-span-2">Infissi</Label>
-                    <Select name="infisso"
-                            value={ formData.infisso }
-                            onChange={ handleSelect }
-                            className="col-span-10"
-                    >
-                        { infissi.data.map((item) => (<option key={ item.id } value={ item.id }>{ item.id }</option>)) }
-                    </Select>
+                    <div className="col-span-10">
+                        <DynamicSelectsInfissi infissiValues={ infissiValues } setInfissiValues={ setInfissiValues } />
+                    </div>
                 </div>
             </div>
             {/* Riscaldamento */ }
@@ -129,14 +151,12 @@ const FormStanza = () => {
                 <div className="grid grid-cols-12 items-center gap-5">
                     <Label htmlFor="riscaldamento" className="col-span-2">Riscaldamento</Label>
                     <Select name="riscaldamento"
-                            value={ formData.riscaldamento }
-                            onChange={ handleSelect }
-                            className="col-span-4"
-                            optionAltro={ true }
-                    >
-                        { climatizzazioneType.map((item, index) => (
-                            <option key={ index } value={ item }>{ item }</option>)) }
-                    </Select>
+                            onChange={ (newValue: SingleValue<{ value: string, label: string }>) => {
+                                handleSelect(newValue, "riscaldamento");
+                            } }
+                            className="col-span-4 rounded-md shadow-sm"
+                            options={ climatizzazioneTypeOptions }
+                    />
                     <Label htmlFor="altroRiscaldamento">Altro</Label>
                     <Input name="altroRiscaldamento" value={ formData.altroRiscaldamento ?? "" }
                            onChange={ handleChange }
@@ -148,14 +168,12 @@ const FormStanza = () => {
                 <div className="grid grid-cols-12 items-center gap-5">
                     <Label htmlFor="raffreddamento" className="col-span-2">Raffreddamento</Label>
                     <Select name="raffreddamento"
-                            value={ formData.raffreddamento }
-                            onChange={ handleSelect }
-                            className="col-span-4"
-                            optionAltro={ true }
-                    >
-                        { climatizzazioneType.map((item, index) => (
-                            <option key={ index } value={ item }>{ item }</option>)) }
-                    </Select>
+                            onChange={ (newValue: SingleValue<{ value: string, label: string }>) => {
+                                handleSelect(newValue, "raffreddamento");
+                            } }
+                            className="col-span-4 rounded-md shadow-sm"
+                            options={ climatizzazioneTypeOptions }
+                    />
                     <Label htmlFor="altroRaffreddamento">Altro</Label>
                     <Input name="altroRaffreddamento" value={ formData.altroRaffreddamento ?? "" }
                            onChange={ handleChange }
@@ -167,14 +185,12 @@ const FormStanza = () => {
                 <div className="grid grid-cols-12 items-center gap-5">
                     <Label htmlFor="illuminazione" className="col-span-2">Illuminazione</Label>
                     <Select name="illuminazione"
-                            value={ formData.illuminazione }
-                            onChange={ handleSelect }
-                            className="col-span-4"
-                            optionAltro={ true }
-                    >
-                        { illuminazioneType.map((item, index) => (
-                            <option key={ index } value={ item }>{ item }</option>)) }
-                    </Select>
+                            onChange={ (newValue: SingleValue<{ value: string, label: string }>) => {
+                                handleSelect(newValue, "illuminazione");
+                            } }
+                            className="col-span-4 rounded-md shadow-sm"
+                            options={ illuminazioneTypeOptions }
+                    />
                     <Label htmlFor="altroIlluminazione">Altro</Label>
                     <Input name="altroIlluminazione" value={ formData.altroIlluminazione ?? "" }
                            onChange={ handleChange }

@@ -1,44 +1,78 @@
-import * as React                                                  from "react";
-import { createContext, useContext, useEffect, useMemo, useState } from "react";
-import Database                                                    from "@tauri-apps/plugin-sql";
-import { invoke }                                                  from "@tauri-apps/api/core";
+import * as React                                              from "react";
+import { createContext, useEffect, useMemo, useRef, useState } from "react";
+import Database                                                from "@tauri-apps/plugin-sql";
+import { invoke }                                              from "@tauri-apps/api/core";
 
 interface DatabaseContextType {
     database: Database | null;
-    changeDatabase: (dbName: string) => void;
+    databasePath: string;
+    databaseName: string;
+    changeDatabase: (dbName: string) => Promise<void>;
+    executeQuery: (query: string, params?: unknown[]) => Promise<void>;
 }
 
-const DatabaseContext = createContext<DatabaseContextType | null>(null);
+export const DatabaseContext = createContext<DatabaseContextType | null>(null);
 
 const DatabaseProvider = ({children}: { children: React.ReactNode }) => {
+    const databaseRef                       = useRef<Database | null>(null);
     const [ databaseName, setDatabaseName ] = useState("data");
+    const [ databasePath, setDatabasePath ] = useState("");
     const [ database, setDatabase ]         = useState<Database | null>(null);
 
-    useEffect(() => {
-        const setupDatabase = async () => {
-            const dbPath = await invoke("get_db_path", {dbName: databaseName});
-            const db     = await Database.load(`sqlite:${ dbPath }`);
-            await db.execute("PRAGMA foreign_keys=ON");
-            await initDatabase(db);
-            setDatabase(db);
-        };
-
-        setupDatabase().catch((error) => {
-            console.error(error);
-            alert(error);
-        });
-    }, [ databaseName ]);
-
-    const changeDatabase = (dbName: string) => {
+    const setupDatabase = async (dbName: string) => {
+        const dbFilePath = await invoke("get_db_path", {dbName: dbName});
+        const dbPath     = `sqlite:${ dbFilePath }`;
+        const db         = await Database.load(dbPath);
+        await db.execute("PRAGMA foreign_keys=ON");
+        await initDatabase(db);
+        databaseRef.current = db;
+        setDatabase(db);
         setDatabaseName(dbName);
+        setDatabasePath(dbPath);
+        return "Setup successfully - Database: " + databaseName;
+    };
+
+    useEffect(() => {
+        const dbName = localStorage.getItem("databaseName");
+        setupDatabase(dbName ?? databaseName).catch((error) => {
+            console.error(error);
+        });
+    }, []);
+
+    const changeDatabase = async (dbName: string) => {
+        try {
+            database?.close();
+            console.log("Database closed - Database: " + databaseName);
+            await setupDatabase(dbName);
+            localStorage.setItem("databaseName", dbName);
+        } catch (e) {
+            console.error("Errore durante il cambio di database: " + e);
+        }
+    };
+
+    const execute = async (query: string, params: unknown[] = []) => {
+        if (database) {
+            try {
+                if (databaseRef.current) {
+                    await databaseRef.current.execute(query, params);
+                } else {
+                    console.error("Database non inizializzato");
+                }
+            } catch (e) {
+                console.error("Errore durante l'esecuzione della query: " + e);
+            }
+        }
     };
 
     const obj = useMemo(() => {
         return {
-            database,
-            changeDatabase
-        };
-    }, [ database ]);
+            database      : database,
+            databaseName  : databaseName,
+            databasePath  : databasePath,
+            changeDatabase: changeDatabase,
+            executeQuery  : execute
+        } as DatabaseContextType;
+    }, [ database, databasePath, databaseName ]);
 
     return <DatabaseContext.Provider value={ obj }>
         { children }
@@ -46,19 +80,12 @@ const DatabaseProvider = ({children}: { children: React.ReactNode }) => {
 };
 export default DatabaseProvider;
 
-export const useDatabase = () => {
-    const context = useContext(DatabaseContext);
-    if (!context) {
-        throw new Error("useDatabase must be used within the DatabaseProvider");
-    }
-    return context;
-};
-
 const initDatabase = async (db: Database) => {
     await db.execute(`
         CREATE TABLE IF NOT EXISTS INFISSI
         (
             ID        TEXT PRIMARY KEY,
+            TIPO      TEXT DEFAULT 'Finestra' CHECK ( TIPO IN ('Finestra', 'Porta')),
             ALTEZZA   REAL NOT NULL,
             LARGHEZZA REAL NOT NULL,
             MATERIALE TEXT NOT NULL,
@@ -70,7 +97,6 @@ const initDatabase = async (db: Database) => {
         (
             ID               INTEGER PRIMARY KEY AUTOINCREMENT,
             FASCICOLO        TEXT NOT NULL,
-            SDV              TEXT NOT NULL,
             PIANO            TEXT NOT NULL,
             ID_SPAZIO        TEXT NOT NULL,
             STANZA           TEXT NOT NULL,
@@ -80,7 +106,7 @@ const initDatabase = async (db: Database) => {
             RISCALDAMENTO    TEXT,
             RAFFRESCAMENTO   TEXT,
             ILLUMINAZIONE    TEXT,
-            UNIQUE (SDV, ID_SPAZIO, STANZA, DESTINAZIONE_USO)
+            UNIQUE (ID_SPAZIO, STANZA, DESTINAZIONE_USO)
         )
     `);
     await db.execute(`
