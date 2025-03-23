@@ -1,0 +1,28 @@
+{
+  "materiale_infisso": [
+    "Legno",
+    "Ferro",
+    "Alluminio",
+    "PVC"
+  ],
+  "vetro_infisso": [
+    "Singolo",
+    "Doppio",
+    "Camera",
+    "Plexiglas"
+  ],
+  "climatizzazione": [
+    "Radiatori",
+    "Ventilconvettori",
+    "Split",
+    "A pavimento",
+    "Pannelli radianti",
+    "Bocchette ad ari"
+  ],
+  "illuminazione": [
+    "Alogene",
+    "Neon",
+    "Led",
+    "Fluorescenza"
+  ]
+}
