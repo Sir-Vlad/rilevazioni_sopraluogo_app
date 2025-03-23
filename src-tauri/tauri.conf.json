@@ -29,8 +29,7 @@
     "category": "Utility",
     "copyright": "",
     "targets": [
-      "nsis",
-      "appimage"
+      "app"
     ],
     "icon": [
       "icons/32x32.png",

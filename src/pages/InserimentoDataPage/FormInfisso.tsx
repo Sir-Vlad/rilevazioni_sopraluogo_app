@@ -12,7 +12,7 @@ import CommentsButton            from "../../components/CommentsButton.tsx";
 const nextAlphabeticalID = (prevID: string | null) => {
     if (!prevID || prevID === "") return "A";
     let result = "";
-    let carry  = true;
+    let carry = true;
     for (let i = prevID.length - 1; i >= 0; i--) {
         const char = prevID[i];
         if (carry) {
@@ -20,7 +20,7 @@ const nextAlphabeticalID = (prevID: string | null) => {
                 result = "A" + result;
             } else {
                 result = String.fromCharCode(char.charCodeAt(0) + 1) + result;
-                carry  = false;
+                carry = false;
             }
         } else {
             result = char + result;
@@ -41,8 +41,8 @@ const FormInfisso = () => {
     const {
               materialiInfissiType,
               vetroInfissiType
-          }                         = useTypes();
-    const infissi                   = useInfissi();
+          } = useTypes();
+    const infissi = useInfissi();
 
     const handleTipoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const {value} = e.target;

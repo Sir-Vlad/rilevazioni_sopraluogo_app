@@ -13,7 +13,7 @@ const Label = ({
                    children
                }: LabelProps) => {
     return <label
-        htmlFor={htmlFor}
+        htmlFor={ htmlFor }
         className={ `block text-sm font-medium text-gray-700 ${ className ?? "" } overflow-hidden` }
     >
         { children }

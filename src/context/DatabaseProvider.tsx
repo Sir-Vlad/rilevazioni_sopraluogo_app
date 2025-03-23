@@ -10,17 +10,17 @@ interface DatabaseEventPayload {
 }
 
 const DatabaseProvider = ({children}: { children: React.ReactNode }) => {
-    const [ databaseName, setDatabaseName ]         = useState("data");
-    const [ databasePath, setDatabasePath ]         = useState("");
-    const [ isLoading, setIsLoading ]               = useState(true);
-    const [ error, setError ]                       = useState<string | null>(null);
-    const [ needReload, setNeedReload ]             = useState(false);
+    const [ databaseName, setDatabaseName ] = useState("data");
+    const [ databasePath, setDatabasePath ] = useState("");
+    const [ isLoading, setIsLoading ] = useState(true);
+    const [ error, setError ] = useState<string | null>(null);
+    const [ needReload, setNeedReload ] = useState(false);
     const [ pendingProviders, setPendingProviders ] = useState(new Set());
 
     // Inizializzazione iniziale
     useEffect(() => {
         const set_database = async () => {
-            const dbName         = localStorage.getItem("databaseName");
+            const dbName = localStorage.getItem("databaseName");
             const dbPath: string = await invoke("set_database", {dbName: dbName ?? databaseName});
             setDatabasePath(dbPath);
             setDatabaseName(dbPath.split("/").pop()?.split(".")[0] ?? "");

@@ -14,11 +14,11 @@ const DynamicSelectsInfissi = ({
                                    infissiValues,
                                    setInfissiValues
                                }: DynamicSelectsInfissiProps) => {
-    const infissi                       = useInfissi();
-    const [ isOpen, setIsOpen ]         = useState(false);
+    const infissi = useInfissi();
+    const [ isOpen, setIsOpen ] = useState(false);
     const [ inputValue, setInputValue ] = useState<number>(0);
 
-    const options      = infissi.data.map((item) => {
+    const options = infissi.data.map((item) => {
         if (!item.id) {
             throw new Error("Infisso doesn't have id");
         }
@@ -30,7 +30,7 @@ const DynamicSelectsInfissi = ({
     const handleSelect = (value: SingleValue<{ value: string, label: string }>, index: number) => {
         setInfissiValues((prev) => {
             if (value !== null) {
-                const updateValues  = [ ...prev ];
+                const updateValues = [ ...prev ];
                 updateValues[index] = value.value;
                 return updateValues;
             }

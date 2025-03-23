@@ -21,6 +21,24 @@ impl Default for Database {
     }
 }
 
+impl Database {
+    pub fn with_transaction<F, T>(&self, op: F) -> Result<T, String>
+    where
+        T: for<'de> serde::Deserialize<'de> + serde::Serialize,
+        F: FnOnce(&rusqlite::Transaction) -> Result<T, String>,
+    {
+        let mut conn_guard = self.conn.lock().unwrap();
+        if let Some(conn) = conn_guard.as_mut() {
+            let tx = conn.transaction().map_err(|e| e.to_string())?;
+            let result = op(&tx)?;
+            tx.commit().map_err(|e| e.to_string())?;
+            Ok(result)
+        } else {
+            Err("Database not initialized".to_string())
+        }
+    }
+}
+
 #[derive(Serialize, Clone)]
 pub struct DatabaseEventPayload {
     pub(crate) type_event: &'static str,
@@ -40,6 +58,8 @@ pub fn set_database(db: State<'_, Database>, db_name: String) -> Result<String, 
     }
     *conn = Some(Connection::open(&db_path).map_err(|c| c.to_string())?);
     *path_to_database = Some(db_path.clone());
+
+    setup_database(conn.as_ref().unwrap())?;
     match init_database(conn.as_ref().ok_or("Database connection not initialized")?) {
         Ok(_) => info!("Database inizializzato"),
         Err(e) => {
@@ -67,6 +87,7 @@ pub fn switch_database(
     }
     *conn = Some(Connection::open(&db_path).map_err(|c| c.to_string())?);
     *path_to_database = Some(db_path.clone());
+    setup_database(conn.as_ref().unwrap())?;
 
     app_handle
         .emit(
@@ -98,4 +119,12 @@ pub fn get_all_name_database() -> Result<Vec<String>, String> {
         return Ok(entries);
     }
     Err("La cartella Documenti non è stata trovata".to_string())
+}
+
+fn setup_database(connection: &Connection) -> Result<(), String> {
+    connection
+        .pragma_update(None, "foreign_keys", "ON")
+        .map_err(|e| format!("Errore durante l'impostazione delle pragma: {}", e))?;
+    info!("Foreign keys enabled");
+    Ok(())
 }

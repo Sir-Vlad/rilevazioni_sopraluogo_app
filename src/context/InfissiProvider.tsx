@@ -9,10 +9,10 @@ const InfissiProvider = ({children}: { children: React.ReactNode }) => {
     const {
               needReload,
               registerProvider
-          }                       = useDatabase();
+          } = useDatabase();
     const [ infissi, setInfissi ] = useState<IInfisso[]>([]);
-    const providerRef             = useRef<{ notifyReloadComplete: () => void; } | null>(null);
-    const [ error, setError ]     = useState<string | null>(null);
+    const providerRef = useRef<{ notifyReloadComplete: () => void; } | null>(null);
+    const [ error, setError ] = useState<string | null>(null);
     const [ loading, setLoading ] = useState(true);
 
     useEffect(() => {
@@ -59,9 +59,11 @@ const InfissiProvider = ({children}: { children: React.ReactNode }) => {
     const obj = useMemo(() => {
         return {
             data         : infissi,
-            insertInfisso: insertInfisso
+            insertInfisso: insertInfisso,
+            error        : error,
+            loading      : loading
         } as InfissiContextType;
-    }, [ infissi, insertInfisso ]);
+    }, [ error, infissi, insertInfisso, loading ]);
 
     return <InfissiContext.Provider value={ obj }>
         { children }

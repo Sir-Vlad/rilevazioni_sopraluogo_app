@@ -110,11 +110,12 @@ fn create_stanze_table(conn: &Connection) -> Result<(), rusqlite::Error> {
 fn create_stanze_con_infissi(conn: &Connection) -> Result<(), rusqlite::Error> {
     conn.execute(
         "CREATE TABLE IF NOT EXISTS STANZE_CON_INFISSI (
-            ID_INFISSI INTEGER NOT NULL,
-            ID_STANZA  TEXT NOT NULL,
+            ID_STANZA  INTEGER NOT NULL,
+            ID_INFISSI TEXT NOT NULL,
+            RIPETIZIONE INTEGER NOT NULL DEFAULT 1,
+            PRIMARY KEY (ID_INFISSI, ID_STANZA),
             FOREIGN KEY (ID_INFISSI) REFERENCES INFISSI (ID),
-            FOREIGN KEY (ID_STANZA) REFERENCES STANZE (ID),
-            PRIMARY KEY (ID_INFISSI, ID_STANZA)
+            FOREIGN KEY (ID_STANZA) REFERENCES STANZE (ID)
         )",
         [],
     )

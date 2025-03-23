@@ -8,6 +8,7 @@ import CommentsButton                               from "../../components/Comme
 import DynamicSelectsInfissi                        from "../../components/DynamicSelectsInfissi.tsx";
 import { toast }                                    from "react-toastify";
 import { capitalize }                               from "../../helpers/helpers.tsx";
+import { IStanzaConInfissi }                        from "../../models/models.tsx";
 
 interface RoomSpecifications {
     stanza: string,
@@ -33,7 +34,7 @@ type AltroType = {
 };
 
 const FormStanza = () => {
-    const [ formData, setFormData ]           = useState<RoomSpecifications>({
+    const [ formData, setFormData ] = useState<RoomSpecifications>({
         stanza         : "",
         destinazioneUso: "",
         cappotto       : false,
@@ -53,12 +54,12 @@ const FormStanza = () => {
     const {
               illuminazioneType,
               climatizzazioneType
-          }                   = useTypes();
-    const stanze              = useStanze();
-    const stanzeConInfissi    = useStanzeConInfissi();
+          } = useTypes();
+    const stanze = useStanze();
+    const stanzeConInfissi = useStanzeConInfissi();
 
 
-    const illuminazioneTypeOptions   = [
+    const illuminazioneTypeOptions = [
         ...illuminazioneType.map((item) => ({
             value: item,
             label: item
@@ -82,8 +83,8 @@ const FormStanza = () => {
             .sort((a, b) => {
                 if (a.startsWith("_") && !b.startsWith("_")) return -1;
                 if (!a.startsWith("_") && b.startsWith("_")) return 1;
-                const aNum   = Number(a);
-                const bNum   = Number(b);
+                const aNum = Number(a);
+                const bNum = Number(b);
                 const aIsNum = !isNaN(aNum);
                 const bIsNum = !isNaN(bNum);
                 if (aIsNum && bIsNum) return aNum - bNum;
@@ -103,7 +104,7 @@ const FormStanza = () => {
             value: ""
         }
     ]);
-    const [ pianoOptions, setPianoOptions ]                     = useState<SelectOption[]>([
+    const [ pianoOptions, setPianoOptions ] = useState<SelectOption[]>([
         {
             label: "",
             value: ""
@@ -147,17 +148,17 @@ const FormStanza = () => {
             }));
 
             const destinazioneUsoStanze = stanze.data.filter((item) => item.stanza === newValue.value)
-                .map((item) => {
-                    return item.destinazione_uso;
-                });
+                                                .map((item) => {
+                                                    return item.destinazione_uso;
+                                                });
             setDestinazioneUsoOptions([ ...new Set(destinazioneUsoStanze) ].map((value): SelectOption => ({
                 label: value,
                 value: value
             })));
             const pianoStanze = stanze.data.filter((item) => item.stanza === newValue.value)
-                .map((item) => {
-                    return item.piano;
-                });
+                                      .map((item) => {
+                                          return item.piano;
+                                      });
             setPianoOptions([ ...new Set(pianoStanze) ].map((value): SelectOption => ({
                 label: value,
                 value: value
@@ -210,8 +211,8 @@ const FormStanza = () => {
      ************************************  INSERIMENTO STANZE NEL DATABASE  ******************************************
      *****************************************************************************************************************/
 
-    const IGNORED_FIELD_KEYS   = [ "altroRiscaldamento", "altroRaffrescamento", "altroIlluminazione", "cappotto" ];
-    const ALTRO_FIELDS         = [ "riscaldamento", "raffrescamento", "illuminazione" ];
+    const IGNORED_FIELD_KEYS = [ "altroRiscaldamento", "altroRaffrescamento", "altroIlluminazione", "cappotto" ];
+    const ALTRO_FIELDS = [ "riscaldamento", "raffrescamento", "illuminazione" ];
     const fieldEmpty: string[] = [];
 
     /**
@@ -241,7 +242,7 @@ const FormStanza = () => {
         if (value === "altro" && !altro[key as keyof AltroType]) {
             if (!altro[key as keyof AltroType]) {
                 const altroKey: string = "altro" + capitalize(key);
-                const res              = !!formData[altroKey as keyof RoomSpecifications];
+                const res = !!formData[altroKey as keyof RoomSpecifications];
                 if (!res) {
                     fieldEmpty.push(altroKey);
                 }
@@ -306,7 +307,7 @@ const FormStanza = () => {
         e.preventDefault();
         console.clear();
         let isFormCorrect = Object.entries(formData)
-            .every(([ key, value ]: [ string, string | number ]) => validateField(key, value));
+                                  .every(([ key, value ]: [ string, string | number ]) => validateField(key, value));
         if (infissiValues[0] === "") {
             isFormCorrect = false;
             fieldEmpty.push("infissi");
@@ -322,24 +323,18 @@ const FormStanza = () => {
             toast.error("Stanza non trovata");
             return;
         }
-        stanza.cappotto       = formData.cappotto;
-        stanza.altezza        = formData.altezza;
-        stanza.spessore_muro  = formData.spessoreMuro;
-        stanza.riscaldamento  = formData.riscaldamento === "altro" ? formData.altroRiscaldamento : formData.riscaldamento;
+        stanza.cappotto = formData.cappotto;
+        stanza.altezza = formData.altezza;
+        stanza.spessore_muro = formData.spessoreMuro;
+        stanza.riscaldamento = formData.riscaldamento === "altro" ? formData.altroRiscaldamento : formData.riscaldamento;
         stanza.raffrescamento = formData.raffrescamento === "altro" ? formData.altroRaffrescamento : formData.raffrescamento;
-        stanza.illuminazione  = formData.illuminazione === "altro" ? formData.altroIlluminazione : formData.illuminazione;
+        stanza.illuminazione = formData.illuminazione === "altro" ? formData.altroIlluminazione : formData.illuminazione;
         stanze.updateStanza(stanza);
 
-        infissiValues.forEach((item) => {
-            stanzeConInfissi.add(stanza.stanza, item).then(
-                () => console.log(item)
-            );
-            console.log("Inserimento stanze con infissi avvenuto");
-        });
-
-        console.log("Form submitted:", formData);
-        console.log("Infissi:", infissiValues);
-
+        stanzeConInfissi.add({
+            id_stanza  : stanza.id,
+            ids_infissi: infissiValues
+        } as IStanzaConInfissi).then(() => console.log("Infissi aggiunti alla stanza"));
     };
 
     return <form onSubmit={ handleSubmit } className="space-y-4">

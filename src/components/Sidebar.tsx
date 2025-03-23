@@ -17,9 +17,9 @@ import { toast }       from "react-toastify";
 import { getFileName } from "../helpers/helpers.tsx";
 
 const Sidebar = () => {
-    const [ isOpen, setIsOpen ]                     = useState(false);
-    const [ databasesFiles, setDatabasesFiles ]     = useState<string[]>([]);
-    const database                                  = useDatabase();
+    const [ isOpen, setIsOpen ] = useState(false);
+    const [ databasesFiles, setDatabasesFiles ] = useState<string[]>([]);
+    const database = useDatabase();
     const [ selectedDatabase, setSelectedDatabase ] = useState<string>(database.databaseName);
 
     const toggleSidebar = () => {

@@ -21,9 +21,9 @@ ModuleRegistry.registerModules([ AllCommunityModule, ClientSideRowModelModule, N
 provideGlobalGridOptions({theme: "legacy"});
 
 const TableInfissi = () => {
-    const gridRef                 = useRef<AgGridReact>(null);
+    const gridRef = useRef<AgGridReact>(null);
     const [ rowData, setRowData ] = useState<IInfisso[]>([]);
-    const [ colDefs ]             = useState<ColDef<IInfisso>[]>([
+    const [ colDefs ] = useState<ColDef<IInfisso>[]>([
         {
             field         : "id",
             filter        : "agTextColumnFilter",
@@ -47,7 +47,7 @@ const TableInfissi = () => {
             }
         }, {field: "materiale"}, {field: "vetro"}, {field: "tipo"}
     ]);
-    const infissi                 = useInfissi();
+    const infissi = useInfissi();
 
 
     useEffect(() => {

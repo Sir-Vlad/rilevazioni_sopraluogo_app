@@ -12,11 +12,11 @@ interface TypePayload {
 
 const TypesProvider = ({children}: { children: React.ReactNode }) => {
     const [ materialiInfissiType, setMaterialiInfissiType ] = useState<string[]>([]);
-    const [ vetroInfissiType, setVetroInfissiType ]         = useState<string[]>([]);
-    const [ climatizzazioneType, setClimatizzazioneType ]   = useState<string[]>([]);
-    const [ illuminazioneType, setIlluminazioneType ]       = useState<string[]>([]);
-    const [ error, setError ]                               = useState<string | null>(null);
-    const [ isLoading, setIsLoading ]                       = useState(true);
+    const [ vetroInfissiType, setVetroInfissiType ] = useState<string[]>([]);
+    const [ climatizzazioneType, setClimatizzazioneType ] = useState<string[]>([]);
+    const [ illuminazioneType, setIlluminazioneType ] = useState<string[]>([]);
+    const [ error, setError ] = useState<string | null>(null);
+    const [ isLoading, setIsLoading ] = useState(true);
 
 
     const loadTypes = useCallback(async () => {
@@ -45,9 +45,10 @@ const TypesProvider = ({children}: { children: React.ReactNode }) => {
             vetroInfissiType,
             climatizzazioneType,
             illuminazioneType,
-            isLoading
+            isLoading,
+            error
         } as TypeContextType;
-    }, [ materialiInfissiType, vetroInfissiType, climatizzazioneType, illuminazioneType, isLoading ]);
+    }, [ materialiInfissiType, vetroInfissiType, climatizzazioneType, illuminazioneType, isLoading, error ]);
 
     return <TypesContext.Provider value={ obj }>
         { children }

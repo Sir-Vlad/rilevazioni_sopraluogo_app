@@ -3,6 +3,7 @@ use crate::database::{set_database, Database, DatabaseEventPayload};
 use calamine::{open_workbook, Reader, Xlsx};
 use polars::frame::{DataFrame, UniqueKeepStrategy};
 use polars::prelude::{NamedFrom, Series};
+use rusqlite::params;
 use tauri::{AppHandle, Emitter, State};
 
 #[tauri::command]
@@ -104,6 +105,41 @@ pub fn insert_stanze(
     }
 }
 
+#[tauri::command]
+pub fn update_stanza(db: State<'_, Database>, updated_stanza: Stanza) -> Result<(), String> {
+    let conn = db.conn.lock().unwrap();
+    if let Some(conn) = conn.as_ref() {
+        let row_affected = conn
+            .execute(
+                "UPDATE STANZE
+                SET ALTEZZA        = ?1,
+                    SPESSORE_MURO  = ?2,
+                    RISCALDAMENTO  = ?3,
+                    RAFFRESCAMENTO = ?4,
+                    ILLUMINAZIONE  = ?5
+                WHERE ID = ?6
+                  AND (ALTEZZA IS NULL OR SPESSORE_MURO IS NULL OR RISCALDAMENTO IS NULL OR
+                       RAFFRESCAMENTO IS NULL OR ILLUMINAZIONE IS NULL)",
+                params![
+                    updated_stanza.altezza,
+                    updated_stanza.spessore_muro,
+                    updated_stanza.riscaldamento,
+                    updated_stanza.raffrescamento,
+                    updated_stanza.illuminazione,
+                    updated_stanza.id
+                ],
+            )
+            .map_err(|e| format!("Errore nella esecuzione della query: {}", e))?;
+
+        if row_affected == 0 {
+            return Err("Nessun record aggiornato".to_string());
+        }
+        Ok(())
+    } else {
+        Err("Database not initialized".to_string())
+    }
+}
+
 fn retrieve_string_field_df(df: &DataFrame, field: &str, index: usize) -> Result<String, String> {
     Ok(df
         .column(field)
@@ -115,7 +151,7 @@ fn retrieve_string_field_df(df: &DataFrame, field: &str, index: usize) -> Result
         .to_string())
 }
 
-pub fn elaborate_file(path: String) -> Result<DataFrame, String> {
+fn elaborate_file(path: String) -> Result<DataFrame, String> {
     let mut workbook: Xlsx<_> = open_workbook(path).expect("Cannot open file");
     // recupero il nome del primo sheet
     let name_first_sheet = workbook.sheet_names()[0].clone();

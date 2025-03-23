@@ -4,7 +4,7 @@ version = "0.1.0"
 description = "A Tauri App"
 authors = ["Mattia Frigiola"]
 license = "MIT"
-repository = ""
+repository = "https://github.com/Sir-Vlad/rilevazioni_sopraluogo_app"
 edition = "2021"
 rust-version = "1.77.2"
 
@@ -25,9 +25,10 @@ tauri = { version = "2.3.1", features = [] }
 tauri-plugin-log = "2.0.0-rc"
 dirs-next = "2.0.0"
 tauri-plugin-dialog = "2"
-polars = { version = "0.46.0", features = ["sql", "lazy", "json"] }
+polars = { version = "0.46.0", features = ["sql", "lazy"] }
 calamine = "0.26.1"
 rusqlite = { version = "0.34.0", features = ["bundled"] }
+itertools = "0.14.0"
 
 [package.metadata.bundle.windows]
 manifest = "app.manifest"

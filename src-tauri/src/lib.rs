@@ -1,8 +1,9 @@
 mod database;
 
 use crate::database::{
-    get_all_name_database, get_infissi, get_stanze, get_types, insert_infisso, insert_stanze,
-    set_database, switch_database, Database,
+    get_all_name_database, get_infissi, get_stanze, get_stanze_con_infissi, get_types,
+    insert_infisso, insert_stanze, insert_stanze_con_infissi, set_database, switch_database,
+    update_stanza, Database,
 };
 use tauri::Manager;
 
@@ -29,7 +30,10 @@ pub fn run() {
             get_infissi,
             get_types,
             insert_infisso,
-            insert_stanze
+            insert_stanze,
+            update_stanza,
+            insert_stanze_con_infissi,
+            get_stanze_con_infissi
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

@@ -6,9 +6,9 @@ import { useStanze }                            from "../context/UseProvider.tsx
 
 
 const Panoramica = () => {
-    const gridRef                 = useRef<AgGridReact>(null);
+    const gridRef = useRef<AgGridReact>(null);
     const [ rowData, setRowData ] = useState<IStanza[]>([]);
-    const [ colDefs ]             = useState<ColDef<IStanza>[]>([
+    const [ colDefs ] = useState<ColDef<IStanza>[]>([
         {field: "id"},
         {field: "fascicolo"},
         {field: "piano"},
@@ -21,13 +21,13 @@ const Panoramica = () => {
         {field: "raffrescamento"},
         {field: "illuminazione"}
     ]);
-    const defaultColDef: ColDef   = useMemo(() => {
+    const defaultColDef: ColDef = useMemo(() => {
         return {
             flex     : 1,
             resizable: false
         };
     }, []);
-    const stanze                  = useStanze();
+    const stanze = useStanze();
 
 
     useEffect(() => {

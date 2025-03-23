@@ -21,3 +21,8 @@ export interface IStanza {
     raffrescamento?: string,
     illuminazione?: string,
 }
+
+export interface IStanzaConInfissi {
+    id_stanza: number;
+    ids_infissi: string[];
+}

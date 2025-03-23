@@ -30,7 +30,7 @@ impl Infisso {
     }
 }
 
-#[derive(Serialize, Debug)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct Stanza {
     pub id: u64,
     pub fascicolo: String,
@@ -170,16 +170,17 @@ impl StanzaBuilder {
     }
 }
 
+#[derive(Serialize, Deserialize, Debug)]
 pub(crate) struct StanzaConInfisso {
-    pub id_stanza: String,
-    pub id_infisso: String,
+    pub id_stanza: u32,
+    pub ids_infissi: Vec<String>,
 }
 
 impl StanzaConInfisso {
-    pub fn new(id_stanza: String, id_infisso: String) {
+    pub fn new(id_stanza: u32, ids_infissi: Vec<String>) {
         Self {
             id_stanza,
-            id_infisso,
+            ids_infissi,
         };
     }
 }
