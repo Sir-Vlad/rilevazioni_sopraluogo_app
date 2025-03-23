@@ -51,7 +51,6 @@ const CommentsButton = ({saveComment}: CommentsButtonProps) => {
                     </button>
                 </div>
             </div>
-
         </div> }
     </>;
 };

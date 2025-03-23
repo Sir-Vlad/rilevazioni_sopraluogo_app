@@ -11,8 +11,8 @@ import {
 }                                               from "ag-grid-community";
 import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-quartz.css";
-import { useInfissi }                           from "../../context/InfissiProvider.tsx";
 import { IInfisso }                             from "../../models/models.tsx";
+import { useInfissi }                           from "../../context/UseProvider.tsx";
 
 // Register all community features
 ModuleRegistry.registerModules([ AllCommunityModule, ClientSideRowModelModule, NumberFilterModule, ValidationModule ]);
@@ -45,8 +45,7 @@ const TableInfissi = () => {
             filterParams  : {
                 buttons: [ "reset" ]
             }
-        }, {field: "materiale"}, {field: "vetro"},
-        {field: "tipo"}
+        }, {field: "materiale"}, {field: "vetro"}, {field: "tipo"}
     ]);
     const infissi                 = useInfissi();
 

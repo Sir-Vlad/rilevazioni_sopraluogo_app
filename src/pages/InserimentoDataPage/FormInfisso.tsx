@@ -3,8 +3,7 @@ import * as React                from "react";
 import { ChangeEvent, useState } from "react";
 import Input                     from "../../components/Input.tsx";
 import Select, { SingleValue }   from "react-select";
-import { useTypes }              from "../../context/TypesProvider.tsx";
-import { useInfissi }            from "../../context/InfissiProvider.tsx";
+import { useInfissi, useTypes }  from "../../context/UseProvider.tsx";
 import { IInfisso }              from "../../models/models.tsx";
 import { toast }                 from "react-toastify";
 import CommentsButton            from "../../components/CommentsButton.tsx";
@@ -70,14 +69,12 @@ const FormInfisso = () => {
         });
     };
 
-    const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         if (formData.altezza === 0 && formData.larghezza === 0 && formData.materiale === "" && formData.vetro === "") {
             return;
         }
         const lastInfisso = infissi.data.at(-1);
-        console.log("LastInfisso: ");
-        console.log(lastInfisso);
         let lastInfissoId = "";
         if (lastInfisso) {
             if (lastInfisso.id) {
@@ -85,16 +82,18 @@ const FormInfisso = () => {
             } else {
                 throw new Error("Infisso doesn't have id");
             }
-
         }
-
         const newInfisso: IInfisso = {
             ...formData,
             id: nextAlphabeticalID(lastInfissoId)
         };
-        console.log(newInfisso);
-        infissi.updateInfissi(newInfisso);
-        toast.success("Infisso inserito con successo");
+        try {
+            await infissi.insertInfisso(newInfisso);
+            toast.success("Infisso inserito con successo");
+        } catch (e) {
+            toast.error("Errore durante l'inserimento del nuovo infisso");
+            console.error(e);
+        }
     };
 
     return (<form onSubmit={ handleSubmit } className="space-y-4">
@@ -112,23 +111,25 @@ const FormInfisso = () => {
             <div className="row-start-1 col-span-12">
                 <div className="grid grid-cols-12 items-center">
                     <Label htmlFor="tipo" className="col-span-2">Tipo</Label>
-                    <div className="col-span-2 flex items-center gap-2 px-3 py-2">
-                        <input type="radio" id="chk_finestra"
-                               name="check_tipo" value="Finestra"
-                               className="h-4 w-4 accent-blue-500"
-                               checked={ formData.tipo === "Finestra" }
-                               onChange={ handleTipoChange }
-                        />
-                        <label htmlFor="chk_finestra">Finestra</label>
-                    </div>
-                    <div className="col-span-2 flex items-center gap-2 px-3 py-2">
-                        <input type="radio" id="chk_finestra"
-                               name="check_tipo" value="Porta"
-                               className="h-4 w-4 accent-blue-500"
-                               checked={ formData.tipo === "Porta" }
-                               onChange={ handleTipoChange }
-                        />
-                        <label htmlFor="chk_porta">Porta</label>
+                    <div id="tipo" className="col-span-4 flex items-center justify-start gap-4">
+                        <div className="col-span-2 flex items-center gap-2 px-3 py-2">
+                            <input type="radio" id="chk_finestra"
+                                   name="check_tipo" value="Finestra"
+                                   className="h-4 w-4 accent-blue-500"
+                                   checked={ formData.tipo === "Finestra" }
+                                   onChange={ handleTipoChange }
+                            />
+                            <label htmlFor="chk_finestra">Finestra</label>
+                        </div>
+                        <div className="col-span-2 flex items-center gap-2 px-3 py-2">
+                            <input type="radio" id="chk_finestra"
+                                   name="check_tipo" value="Porta"
+                                   className="h-4 w-4 accent-blue-500"
+                                   checked={ formData.tipo === "Porta" }
+                                   onChange={ handleTipoChange }
+                            />
+                            <label htmlFor="chk_porta">Porta</label>
+                        </div>
                     </div>
                 </div>
             </div>

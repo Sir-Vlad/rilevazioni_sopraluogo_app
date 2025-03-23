@@ -1,59 +1,43 @@
-import { useEffect, useState }                                              from "react";
-import { faArrowLeft, faArrowRight, faArrowUpRightFromSquare, faFileLines } from "@fortawesome/free-solid-svg-icons";
-import { FontAwesomeIcon }                                                  from "@fortawesome/react-fontawesome";
-import { invoke }                                                           from "@tauri-apps/api/core";
-import { open }                                                             from "@tauri-apps/plugin-dialog";
+import { useCallback, useEffect, useState } from "react";
+import {
+    faArrowLeft,
+    faArrowRight,
+    faArrowUpRightFromSquare,
+    faCheck,
+    faFileLines
+}                                           from "@fortawesome/free-solid-svg-icons";
+import {
+    FontAwesomeIcon
+}                                           from "@fortawesome/react-fontawesome";
+import { invoke }                           from "@tauri-apps/api/core";
+import { open }                             from "@tauri-apps/plugin-dialog";
 
-import { useDatabase } from "../context/UseDatabase.tsx";
+import { useDatabase } from "../context/UseProvider.tsx";
 import { toast }       from "react-toastify";
-
-interface DataJsonToExcel {
-    fascicolo: string,
-    piano: string,
-    id_spazio: string,
-    cod_stanza: string,
-    destinazione_uso: string
-}
-
+import { getFileName } from "../helpers/helpers.tsx";
 
 const Sidebar = () => {
-    const [ isOpen, setIsOpen ] = useState(false);
+    const [ isOpen, setIsOpen ]                     = useState(false);
+    const [ databasesFiles, setDatabasesFiles ]     = useState<string[]>([]);
+    const database                                  = useDatabase();
+    const [ selectedDatabase, setSelectedDatabase ] = useState<string>(database.databaseName);
 
-    const toggleSidebar                         = () => {
+    const toggleSidebar = () => {
         setIsOpen(!isOpen);
     };
-    const [ databasesFiles, setDatabasesFiles ] = useState<string[]>([]);
-    const database                              = useDatabase();
 
-    const retrieveNameDatabases = async () => {
+    const retrieveNameDatabases = useCallback(async () => {
         const dbs: string[] = await invoke("get_all_name_database");
         setDatabasesFiles(dbs);
-    };
+    }, []);
 
     useEffect(() => {
         retrieveNameDatabases().catch(console.error);
-    }, []);
+    }, [ retrieveNameDatabases ]);
 
-
-    const insertJsonInDatabase = async (jsonData: string) => {
-        try {
-            const data: DataJsonToExcel[] = JSON.parse(jsonData);
-            await database.changeDatabase(data[0].fascicolo);
-
-            for (const item of data) {
-                await database.executeQuery(`INSERT INTO STANZE (FASCICOLO, PIANO, ID_SPAZIO, STANZA, DESTINAZIONE_USO)
-                                             VALUES ($1, $2, $3, $4, $5)`, [
-                    item.fascicolo, item.piano, item.id_spazio, item.cod_stanza, item.destinazione_uso
-                ]);
-            }
-            console.log("Inserimento avvenuto con successo");
-            toast.success("Inserimento avvenuto con successo");
-        } catch (e) {
-            console.log("Errore durante l'inserimento: " + e);
-            toast.error("Errore durante il cambio di database");
-        }
-
-    };
+    useEffect(() => {
+        setSelectedDatabase(database.databaseName);
+    }, [ database.databaseName ]);
 
     const addNewFascicolo = async () => {
         const file = await open({
@@ -68,11 +52,17 @@ const Sidebar = () => {
             ]
         });
         /* Passare il path a rust che ne elabora il contenuto (con polars) e mi ritorna un json del contenuto del file*/
-        const jsonData: string = await invoke("elaborate_file", {
-            path: file
-        });
-        insertJsonInDatabase(jsonData).then();
-        await retrieveNameDatabases();
+        try {
+            const path_db: string = await invoke("insert_stanze", {
+                path: file
+            });
+            setDatabasesFiles((prev) => [ ...prev, path_db ]);
+            console.log("Inserimento avvenuto con successo");
+            toast.success("Inserimento avvenuto con successo");
+        } catch (e) {
+            console.log("Errore durante l'inserimento: " + e);
+            toast.error("Errore durante il cambio di database");
+        }
     };
 
     return <aside className={ `bg-gray-800 text-white transition-all ${ isOpen ? "w-64" : "w-16" } p-4` }>
@@ -90,21 +80,28 @@ const Sidebar = () => {
                 <div className="h-full flex flex-col">
                     {/* Btn dei vari fascicoli */ }
                     { databasesFiles.map((databaseFile, i) => {
+                        const nameDatabase = getFileName(databaseFile);
+                        if (!nameDatabase) return;
                         return <div className="grid grid-cols-8 items-center h-full" key={ i }>
                             <button
                                 className="col-span-5 flex items-center rounded hover:bg-gray-700 cursor-pointer"
                                 onClick={ async () => {
-                                    await database.changeDatabase(databaseFile.split(".")[0]);
+                                    await database.changeDatabase(nameDatabase);
+                                    setSelectedDatabase(nameDatabase);
                                 } }>
                                 <FontAwesomeIcon icon={ faFileLines }
                                                  className="flex items-center p-2" />
-                                <span className="ml-3">{ databaseFile.split(".")[0] }</span>
+                                <span className="ml-3">{ nameDatabase }</span>
                             </button>
                             <button className="col-span-2 rounded hover:bg-gray-700 cursor-pointer p-2"
                                     onClick={ () => {
                                     } }>
                                 <FontAwesomeIcon icon={ faArrowUpRightFromSquare } />
                             </button>
+                            <div
+                                className={ `col-span-1 ${ selectedDatabase === nameDatabase ? "" : "hidden" }` }>
+                                <FontAwesomeIcon icon={ faCheck } />
+                            </div>
                         </div>;
                     }) }
                     {/* Btn add nuovo fascicolo */ }

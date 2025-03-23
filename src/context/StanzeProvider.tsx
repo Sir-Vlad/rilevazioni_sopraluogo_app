@@ -1,40 +1,60 @@
-import * as React                                                  from "react";
-import { createContext, useContext, useEffect, useMemo, useState } from "react";
-import { useDatabase }                                             from "./UseDatabase.tsx";
-import { IStanza }                                                 from "../models/models.tsx";
-
-interface IStanzaContext {
-    data: IStanza[];
-}
-
-const StanzeContext = createContext<IStanzaContext | null>(null);
+import * as React                                            from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useDatabase }                                       from "./UseProvider.tsx";
+import { IStanza }                                           from "../models/models.tsx";
+import { IStanzaContext, StanzeContext }                     from "./Context.tsx";
+import { invoke }                                            from "@tauri-apps/api/core";
 
 const StanzeProvider = ({children}: { children: React.ReactNode }) => {
-    const {database}            = useDatabase();
-    const [ stanze, setStanze ] = useState<IStanza[]>([]);
+    const {
+              needReload,
+              registerProvider
+          }                       = useDatabase();
+    const providerRef             = useRef<{ notifyReloadComplete: () => void; } | null>(null);
+    const [ stanze, setStanze ]   = useState<IStanza[]>([]);
+    const [ error, setError ]     = useState<string | null>(null);
+    const [ loading, setLoading ] = useState(true);
 
     useEffect(() => {
-        if (database) {
-            const fetchStanze = async () => {
-                const res: object[] = await database.select(`
-                    SELECT *
-                    FROM STANZE;
-                `);
-                const new_stanze    = res.map((row: Record<string, any>): IStanza => {
-                    return Object.fromEntries(Object.entries(row).map(([ key, value ]) => [
-                        key.toLowerCase(), value
-                    ])) as IStanza;
-                });
-                setStanze(new_stanze);
-            };
-            fetchStanze().catch(console.error);
+        providerRef.current = registerProvider("stanze");
+    }, [ registerProvider ]);
+
+    const loadStanze = useCallback(async () => {
+        try {
+            setLoading(true);
+            setError(null);
+            const data: IStanza[] = await invoke("get_stanze");
+            console.log("stanze", data);
+            setStanze(data);
+        } catch (e) {
+            setError("Errore durante il caricamento degli infissi: " + e);
+        } finally {
+            setLoading(false);
         }
-    }, [ database ]);
+    }, []);
+
+    useEffect(() => {
+        if (needReload) {
+            loadStanze().then(() => {
+                providerRef.current?.notifyReloadComplete();
+            });
+        }
+    }, [ loadStanze, needReload ]);
+
+    useEffect(() => {
+        loadStanze().catch(console.error);
+    }, [ loadStanze ]);
+
+    const updateStanza = (newStanza: IStanza) => {
+        // todo: aggiungere al database i nuovi dati
+        console.log("updateStanza", newStanza);
+    };
 
 
     const obj: IStanzaContext = useMemo(() => {
         return {
-            data: stanze
+            data        : stanze,
+            updateStanza: updateStanza
         };
     }, [ stanze ]);
 
@@ -44,11 +64,3 @@ const StanzeProvider = ({children}: { children: React.ReactNode }) => {
 };
 
 export default StanzeProvider;
-
-export const useStanze = () => {
-    const stanze = useContext(StanzeContext);
-    if (!stanze) {
-        throw new Error("useStanze must be used within the DatabaseProvider");
-    }
-    return stanze;
-};

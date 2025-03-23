@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import "./Header.css";
 
-import { useDatabase } from "../context/UseDatabase.tsx";
+import { useDatabase } from "../context/UseProvider.tsx";
 
 const Header = () => {
     const {databaseName} = useDatabase();

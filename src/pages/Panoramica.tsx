@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { AgGridReact }                          from "ag-grid-react";
 import { ColDef }                               from "ag-grid-community";
 import { IStanza }                              from "../models/models.tsx";
-import { useStanze }                            from "../context/StanzeProvider.tsx";
+import { useStanze }                            from "../context/UseProvider.tsx";
 
 
 const Panoramica = () => {
@@ -14,7 +14,12 @@ const Panoramica = () => {
         {field: "piano"},
         {field: "id_spazio"},
         {field: "stanza"},
-        {field: "destinazione_uso"}
+        {field: "destinazione_uso"},
+        {field: "altezza"},
+        {field: "spessore_muro"},
+        {field: "riscaldamento"},
+        {field: "raffrescamento"},
+        {field: "illuminazione"}
     ]);
     const defaultColDef: ColDef   = useMemo(() => {
         return {

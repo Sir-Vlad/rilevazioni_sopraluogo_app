@@ -1,44 +1,53 @@
-import * as React                           from "react";
-import { ChangeEvent, useEffect, useState } from "react";
-import Label                                from "../../components/Label";
-import Input                                from "../../components/Input.tsx";
-import Select, { SingleValue }              from "react-select";
-import { useTypes }                         from "../../context/TypesProvider.tsx";
-import CommentsButton                       from "../../components/CommentsButton.tsx";
-import DynamicSelectsInfissi                from "../../components/DynamicSelectsInfissi.tsx";
-import { toast }                            from "react-toastify";
-import { capitalize }                       from "../../helpers/helpers.tsx";
-import { useStanze }                        from "../../context/StanzeProvider.tsx";
+import * as React                                   from "react";
+import { ChangeEvent, useEffect, useState }         from "react";
+import Label                                        from "../../components/Label";
+import Input                                        from "../../components/Input.tsx";
+import Select, { SingleValue }                      from "react-select";
+import { useStanze, useStanzeConInfissi, useTypes } from "../../context/UseProvider.tsx";
+import CommentsButton                               from "../../components/CommentsButton.tsx";
+import DynamicSelectsInfissi                        from "../../components/DynamicSelectsInfissi.tsx";
+import { toast }                                    from "react-toastify";
+import { capitalize }                               from "../../helpers/helpers.tsx";
 
 interface RoomSpecifications {
     stanza: string,
     destinazioneUso: string,
+    piano?: string,
+    cappotto: boolean,
     altezza: number,
     spessoreMuro: number,
     riscaldamento: string,
     altroRiscaldamento?: string,
-    raffreddamento: string,
-    altroRaffreddamento?: string,
+    raffrescamento: string,
+    altroRaffrescamento?: string,
     illuminazione: string,
     altroIlluminazione?: string,
 }
 
+type SelectOption = {
+    value: string, label: string
+};
+
+type AltroType = {
+    riscaldamento: boolean, raffrescamento: boolean, illuminazione: boolean
+};
 
 const FormStanza = () => {
     const [ formData, setFormData ]           = useState<RoomSpecifications>({
         stanza         : "",
         destinazioneUso: "",
+        cappotto       : false,
         altezza        : 0,
         spessoreMuro   : 0,
         riscaldamento  : "",
-        raffreddamento : "",
+        raffrescamento : "",
         illuminazione  : ""
     });
     const [ infissiValues, setInfissiValues ] = useState<string[]>([ "" ]);
 
-    const [ altro, setAltro ] = useState({
+    const [ altro, setAltro ] = useState<AltroType>({
         riscaldamento : true,
-        raffreddamento: true,
+        raffrescamento: true,
         illuminazione : true
     });
     const {
@@ -46,6 +55,8 @@ const FormStanza = () => {
               climatizzazioneType
           }                   = useTypes();
     const stanze              = useStanze();
+    const stanzeConInfissi    = useStanzeConInfissi();
+
 
     const illuminazioneTypeOptions   = [
         ...illuminazioneType.map((item) => ({
@@ -86,7 +97,13 @@ const FormStanza = () => {
             }))
     ];
 
-    const [ destinazioneUsoOptions, setDestinazioneUsoOptions ] = useState<{ label: string, value: string }[]>([
+    const [ destinazioneUsoOptions, setDestinazioneUsoOptions ] = useState<SelectOption[]>([
+        {
+            label: "",
+            value: ""
+        }
+    ]);
+    const [ pianoOptions, setPianoOptions ]                     = useState<SelectOption[]>([
         {
             label: "",
             value: ""
@@ -100,7 +117,13 @@ const FormStanza = () => {
                 destinazioneUso: destinazioneUsoOptions[0].value
             }));
         }
-    }, [ destinazioneUsoOptions ]);
+        if (pianoOptions.length === 1) {
+            setFormData((prev) => ({
+                ...prev,
+                piano: pianoOptions[0].value
+            }));
+        }
+    }, [ destinazioneUsoOptions, pianoOptions ]);
 
     const currentValueDestinazioneUso = () => {
         if (destinazioneUsoOptions.length <= 1) {
@@ -123,12 +146,21 @@ const FormStanza = () => {
                 destinazioneUso: ""
             }));
 
-            const stanzeRes = stanze.data.filter((item) => item.stanza === newValue.value).map((item) => {
-                return item.destinazione_uso;
-            });
-            setDestinazioneUsoOptions([ ...new Set(stanzeRes) ].map((item) => ({
-                label: item,
-                value: item
+            const destinazioneUsoStanze = stanze.data.filter((item) => item.stanza === newValue.value)
+                .map((item) => {
+                    return item.destinazione_uso;
+                });
+            setDestinazioneUsoOptions([ ...new Set(destinazioneUsoStanze) ].map((value): SelectOption => ({
+                label: value,
+                value: value
+            })));
+            const pianoStanze = stanze.data.filter((item) => item.stanza === newValue.value)
+                .map((item) => {
+                    return item.piano;
+                });
+            setPianoOptions([ ...new Set(pianoStanze) ].map((value): SelectOption => ({
+                label: value,
+                value: value
             })));
         }
     };
@@ -174,52 +206,140 @@ const FormStanza = () => {
         }
     };
 
+    /*****************************************************************************************************************
+     ************************************  INSERIMENTO STANZE NEL DATABASE  ******************************************
+     *****************************************************************************************************************/
+
+    const IGNORED_FIELD_KEYS   = [ "altroRiscaldamento", "altroRaffrescamento", "altroIlluminazione", "cappotto" ];
+    const ALTRO_FIELDS         = [ "riscaldamento", "raffrescamento", "illuminazione" ];
+    const fieldEmpty: string[] = [];
+
+    /**
+     * Determines if a given field should be skipped based on its key.
+     *
+     * The function checks whether the provided key exists in the predefined list of ignored field keys.
+     *
+     * @param {string} key - The key of the field to evaluate.
+     * @returns {boolean} - Returns true if the field key is present in the ignored field keys, otherwise false.
+     */
+    const shouldSkipField = (key: string): boolean => IGNORED_FIELD_KEYS.includes(key);
+
+    /**
+     * Validates if the provided field key and value require an additional "altro" field to be filled out.
+     *
+     * This function checks if the `value` equals "altro" and whether the corresponding `altro` field
+     * from the `AltroType` object is empty. If the specific `altro` field is empty, it determines the key
+     * for the "altro" field, checks its presence in the `formData` object, and adds it to the `fieldEmpty`
+     * array if missing.
+     *
+     * @param {string} key - The key representing the field being validated.
+     * @param {string | number} value - The value of the field being validated.
+     * @returns {boolean} Returns a boolean indicating if the additional "altro" field is filled (true)
+     * or missing (false).
+     */
+    const validateAltroField = (key: string, value: string | number): boolean => {
+        if (value === "altro" && !altro[key as keyof AltroType]) {
+            if (!altro[key as keyof AltroType]) {
+                const altroKey: string = "altro" + capitalize(key);
+                const res              = !!formData[altroKey as keyof RoomSpecifications];
+                if (!res) {
+                    fieldEmpty.push(altroKey);
+                }
+                return res;
+            }
+        }
+        return true;
+    };
+
+    /**
+     * Validates a specific field based on the provided key and value.
+     *
+     * The function determines whether the field should be skipped,
+     * validated against a specific set of rules for certain field keys,
+     * or checked for general validity. If the field is invalid and empty,
+     * its key is added to a list of empty fields.
+     *
+     * @param {string} key - The identifier of the field to validate.
+     * @param {string | number} value - The value of the field to validate.
+     * @returns {boolean} - Returns true if the field is valid or should be skipped.
+     *                      Returns false if the field is invalid.
+     */
+    const validateField = (key: string, value: string | number): boolean => {
+        if (shouldSkipField(key)) return true;
+        if (ALTRO_FIELDS.includes(key)) return validateAltroField(key, value);
+        const isValid = !!value;
+        if (!isValid) {
+            fieldEmpty.push(key);
+        }
+        return isValid;
+    };
+
+    /**
+     * Function to display a toast error for each field that is considered empty in the form.
+     * It iterates through the `fieldEmpty` array, checks the field names, adjusts them for readability,
+     * and triggers a warning toast message indicating that the field is not filled out.
+     *
+     * Adjustments to field names:
+     * - If the field name is "destinazioneUso", it is displayed as "destinazione d'uso".
+     * - If the field name is "spessoreMuro", it is displayed as "spessore muro".
+     * - If the field name matches the pattern /^altro.*$/, it is displayed as "altro di <suffix>",
+     *   where <suffix> is the remaining part of the field name after "altro" converted to lowercase.
+     *
+     * Emits a warning toast with the message: "Campo <field> non compilato" for each unfilled field.
+     */
+    const printToastError = () => {
+        fieldEmpty.forEach((field) => {
+            if (field === "destinazioneUso") {
+                field = "destinazione d'uso";
+            } else if (field === "spessoreMuro") {
+                field = "spessore muro";
+            } else if (/^altro.*$/.test(field)) {
+                field = "altro di " + field.split("altro")[1].toLowerCase();
+            }
+            toast.warning("Campo " + field + " non compilato");
+        });
+        // clear array
+        fieldEmpty.length = 0;
+    };
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         console.clear();
-        let fieldEmpty: string = "";
-        let isFormCorrect      = Object.entries(formData).every(([ key, value ]: [ string, string | number ]) => {
-            if (key === "altroRiscaldamento" || key === "altroRaffreddamento" || key === "altroIlluminazione") {
-                return true;
-            }
-            if (key === "riscaldamento" || key === "raffreddamento" || key === "illuminazione") {
-                if (value === "altro") {
-                    if (!altro[key]) {
-                        const altroKey: string = "altro" + capitalize(key);
-                        const res              = !!formData[altroKey as keyof RoomSpecifications];
-                        if (!res) {
-                            fieldEmpty = altroKey;
-                        }
-                        return res;
-                    }
-                }
-            }
-            const res = !!value;
-            if (!res) {
-                fieldEmpty = key;
-            }
-            return res;
-        });
+        let isFormCorrect = Object.entries(formData)
+            .every(([ key, value ]: [ string, string | number ]) => validateField(key, value));
         if (infissiValues[0] === "") {
             isFormCorrect = false;
-            fieldEmpty    = "infissi";
+            fieldEmpty.push("infissi");
         }
-
         if (!isFormCorrect) {
-            if (fieldEmpty === "destinazioneUso") {
-                fieldEmpty = "destinazione d'uso";
-            } else if (fieldEmpty === "spessoreMuro") {
-                fieldEmpty = "spessore muro";
-            } else if (/^altro.*$/.test(fieldEmpty)) {
-                fieldEmpty = "altro di " + fieldEmpty.split("altro")[1].toLowerCase();
-            }
-            toast.warning("Campo " + fieldEmpty + " non compilato");
+            printToastError();
             return;
         }
+        const stanza = stanze.data.find((item) => {
+            return item.stanza === formData.stanza && item.destinazione_uso === formData.destinazioneUso && item.piano === formData.piano;
+        });
+        if (stanza === undefined) {
+            toast.error("Stanza non trovata");
+            return;
+        }
+        stanza.cappotto       = formData.cappotto;
+        stanza.altezza        = formData.altezza;
+        stanza.spessore_muro  = formData.spessoreMuro;
+        stanza.riscaldamento  = formData.riscaldamento === "altro" ? formData.altroRiscaldamento : formData.riscaldamento;
+        stanza.raffrescamento = formData.raffrescamento === "altro" ? formData.altroRaffrescamento : formData.raffrescamento;
+        stanza.illuminazione  = formData.illuminazione === "altro" ? formData.altroIlluminazione : formData.illuminazione;
+        stanze.updateStanza(stanza);
+
+        infissiValues.forEach((item) => {
+            stanzeConInfissi.add(stanza.stanza, item).then(
+                () => console.log(item)
+            );
+            console.log("Inserimento stanze con infissi avvenuto");
+        });
 
         console.log("Form submitted:", formData);
         console.log("Infissi:", infissiValues);
+
     };
 
     return <form onSubmit={ handleSubmit } className="space-y-4">
@@ -237,11 +357,13 @@ const FormStanza = () => {
             <div className="row-start-1 col-span-12">
                 <div className="grid grid-cols-12 items-center gap-5">
                     <Label htmlFor="stanza" className="col-span-2"> Stanza/e </Label>
-                    <Select name="stanza" options={ stanzeOptions } onChange={ (newValue) => {
-                        handleStanzaChange(newValue);
-                    } }
+                    <Select name="stanza"
+                            options={ stanzeOptions }
+                            onChange={ (newValue) => {
+                                handleStanzaChange(newValue);
+                            } }
                             className="col-span-4" />
-                    <Label htmlFor="stanza" className="col-span-2"> Destinazione D'uso </Label>
+                    <Label htmlFor="destinazioneUso" className="col-span-2"> Destinazione D'uso </Label>
                     <Select name="destinazioneUso"
                             value={ currentValueDestinazioneUso() }
                             onChange={ (newValue: SingleValue<{ value: string, label: string }>) => {
@@ -256,8 +378,57 @@ const FormStanza = () => {
                     />
                 </div>
             </div>
-            {/* Altezza */ }
             <div className="row-start-2 col-span-12">
+                <div className="grid grid-cols-12 items-center gap-5">
+                    <Label htmlFor="piano" className="col-span-2">Piano</Label>
+                    <Select name="piano"
+                            className="col-span-4"
+                            options={ pianoOptions }
+                            value={ pianoOptions.length === 1 ? pianoOptions[0] : null } // fixme: non mi fa selezionare un elemento perchè mette sempre null
+                            isDisabled={ formData.stanza !== "_" }
+                            onChange={ (newValue: SingleValue<{ value: string, label: string }>) => {
+                                console.log(newValue);
+                                setFormData((prev) => ({
+                                    ...prev,
+                                    piano: newValue?.value ?? ""
+                                }));
+                            } }
+                    />
+                    <Label htmlFor="cappotto" className="col-span-2">Cappotto</Label>
+                    <div id="cappotto" className="col-span-4 flex items-center justify-start gap-4">
+                        <div className="col-span-2 flex items-center gap-2 px-3 py-2">
+                            <input type="radio" id="chk_finestra"
+                                   name="check_tipo" value="Finestra"
+                                   className="h-4 w-4 accent-blue-500"
+                                   checked={ formData.cappotto }
+                                   onChange={ () => {
+                                       setFormData((prev) => ({
+                                           ...prev,
+                                           cappotto: true
+                                       }));
+                                   } }
+                            />
+                            <label htmlFor="chk_finestra">SI</label>
+                        </div>
+                        <div className="col-span-2 flex items-center gap-2 px-3 py-2">
+                            <input type="radio" id="chk_finestra"
+                                   name="check_tipo" value="Porta"
+                                   className="h-4 w-4 accent-blue-500"
+                                   checked={ !formData.cappotto }
+                                   onChange={ () => {
+                                       setFormData((prev) => ({
+                                           ...prev,
+                                           cappotto: false
+                                       }));
+                                   } }
+                            />
+                            <label htmlFor="chk_porta">NO</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {/* Altezza */ }
+            <div className="row-start-3 col-span-12">
                 <div className="grid grid-cols-12 items-center gap-5">
                     <Label htmlFor="altezza" className="col-span-2"> Altezza (cm) </Label>
                     <Input name="altezza"
@@ -274,7 +445,7 @@ const FormStanza = () => {
                 </div>
             </div>
             {/* Infissi */ }
-            <div className="row-start-3 col-span-12">
+            <div className="row-start-4 col-span-12">
                 <div className="grid grid-cols-12 items-baseline gap-5">
                     <Label htmlFor="infisso" className="col-span-2">Infissi</Label>
                     <div className="col-span-10">
@@ -283,7 +454,7 @@ const FormStanza = () => {
                 </div>
             </div>
             {/* Riscaldamento */ }
-            <div className="row-start-4 col-span-12">
+            <div className="row-start-5 col-span-12">
                 <div className="grid grid-cols-12 items-center gap-5">
                     <Label htmlFor="riscaldamento" className="col-span-2">Riscaldamento</Label>
                     <Select name="riscaldamento"
@@ -299,25 +470,25 @@ const FormStanza = () => {
                            className="col-span-5 disabled:bg-gray-200" disabled={ altro["riscaldamento"] } />
                 </div>
             </div>
-            {/* Raffreddamento */ }
-            <div className="row-start-5 col-span-12">
+            {/* Raffrescamento */ }
+            <div className="row-start-6 col-span-12">
                 <div className="grid grid-cols-12 items-center gap-5">
-                    <Label htmlFor="raffreddamento" className="col-span-2">Raffreddamento</Label>
-                    <Select name="raffreddamento"
+                    <Label htmlFor="raffrescamento" className="col-span-2">Raffrescamento</Label>
+                    <Select name="raffrescamento"
                             onChange={ (newValue: SingleValue<{ value: string, label: string }>) => {
-                                handleSelect(newValue, "raffreddamento");
+                                handleSelect(newValue, "raffrescamento");
                             } }
                             className="col-span-4 rounded-md shadow-sm"
                             options={ climatizzazioneTypeOptions }
                     />
-                    <Label htmlFor="altroRaffreddamento">Altro</Label>
-                    <Input name="altroRaffreddamento" value={ formData.altroRaffreddamento ?? "" }
+                    <Label htmlFor="altroRaffrescamento">Altro</Label>
+                    <Input name="altroRaffrescamento" value={ formData.altroRaffrescamento ?? "" }
                            onChange={ handleChange }
-                           className="col-span-5 disabled:bg-gray-200" disabled={ altro["raffreddamento"] } />
+                           className="col-span-5 disabled:bg-gray-200" disabled={ altro["raffrescamento"] } />
                 </div>
             </div>
             {/* Illuminazione */ }
-            <div className="row-start-6 col-span-12">
+            <div className="row-start-7 col-span-12">
                 <div className="grid grid-cols-12 items-center gap-5">
                     <Label htmlFor="illuminazione" className="col-span-2">Illuminazione</Label>
                     <Select name="illuminazione"

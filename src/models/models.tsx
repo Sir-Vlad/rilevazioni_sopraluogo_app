@@ -14,9 +14,10 @@ export interface IStanza {
     id_spazio: string;
     stanza: string;
     destinazione_uso: string;
+    cappotto?: boolean;
     altezza?: number,
-    spessoreMuro?: number,
+    spessore_muro?: number,
     riscaldamento?: string,
-    raffreddamento?: string,
+    raffrescamento?: string,
     illuminazione?: string,
 }

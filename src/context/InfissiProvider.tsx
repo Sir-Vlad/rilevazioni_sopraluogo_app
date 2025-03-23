@@ -1,66 +1,67 @@
-import * as React                                                  from "react";
-import { createContext, useContext, useEffect, useMemo, useState } from "react";
-import { IInfisso }                                                from "../models/models.tsx";
-import { useDatabase }                                             from "./UseDatabase.tsx";
-
-interface InfissiContextType {
-    data: IInfisso[];
-    updateInfissi: (newInfisso: IInfisso) => void;
-}
-
-const InfissiContext = createContext<InfissiContextType | null>(null);
+import * as React                                            from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { IInfisso }                                          from "../models/models.tsx";
+import { useDatabase }                                       from "./UseProvider.tsx";
+import { invoke }                                            from "@tauri-apps/api/core";
+import { InfissiContext, InfissiContextType }                from "./Context.tsx";
 
 const InfissiProvider = ({children}: { children: React.ReactNode }) => {
-    const {database}              = useDatabase();
+    const {
+              needReload,
+              registerProvider
+          }                       = useDatabase();
     const [ infissi, setInfissi ] = useState<IInfisso[]>([]);
+    const providerRef             = useRef<{ notifyReloadComplete: () => void; } | null>(null);
+    const [ error, setError ]     = useState<string | null>(null);
+    const [ loading, setLoading ] = useState(true);
 
     useEffect(() => {
-        if (database) {
-            const fetchInfissi = async () => {
-                const res: object[] = await database.select(`
-                    SELECT *
-                    FROM INFISSI
-                `);
-                const new_infissi   = res.map((row: Record<string, any>): IInfisso => {
-                    return Object.fromEntries(Object.entries(row).map(([ key, value ]) => [
-                        key.toLowerCase(), value
-                    ])) as IInfisso;
-                });
-                setInfissi(new_infissi);
-            };
+        providerRef.current = registerProvider("infissi");
+    }, [ registerProvider ]);
 
-            fetchInfissi().catch(console.error);
+    const loadInfissi = useCallback(async () => {
+        try {
+            setLoading(true);
+            setError(null);
+            const data: IInfisso[] = await invoke("get_infissi");
+            setInfissi(data);
+        } catch (e) {
+            setError("Errore durante il caricamento degli infissi: " + e);
+        } finally {
+            setLoading(false);
         }
-    }, [ database ]);
+    }, []);
 
-    const updateInfisso = (newInfisso: IInfisso) => {
-        console.log("updateInfisso", newInfisso);
-
-        const columns     = Object.keys(newInfisso).join(", ");
-        const placeholder = Object.keys(newInfisso).map((_x, index) => {
-            return "$" + (index + 1);
-        }).join(", ");
-        const query       = `
-            INSERT INTO INFISSI (${ columns })
-            VALUES (${ placeholder })
-        `;
-        if (database) {
-            database.execute(query, [ ...Object.values(newInfisso) ]).then(r => {
-                console.log(r);
-            }).catch((e) => {
-                console.error("Errore nell'inserimento " + e);
+    // Ricarica i dati quando il database cambia
+    useEffect(() => {
+        if (needReload) {
+            loadInfissi().then(() => {
+                providerRef.current?.notifyReloadComplete();
             });
-            setInfissi((prev) => [ ...prev, newInfisso ]);
         }
-    };
+    }, [ loadInfissi, needReload ]);
+
+    // Caricamento iniziale
+    useEffect(() => {
+        loadInfissi().catch(console.error);
+    }, [ loadInfissi ]);
+
+    const insertInfisso = useCallback(async (newInfisso: IInfisso) => {
+        try {
+            const inserted_infisso: IInfisso = await invoke("insert_infisso", {infisso: newInfisso});
+            setInfissi((prev) => [ ...prev, inserted_infisso ]);
+        } catch (e) {
+            console.error(e);
+        }
+    }, []);
 
 
     const obj = useMemo(() => {
         return {
             data         : infissi,
-            updateInfissi: updateInfisso
-        };
-    }, [ infissi ]);
+            insertInfisso: insertInfisso
+        } as InfissiContextType;
+    }, [ infissi, insertInfisso ]);
 
     return <InfissiContext.Provider value={ obj }>
         { children }
@@ -69,10 +70,3 @@ const InfissiProvider = ({children}: { children: React.ReactNode }) => {
 
 export default InfissiProvider;
 
-export const useInfissi = () => {
-    const infissi = useContext(InfissiContext);
-    if (!infissi) {
-        throw new Error("useInfissi must be used within an InfissiProvider");
-    }
-    return infissi;
-};
