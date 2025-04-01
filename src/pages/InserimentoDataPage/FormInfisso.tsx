@@ -1,12 +1,12 @@
-import Label                     from "../../components/Label.tsx";
-import * as React                from "react";
-import { ChangeEvent, useState } from "react";
-import Input                     from "../../components/Input.tsx";
-import Select, { SingleValue }   from "react-select";
-import { useInfissi, useTypes }  from "../../context/UseProvider.tsx";
-import { IInfisso }              from "../../models/models.tsx";
-import { toast }                 from "react-toastify";
-import CommentsButton            from "../../components/CommentsButton.tsx";
+import Label                                 from "../../components/Label.tsx";
+import * as React                            from "react";
+import { ChangeEvent, useState }             from "react";
+import Input                                 from "../../components/Input.tsx";
+import Select, { SingleValue }               from "react-select";
+import { useDatabase, useInfissi, useTypes } from "../../context/UseProvider.tsx";
+import { IInfisso }                          from "../../models/models.tsx";
+import { toast }                             from "react-toastify";
+import CommentsButton                        from "../../components/CommentsButton.tsx";
 
 
 const nextAlphabeticalID = (prevID: string | null) => {
@@ -43,6 +43,7 @@ const FormInfisso = () => {
               vetroInfissiType
           } = useTypes();
     const infissi = useInfissi();
+    const {error} = useDatabase();
 
     const handleTipoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const {value} = e.target;
@@ -71,6 +72,11 @@ const FormInfisso = () => {
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
+        if (error === "Database non settato") {
+            toast.warning("File non selezionato");
+            return;
+        }
+
         if (formData.altezza === 0 && formData.larghezza === 0 && formData.materiale === "" && formData.vetro === "") {
             return;
         }
@@ -94,6 +100,13 @@ const FormInfisso = () => {
             toast.error("Errore durante l'inserimento del nuovo infisso");
             console.error(e);
         }
+        setFormData({
+            tipo     : "Finestra",
+            altezza  : 0,
+            larghezza: 0,
+            materiale: "",
+            vetro    : ""
+        });
     };
 
     return (<form onSubmit={ handleSubmit } className="space-y-4">
@@ -136,13 +149,13 @@ const FormInfisso = () => {
             {/* Altezza e Larghezza */ }
             <div className="row-start-2 col-span-12">
                 <div className="grid grid-cols-12 items-center gap-5">
-                    <Label htmlFor="altezza" className="col-span-2"> Altezza </Label>
+                    <Label htmlFor="altezza" className="col-span-2">Altezza (cm)</Label>
                     <Input name="altezza"
                            value={ formData.altezza }
                            onChange={ handleInputNumericChange }
                            className="col-span-4 decoration-none"
                     />
-                    <Label htmlFor="larghezza" className="col-span-2">Larghezza</Label>
+                    <Label htmlFor="larghezza" className="col-span-2">Larghezza (cm)</Label>
                     <Input name="larghezza"
                            value={ formData.larghezza }
                            onChange={ handleInputNumericChange }

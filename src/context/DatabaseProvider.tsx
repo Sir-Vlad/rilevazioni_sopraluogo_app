@@ -3,6 +3,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { invoke }                                    from "@tauri-apps/api/core";
 import { listen }                                    from "@tauri-apps/api/event";
 import { DatabaseContext, DatabaseContextType }      from "./Context.tsx";
+import { getFileName }                               from "../helpers/helpers.tsx";
 
 interface DatabaseEventPayload {
     type_event: string;
@@ -10,9 +11,9 @@ interface DatabaseEventPayload {
 }
 
 const DatabaseProvider = ({children}: { children: React.ReactNode }) => {
-    const [ databaseName, setDatabaseName ] = useState("data");
-    const [ databasePath, setDatabasePath ] = useState("");
-    const [ isLoading, setIsLoading ] = useState(true);
+    const [ databaseName, setDatabaseName ] = useState<string | null>(null);
+    const [ databasePath, setDatabasePath ] = useState<string | null>(null);
+    const [ isLoading, setIsLoading ] = useState(false);
     const [ error, setError ] = useState<string | null>(null);
     const [ needReload, setNeedReload ] = useState(false);
     const [ pendingProviders, setPendingProviders ] = useState(new Set());
@@ -20,10 +21,23 @@ const DatabaseProvider = ({children}: { children: React.ReactNode }) => {
     // Inizializzazione iniziale
     useEffect(() => {
         const set_database = async () => {
-            const dbName = localStorage.getItem("databaseName");
-            const dbPath: string = await invoke("set_database", {dbName: dbName ?? databaseName});
-            setDatabasePath(dbPath);
-            setDatabaseName(dbPath.split("/").pop()?.split(".")[0] ?? "");
+            try {
+                setIsLoading(true);
+                const dbName = localStorage.getItem("databaseName");
+                if (dbName === null && databaseName === null) {
+                    setError("Database non settato");
+                    return;
+                }
+
+                const dbPath: string = await invoke("set_database", {dbName: dbName ?? databaseName});
+                setDatabasePath(dbPath);
+                setDatabaseName(getFileName(dbPath) ?? "");
+            } catch (e) {
+                setError("Errore durante l'inizializzazione del database");
+                console.error(e);
+            } finally {
+                setIsLoading(false);
+            }
         };
         set_database().catch(console.error);
     }, []);
@@ -49,7 +63,7 @@ const DatabaseProvider = ({children}: { children: React.ReactNode }) => {
             const {payload} = e;
 
             if (payload.type_event === "database_switched") {
-                const databaseName = payload.path.split("/").pop()?.split(".")[0];
+                const databaseName = getFileName(payload.path);
                 localStorage.setItem("databaseName", databaseName);
                 setDatabasePath(payload.path);
                 setDatabaseName(databaseName ?? "");

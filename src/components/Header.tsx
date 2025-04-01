@@ -4,13 +4,19 @@ import "./Header.css";
 import { useDatabase } from "../context/UseProvider.tsx";
 
 const Header = () => {
-    const {databaseName} = useDatabase();
+    const {
+              databaseName,
+              error
+          } = useDatabase();
 
     return (<header className="bg-blue-600 text-white p-4 h-16 flex items-center">
         <div className="flex justify-between items-center w-full">
             <Link className="text-white text-lg font-bold" to="/">Dashboard</Link>
             <div className="w-full md:flex md:w-auto justify-center align-middle">
-                <p>Stai lavorando su <b>{ databaseName }</b></p>
+                { error !== "Database non settato" ?
+                    <p>Stai lavorando su <b>{ databaseName }</b></p> :
+                    <p>Selezionare un file</p>
+                }
             </div>
             <div className="w-full md:flex md:w-auto hidden justify-end">
                 <ul className="flex flex-col md:flex-row">

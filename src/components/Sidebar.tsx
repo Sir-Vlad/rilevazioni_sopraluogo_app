@@ -82,16 +82,16 @@ const Sidebar = () => {
                     { databasesFiles.map((databaseFile, i) => {
                         const nameDatabase = getFileName(databaseFile);
                         if (!nameDatabase) return;
-                        return <div className="grid grid-cols-8 items-center h-full" key={ i }>
+                        return <div className="grid grid-cols-10 items-center h-full" key={ i }>
                             <button
-                                className="col-span-5 flex items-center rounded hover:bg-gray-700 cursor-pointer"
+                                className="col-span-7 flex items-center rounded hover:bg-gray-700 cursor-pointer"
                                 onClick={ async () => {
                                     await database.changeDatabase(nameDatabase);
                                     setSelectedDatabase(nameDatabase);
                                 } }>
                                 <FontAwesomeIcon icon={ faFileLines }
                                                  className="flex items-center p-2" />
-                                <span className="ml-3">{ nameDatabase }</span>
+                                <span className="ml-2 truncate">{ nameDatabase }</span>
                             </button>
                             <button className="col-span-2 rounded hover:bg-gray-700 cursor-pointer p-2"
                                     onClick={ () => {
@@ -99,7 +99,7 @@ const Sidebar = () => {
                                 <FontAwesomeIcon icon={ faArrowUpRightFromSquare } />
                             </button>
                             <div
-                                className={ `col-span-1 ${ selectedDatabase === nameDatabase ? "" : "hidden" }` }>
+                                className={ `col-span-1 flex items-center justify-center ${ selectedDatabase === nameDatabase ? "" : "hidden" }` }>
                                 <FontAwesomeIcon icon={ faCheck } />
                             </div>
                         </div>;

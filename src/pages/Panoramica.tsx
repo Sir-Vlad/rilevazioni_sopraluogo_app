@@ -10,9 +10,7 @@ const Panoramica = () => {
     const [ rowData, setRowData ] = useState<IStanza[]>([]);
     const [ colDefs ] = useState<ColDef<IStanza>[]>([
         {field: "id"},
-        {field: "fascicolo"},
         {field: "piano"},
-        {field: "id_spazio"},
         {field: "stanza"},
         {field: "destinazione_uso"},
         {field: "altezza"},
