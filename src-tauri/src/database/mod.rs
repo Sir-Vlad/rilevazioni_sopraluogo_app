@@ -1,4 +1,4 @@
-mod database;
+mod db;
 mod infissi_table;
 mod model;
 mod stanze_con_infissi_table;
@@ -6,7 +6,7 @@ mod stanze_table;
 mod type_tables;
 mod utils;
 
-pub use database::{
+pub use db::{
     get_all_name_database, set_database, switch_database, Database, DatabaseEventPayload,
 };
 pub use infissi_table::{get_infissi, insert_infisso};

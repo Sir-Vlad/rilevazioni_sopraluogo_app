@@ -46,11 +46,12 @@ pub struct DatabaseEventPayload {
 }
 
 #[tauri::command]
-pub fn set_database(db: State<'_, Database>, db_name: String) -> Result<String, String> {
-    let db_path = match get_db_path(db_name) {
-        Ok(path) => path,
-        Err(e) => return Err(e),
-    };
+pub fn set_database(
+    app_handle: AppHandle,
+    db: State<'_, Database>,
+    db_name: String,
+) -> Result<String, String> {
+    let db_path = get_db_path(db_name)?;
     let mut conn = db.conn.lock().unwrap();
     let mut path_to_database = db.path_to_database.lock().unwrap();
     if let Some(existing_conn) = conn.take() {
@@ -60,7 +61,10 @@ pub fn set_database(db: State<'_, Database>, db_name: String) -> Result<String, 
     *path_to_database = Some(db_path.clone());
 
     setup_database(conn.as_ref().unwrap())?;
-    match init_database(conn.as_ref().ok_or("Database connection not initialized")?) {
+    match init_database(
+        app_handle.clone(),
+        conn.as_ref().ok_or("Database connection not initialized")?,
+    ) {
         Ok(_) => info!("Database inizializzato"),
         Err(e) => {
             warn!("Errore nell'inizializzazione del database: {}", e);
@@ -76,10 +80,7 @@ pub fn switch_database(
     db: State<'_, Database>,
     db_name: String,
 ) -> Result<(), String> {
-    let db_path = match get_db_path(db_name) {
-        Ok(path) => path,
-        Err(e) => return Err(e),
-    };
+    let db_path = get_db_path(db_name)?;
     let mut conn = db.conn.lock().unwrap();
     let mut path_to_database = db.path_to_database.lock().unwrap();
     if let Some(existing_conn) = conn.take() {

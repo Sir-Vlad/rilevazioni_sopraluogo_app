@@ -8,10 +8,10 @@ pub fn get_types(db: State<'_, Database>) -> Result<HashMap<&'static str, Vec<St
     let mut types: HashMap<&str, Vec<String>> = HashMap::new();
     let conn = db.conn.lock().unwrap();
     if let Some(conn) = conn.as_ref() {
-        types.insert("materiale_infissi", get_materiale_infissi_type(&conn));
-        types.insert("vetro_infissi", get_vetro_infissi_type(&conn));
-        types.insert("climatizzazione", get_climatizzazione_type(&conn));
-        types.insert("illuminazione", get_illuminazione_type(&conn));
+        types.insert("materiale_infissi", get_materiale_infissi_type(conn));
+        types.insert("vetro_infissi", get_vetro_infissi_type(conn));
+        types.insert("climatizzazione", get_climatizzazione_type(conn));
+        types.insert("illuminazione", get_illuminazione_type(conn));
         Ok(types)
     } else {
         Err("Database not initialized".to_string())
@@ -20,11 +20,11 @@ pub fn get_types(db: State<'_, Database>) -> Result<HashMap<&'static str, Vec<St
 
 fn get_materiale_infissi_type(connection: &Connection) -> Vec<String> {
     let mut stmt = connection
-        .prepare("SELECT MATERIALE FROM TIPO_MATERIALE_INFISSO")
+        .prepare("SELECT MATERIALE FROM MATERIALE_INFISSO")
         .unwrap();
 
     let result: Result<Vec<String>, rusqlite::Error> = stmt
-        .query_map([], |row| Ok(row.get(0)?))
+        .query_map([], |row| row.get(0))
         .expect("Errore nella lettura dei dati di tipo materiale")
         .collect();
     match result {
@@ -35,11 +35,11 @@ fn get_materiale_infissi_type(connection: &Connection) -> Vec<String> {
 
 fn get_vetro_infissi_type(connection: &Connection) -> Vec<String> {
     let mut stmt = connection
-        .prepare("SELECT VETRO FROM TIPO_VETRO_INFISSO")
+        .prepare("SELECT VETRO FROM VETRO_INFISSO")
         .unwrap();
 
     let result: Result<Vec<String>, rusqlite::Error> = stmt
-        .query_map([], |row| Ok(row.get(0)?))
+        .query_map([], |row| row.get(0))
         .expect("Errore nella lettura dei dati di tipo materiale")
         .collect();
     match result {
@@ -50,11 +50,11 @@ fn get_vetro_infissi_type(connection: &Connection) -> Vec<String> {
 
 fn get_climatizzazione_type(connection: &Connection) -> Vec<String> {
     let mut stmt = connection
-        .prepare("SELECT CLIMATIZZAZIONE FROM TIPO_CLIMATIZZAZIONE")
+        .prepare("SELECT CLIMATIZZAZIONE FROM CLIMATIZZAZIONE")
         .unwrap();
 
     let result: Result<Vec<String>, rusqlite::Error> = stmt
-        .query_map([], |row| Ok(row.get(0)?))
+        .query_map([], |row| row.get(0))
         .expect("Errore nella lettura dei dati di tipo materiale")
         .collect();
     match result {
@@ -64,11 +64,11 @@ fn get_climatizzazione_type(connection: &Connection) -> Vec<String> {
 }
 fn get_illuminazione_type(connection: &Connection) -> Vec<String> {
     let mut stmt = connection
-        .prepare("SELECT LAMPADINA FROM TIPO_ILLUMINAZIONE")
+        .prepare("SELECT LAMPADINA FROM ILLUMINAZIONE")
         .unwrap();
 
     let result: Result<Vec<String>, rusqlite::Error> = stmt
-        .query_map([], |row| Ok(row.get(0)?))
+        .query_map([], |row| row.get(0))
         .expect("Errore nella lettura dei dati di tipo materiale")
         .collect();
     match result {

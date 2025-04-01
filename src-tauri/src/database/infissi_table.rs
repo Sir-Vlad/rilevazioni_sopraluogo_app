@@ -8,7 +8,7 @@ pub fn get_infissi(db: State<'_, Database>) -> Result<Vec<Infisso>, String> {
 
     if let Some(conn) = conn.as_ref() {
         let mut stmt = conn
-            .prepare("SELECT * FROM INFISSI")
+            .prepare("SELECT * FROM INFISSO")
             .map_err(|e| e.to_string())
             .ok()
             .unwrap();

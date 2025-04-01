@@ -10,7 +10,7 @@ use tauri::{AppHandle, Emitter, State};
 pub fn get_stanze(db: State<'_, Database>) -> Result<Vec<Stanza>, String> {
     let conn = db.conn.lock().unwrap();
     if let Some(conn) = conn.as_ref() {
-        let mut stmt = conn.prepare("SELECT * FROM STANZE").ok().unwrap();
+        let mut stmt = conn.prepare("SELECT * FROM STANZA").ok().unwrap();
         let result: Result<Vec<Stanza>, rusqlite::Error> = stmt
             .query_map([], |row| {
                 let stanza = StanzaBuilder::new()
@@ -50,10 +50,7 @@ pub fn insert_stanze(
     db: State<'_, Database>,
     path: String,
 ) -> Result<String, String> {
-    let df = match elaborate_file(path) {
-        Ok(df) => df,
-        Err(e) => return Err(e),
-    };
+    let df = elaborate_file(path)?;
 
     let name_db = df
         .column("fascicolo")
@@ -62,27 +59,41 @@ pub fn insert_stanze(
         .unwrap()
         .to_string()
         .replace("\"", "");
-    let path_db = set_database(db.clone(), name_db)?;
+    let path_db = set_database(app_handle.clone(), db.clone(), name_db)?;
 
     let conn = db.conn.lock().unwrap();
     if let Some(conn) = conn.as_ref() {
         conn.execute("BEGIN TRANSACTION", [])
             .map_err(|e| format!("Errore nella transazione: {}", e))?;
+
         let mut stmt = conn
             .prepare(
-                "INSERT INTO STANZE(FASCICOLO, PIANO, ID_SPAZIO, STANZA, DESTINAZIONE_USO)
+                "INSERT INTO EDIFICIO(CHIAVE, FASCICOLO, INDIRIZZO)
+                VALUES (?1, ?2, ?3)",
+            )
+            .map_err(|e| format!("Errore nella preparazione della query: {}", e))?;
+
+        let chiave = retrieve_string_field_df(&df, "chiave", 0)?;
+        let fascicolo = retrieve_string_field_df(&df, "fascicolo", 0)?;
+        let indirizzo_edificio = retrieve_string_field_df(&df, "nome_via", 0)?;
+
+        stmt.execute(params![chiave, fascicolo, indirizzo_edificio])
+            .map_err(|e| format!("Errore nella esecuzione della query: {}", e))?;
+
+        stmt = conn
+            .prepare(
+                "INSERT INTO STANZA(CHIAVE, PIANO, ID_SPAZIO, STANZA, DESTINAZIONE_USO)
                     VALUES (?1, ?2, ?3, ?4, ?5)",
             )
             .map_err(|e| format!("Errore nella preparazione della query: {}", e))?;
 
         for i in 0..df.height() {
-            let fascicolo = retrieve_string_field_df(&df, "fascicolo", i)?;
             let piano = retrieve_string_field_df(&df, "piano", i)?;
             let id_spazio = retrieve_string_field_df(&df, "id_spazio", i)?;
             let stanza = retrieve_string_field_df(&df, "cod_stanza", i)?;
             let destinazione_uso = retrieve_string_field_df(&df, "destinazione_uso", i)?;
 
-            stmt.execute(&[&fascicolo, &piano, &id_spazio, &stanza, &destinazione_uso])
+            stmt.execute(params![chiave, piano, id_spazio, stanza, destinazione_uso])
                 .map_err(|e| format!("Errore nella esecuzione della query: {}", e))?;
         }
         conn.execute("COMMIT TRANSACTION", [])
@@ -189,6 +200,8 @@ fn elaborate_file(path: String) -> Result<DataFrame, String> {
     let cleaned_df = df
         .select([
             "fascicolo",
+            "chiave",
+            "nome_via",
             "piano",
             "id_spazio",
             "cod_stanza",
