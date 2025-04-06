@@ -8,14 +8,14 @@ use tauri::{AppHandle, Emitter, State};
 
 #[tauri::command]
 pub fn get_stanze(db: State<'_, Database>) -> Result<Vec<Stanza>, String> {
-    let conn = db.conn.lock().unwrap();
+    let conn = db.get_conn();
     if let Some(conn) = conn.as_ref() {
         let mut stmt = conn.prepare("SELECT * FROM STANZA").ok().unwrap();
         let result: Result<Vec<Stanza>, rusqlite::Error> = stmt
             .query_map([], |row| {
                 let stanza = StanzaBuilder::new()
                     .id(row.get::<_, u64>(0)?)
-                    .fascicolo(row.get::<_, String>(1)?)
+                    .chiave(row.get::<_, String>(1)?)
                     .piano(row.get::<_, String>(2)?)
                     .id_spazio(row.get::<_, String>(3)?)
                     .stanza(row.get::<_, String>(4)?)
@@ -61,7 +61,7 @@ pub fn insert_stanze(
         .replace("\"", "");
     let path_db = set_database(app_handle.clone(), db.clone(), name_db)?;
 
-    let conn = db.conn.lock().unwrap();
+    let conn = db.get_conn();
     if let Some(conn) = conn.as_ref() {
         conn.execute("BEGIN TRANSACTION", [])
             .map_err(|e| format!("Errore nella transazione: {}", e))?;
@@ -118,11 +118,11 @@ pub fn insert_stanze(
 
 #[tauri::command]
 pub fn update_stanza(db: State<'_, Database>, updated_stanza: Stanza) -> Result<(), String> {
-    let conn = db.conn.lock().unwrap();
+    let conn = db.get_conn();
     if let Some(conn) = conn.as_ref() {
         let row_affected = conn
             .execute(
-                "UPDATE STANZE
+                "UPDATE STANZA
                 SET ALTEZZA        = ?1,
                     SPESSORE_MURO  = ?2,
                     RISCALDAMENTO  = ?3,

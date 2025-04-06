@@ -31,5 +31,8 @@ calamine = "0.26.1"
 rusqlite = { version = "0.34.0", features = ["bundled"] }
 itertools = "0.14.0"
 
+[target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
+tauri-plugin-single-instance = "2"
+
 [package.metadata.bundle.windows]
 manifest = "app.manifest"

@@ -1,6 +1,7 @@
 use dirs_next::document_dir;
 use log::{info, warn};
 use rusqlite::{params, Connection};
+use serde::Deserialize;
 use std::collections::HashMap;
 use std::fs;
 use std::fs::File;
@@ -71,7 +72,12 @@ pub fn init_database(app_handle: AppHandle, conn: &Connection) -> Result<(), rus
     Ok(())
 }
 
-type JsonTypeMap = HashMap<String, Vec<String>>;
+#[derive(Deserialize)]
+struct TypeRecord {
+    value: String,
+    efficienza_energetica: i32,
+}
+type JsonTypeMap = HashMap<String, Vec<TypeRecord>>;
 fn retrieve_type_to_file(app_handle: AppHandle, file_name: &str) -> Result<JsonTypeMap, String> {
     let path = app_handle
         .path()
@@ -88,18 +94,20 @@ fn insert_values_into_table(
     conn: &Connection,
     table_name: &str,
     column_name: &str,
-    values: Vec<String>,
+    values: Vec<TypeRecord>,
 ) {
     let query = format!(
-        "INSERT OR IGNORE INTO {}({}) VALUES (?1)",
+        "INSERT OR IGNORE INTO {}({}, EFFICIENZA_ENERGETICA) VALUES (?1, ?2)",
         table_name, column_name
     );
     let mut stmt = conn
         .prepare(&query)
         .expect("Errore nella preparazione della query per inserire i dati nel database");
     for value in values {
-        stmt.execute(params![value])
-            .expect("Errore nell'inserimento dei dati nel database");
+        stmt.execute(params![
+            value.value, value.efficienza_energetica
+        ])
+        .expect("Errore nell'inserimento dei dati nel database");
     }
     info!("Tabella {} popolata con successo", table_name);
 }

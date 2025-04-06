@@ -1,28 +1,82 @@
 {
   "materiale_infisso": [
-    "Legno",
-    "Ferro",
-    "Alluminio",
-    "PVC"
+    {
+      "value": "Legno",
+      "efficienza_energetica": 1
+    },
+    {
+      "value": "Ferro",
+      "efficienza_energetica": 2
+    },
+    {
+      "value": "Alluminio",
+      "efficienza_energetica": 3
+    },
+    {
+      "value": "PVC",
+      "efficienza_energetica": 4
+    }
   ],
   "vetro_infisso": [
-    "Singolo",
-    "Doppio",
-    "Camera",
-    "Plexiglas"
+    {
+      "value": "Singolo",
+      "efficienza_energetica": 1
+    },
+    {
+      "value": "Doppio",
+      "efficienza_energetica": 2
+    },
+    {
+      "value": "Camera",
+      "efficienza_energetica": 3
+    },
+    {
+      "value": "Plexiglas",
+      "efficienza_energetica": 4
+    }
   ],
   "climatizzazione": [
-    "Radiatori",
-    "Ventilconvettori",
-    "Split",
-    "A pavimento",
-    "Pannelli radianti",
-    "Bocchette ad ari"
+    {
+      "value": "Radiatori",
+      "efficienza_energetica": 1
+    },
+    {
+      "value": "Ventilconvettori",
+      "efficienza_energetica": 2
+    },
+    {
+      "value": "Split",
+      "efficienza_energetica": 3
+    },
+    {
+      "value": "A pavimento",
+      "efficienza_energetica": 4
+    },
+    {
+      "value": "Pannelli radianti",
+      "efficienza_energetica": 5
+    },
+    {
+      "value": "Bocchette ad aria",
+      "efficienza_energetica": 6
+    }
   ],
   "illuminazione": [
-    "Alogene",
-    "Neon",
-    "Led",
-    "Fluorescenza"
+    {
+      "value": "Alogene",
+      "efficienza_energetica": 1
+    },
+    {
+      "value": "Neon",
+      "efficienza_energetica": 2
+    },
+    {
+      "value": "Led",
+      "efficienza_energetica": 3
+    },
+    {
+      "value": "Fluorescenza",
+      "efficienza_energetica": 4
+    }
   ]
 }

@@ -4,7 +4,7 @@ use tauri::State;
 
 #[tauri::command]
 pub fn get_infissi(db: State<'_, Database>) -> Result<Vec<Infisso>, String> {
-    let conn = db.conn.lock().unwrap();
+    let conn = db.get_conn();
 
     if let Some(conn) = conn.as_ref() {
         let mut stmt = conn
@@ -37,10 +37,10 @@ pub fn get_infissi(db: State<'_, Database>) -> Result<Vec<Infisso>, String> {
 
 #[tauri::command]
 pub fn insert_infisso(db: State<'_, Database>, infisso: Infisso) -> Result<Infisso, String> {
-    let conn = db.conn.lock().unwrap();
+    let conn = db.get_conn();
     if let Some(conn) = conn.as_ref() {
         conn.execute(
-            "INSERT INTO INFISSI(ID, TIPO, ALTEZZA, LARGHEZZA, MATERIALE, VETRO) 
+            "INSERT INTO INFISSO(ID, TIPO, ALTEZZA, LARGHEZZA, MATERIALE, VETRO) 
                 VALUES (?1, ?2, ?3, ?4, ?5, ?6)",
             (
                 &infisso.id,

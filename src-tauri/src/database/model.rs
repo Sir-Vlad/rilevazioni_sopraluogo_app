@@ -1,4 +1,52 @@
+use rusqlite::Connection;
 use serde::{Deserialize, Serialize};
+use std::sync::{Mutex, MutexGuard};
+
+pub struct Database {
+    conn: Mutex<Option<Connection>>,
+    path_to_database: Mutex<Option<String>>,
+}
+
+impl Default for Database {
+    fn default() -> Self {
+        Self {
+            conn: Mutex::new(None),
+            path_to_database: Mutex::new(None),
+        }
+    }
+}
+
+impl Database {
+    pub fn get_path_to_database(&self) -> MutexGuard<'_, Option<String>> {
+        self.path_to_database.lock().unwrap()
+    }
+    
+    pub fn get_conn(&self) -> MutexGuard<'_, Option<Connection>> {
+        self.conn.lock().unwrap()
+    }
+
+    pub fn with_transaction<F, T>(&self, op: F) -> Result<T, String>
+    where
+        T: for<'de> serde::Deserialize<'de> + serde::Serialize,
+        F: FnOnce(&rusqlite::Transaction) -> Result<T, String>,
+    {
+        let mut conn_guard = self.conn.lock().unwrap();
+        if let Some(conn) = conn_guard.as_mut() {
+            let tx = conn.transaction().map_err(|e| e.to_string())?;
+            let result = op(&tx)?;
+            tx.commit().map_err(|e| e.to_string())?;
+            Ok(result)
+        } else {
+            Err("Database not initialized".to_string())
+        }
+    }
+}
+
+#[derive(Serialize, Clone)]
+pub struct DatabaseEventPayload {
+    pub(crate) type_event: &'static str,
+    pub(crate) path: String,
+}
 
 #[derive(Serialize, Deserialize, Debug)]
 pub(crate) struct Infisso {
@@ -33,7 +81,7 @@ impl Infisso {
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Stanza {
     pub id: u64,
-    pub fascicolo: String,
+    pub chiave: String,
     pub piano: String,
     pub id_spazio: String,
     pub stanza: String,
@@ -47,7 +95,7 @@ pub struct Stanza {
 
 pub(crate) struct StanzaBuilder {
     pub id: Option<u64>,
-    pub fascicolo: Option<String>,
+    pub chiave: Option<String>,
     pub piano: Option<String>,
     pub id_spazio: Option<String>,
     pub stanza: Option<String>,
@@ -63,7 +111,7 @@ impl StanzaBuilder {
     pub fn new() -> Self {
         Self {
             id: None,
-            fascicolo: None,
+            chiave: None,
             piano: None,
             id_spazio: None,
             stanza: None,
@@ -81,8 +129,8 @@ impl StanzaBuilder {
         self
     }
 
-    pub fn fascicolo(mut self, fascicolo: String) -> Self {
-        self.fascicolo = Some(fascicolo);
+    pub fn chiave(mut self, chiave: String) -> Self {
+        self.chiave = Some(chiave);
         self
     }
 
@@ -154,7 +202,7 @@ impl StanzaBuilder {
     pub fn build(self) -> Result<Stanza, String> {
         Ok(Stanza {
             id: self.id.ok_or("id è obbligatorio")?,
-            fascicolo: self.fascicolo.ok_or("Il fascicolo è obbligatorio")?,
+            chiave: self.chiave.ok_or("Il chiave è obbligatorio")?,
             piano: self.piano.ok_or("Il piano è obbligatorio")?,
             id_spazio: self.id_spazio.ok_or("id_spazio è obbligatorio")?,
             stanza: self.stanza.ok_or("stanza è obbligatorio")?,
@@ -176,11 +224,12 @@ pub(crate) struct StanzaConInfisso {
     pub ids_infissi: Vec<String>,
 }
 
+#[allow(dead_code)]
 impl StanzaConInfisso {
-    pub fn new(id_stanza: u32, ids_infissi: Vec<String>) {
+    pub fn new(id_stanza: u32, ids_infissi: Vec<String>) -> Self {
         Self {
             id_stanza,
             ids_infissi,
-        };
+        }
     }
 }

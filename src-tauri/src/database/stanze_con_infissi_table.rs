@@ -5,12 +5,12 @@ use rusqlite::params;
 use tauri::State;
 
 #[tauri::command]
-pub fn get_stanze_con_infissi() -> Result<(), String> {
+pub fn get_stanza_con_infissi() -> Result<(), String> {
     Ok(())
 }
 
 #[tauri::command]
-pub fn insert_stanze_con_infissi(
+pub fn insert_stanza_con_infissi(
     db: State<'_, Database>,
     new_value: StanzaConInfisso,
 ) -> Result<(), String> {
@@ -26,7 +26,7 @@ pub fn insert_stanze_con_infissi(
 
         for (id_infisso, conteggio) in conteggio_infissi {
             tx.execute(
-                "INSERT INTO STANZE_CON_INFISSI(ID_STANZA, ID_INFISSI, RIPETIZIONE) VALUES (?1, ?2, ?3)",
+                "INSERT INTO STANZA_CON_INFISSI(ID_INFISSO, ID_STANZA, NUM_INFISSI) VALUES (?1, ?2, ?3)",
                 params![new_value.id_stanza, id_infisso, conteggio],
             )
             .map_err(|e| format!("Errore nell'inserimento: {}", e))?;

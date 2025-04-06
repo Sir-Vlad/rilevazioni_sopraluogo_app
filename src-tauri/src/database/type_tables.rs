@@ -6,7 +6,7 @@ use tauri::State;
 #[tauri::command]
 pub fn get_types(db: State<'_, Database>) -> Result<HashMap<&'static str, Vec<String>>, String> {
     let mut types: HashMap<&str, Vec<String>> = HashMap::new();
-    let conn = db.conn.lock().unwrap();
+    let conn = db.get_conn();
     if let Some(conn) = conn.as_ref() {
         types.insert("materiale_infissi", get_materiale_infissi_type(conn));
         types.insert("vetro_infissi", get_vetro_infissi_type(conn));

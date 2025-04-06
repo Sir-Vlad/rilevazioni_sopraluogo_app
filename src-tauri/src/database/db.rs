@@ -1,49 +1,11 @@
+use std::ffi::OsStr;
 use crate::database::utils::{get_db_path, init_database, NAME_DIR_DATABASE};
+use crate::database::{Database, DatabaseEventPayload};
 use dirs_next::document_dir;
 use log::{info, warn};
 use rusqlite::Connection;
-use serde::Serialize;
 use std::fs;
-use std::sync::Mutex;
 use tauri::{AppHandle, Emitter, State};
-
-pub struct Database {
-    pub(crate) conn: Mutex<Option<Connection>>,
-    path_to_database: Mutex<Option<String>>,
-}
-
-impl Default for Database {
-    fn default() -> Self {
-        Self {
-            conn: Mutex::new(None),
-            path_to_database: Mutex::new(None),
-        }
-    }
-}
-
-impl Database {
-    pub fn with_transaction<F, T>(&self, op: F) -> Result<T, String>
-    where
-        T: for<'de> serde::Deserialize<'de> + serde::Serialize,
-        F: FnOnce(&rusqlite::Transaction) -> Result<T, String>,
-    {
-        let mut conn_guard = self.conn.lock().unwrap();
-        if let Some(conn) = conn_guard.as_mut() {
-            let tx = conn.transaction().map_err(|e| e.to_string())?;
-            let result = op(&tx)?;
-            tx.commit().map_err(|e| e.to_string())?;
-            Ok(result)
-        } else {
-            Err("Database not initialized".to_string())
-        }
-    }
-}
-
-#[derive(Serialize, Clone)]
-pub struct DatabaseEventPayload {
-    pub(crate) type_event: &'static str,
-    pub(crate) path: String,
-}
 
 #[tauri::command]
 pub fn set_database(
@@ -52,8 +14,8 @@ pub fn set_database(
     db_name: String,
 ) -> Result<String, String> {
     let db_path = get_db_path(db_name)?;
-    let mut conn = db.conn.lock().unwrap();
-    let mut path_to_database = db.path_to_database.lock().unwrap();
+    let mut conn = db.get_conn();
+    let mut path_to_database = db.get_path_to_database();
     if let Some(existing_conn) = conn.take() {
         drop(existing_conn);
     }
@@ -81,8 +43,8 @@ pub fn switch_database(
     db_name: String,
 ) -> Result<(), String> {
     let db_path = get_db_path(db_name)?;
-    let mut conn = db.conn.lock().unwrap();
-    let mut path_to_database = db.path_to_database.lock().unwrap();
+    let mut conn = db.get_conn();
+    let mut path_to_database = db.get_path_to_database();
     if let Some(existing_conn) = conn.take() {
         drop(existing_conn);
     }
@@ -114,7 +76,7 @@ pub fn get_all_name_database() -> Result<Vec<String>, String> {
         let entries = fs::read_dir(path)
             .map_err(|e| e.to_string())?
             .filter_map(Result::ok)
-            .filter(|entry| entry.path().is_file())
+            .filter(|entry| entry.path().is_file() && entry.path().extension() == Some(OsStr::new("db")))
             .map(|entry| entry.file_name().to_string_lossy().into_owned())
             .collect::<Vec<String>>();
         return Ok(entries);
@@ -127,5 +89,9 @@ fn setup_database(connection: &Connection) -> Result<(), String> {
         .pragma_update(None, "foreign_keys", "ON")
         .map_err(|e| format!("Errore durante l'impostazione delle pragma: {}", e))?;
     info!("Foreign keys enabled");
+    connection
+        .pragma_update(None, "journal_mode", "WAL")
+        .map_err(|e| format!("Errore durante l'impostazione del pragma: {}", e))?;
+    info!("Journal mode enabled");
     Ok(())
 }
