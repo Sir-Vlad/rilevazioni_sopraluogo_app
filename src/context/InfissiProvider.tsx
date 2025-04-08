@@ -52,6 +52,7 @@ const InfissiProvider = ({children}: { children: React.ReactNode }) => {
             setInfissi((prev) => [ ...prev, inserted_infisso ]);
         } catch (e) {
             console.error(e);
+            throw e;
         }
     }, []);
 

@@ -47,7 +47,7 @@ const StanzeProvider = ({children}: { children: React.ReactNode }) => {
 
     const updateStanza = useCallback(async (newStanza: IStanza) => {
         try {
-            await invoke("update_stanza", {updatedStanza: newStanza});
+            await invoke("update_stanza", {stanza: newStanza});
             setStanze((prev) => {
                 const newStanzaIndex = prev.findIndex(s => s.id === newStanza.id);
                 if (newStanzaIndex !== -1) {
@@ -63,6 +63,7 @@ const StanzeProvider = ({children}: { children: React.ReactNode }) => {
             }
             console.error("Errore durante l'aggiornamento della stanza: " + e);
             toast.error("Errore durante l'aggiornamento della stanza");
+            throw e;
         }
 
     }, []);

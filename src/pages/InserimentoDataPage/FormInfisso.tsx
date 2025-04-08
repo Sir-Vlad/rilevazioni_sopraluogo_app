@@ -32,7 +32,7 @@ const nextAlphabeticalID = (prevID: string | null) => {
 
 const FormInfisso = () => {
     const [ formData, setFormData ] = useState<IInfisso>({
-        tipo     : "Finestra",
+        tipo     : "FINESTRA",
         altezza  : 0,
         larghezza: 0,
         materiale: "",
@@ -49,7 +49,7 @@ const FormInfisso = () => {
         const {value} = e.target;
         setFormData((prev) => ({
             ...prev,
-            tipo: value
+            tipo: value.toUpperCase()
         }));
     };
 
@@ -72,7 +72,7 @@ const FormInfisso = () => {
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-        if (error === "Database non settato") {
+        if (error === "Database non impostato") {
             toast.warning("File non selezionato");
             return;
         }
@@ -86,7 +86,7 @@ const FormInfisso = () => {
             if (lastInfisso.id) {
                 lastInfissoId = lastInfisso.id;
             } else {
-                throw new Error("Infisso doesn't have id");
+                throw new Error("Infisso non ha un id");
             }
         }
         const newInfisso: IInfisso = {
@@ -94,6 +94,7 @@ const FormInfisso = () => {
             id: nextAlphabeticalID(lastInfissoId)
         };
         try {
+            console.log(newInfisso);
             await infissi.insertInfisso(newInfisso);
             toast.success("Infisso inserito con successo");
         } catch (e) {
@@ -101,7 +102,7 @@ const FormInfisso = () => {
             console.error(e);
         }
         setFormData({
-            tipo     : "Finestra",
+            tipo     : "FINESTRA",
             altezza  : 0,
             larghezza: 0,
             materiale: "",
@@ -127,18 +128,18 @@ const FormInfisso = () => {
                     <div id="tipo" className="col-span-4 flex items-center justify-start gap-4">
                         <div className="col-span-2 flex items-center gap-2 px-3 py-2">
                             <input type="radio" id="chk_finestra"
-                                   name="check_tipo" value="Finestra"
+                                   name="check_tipo" value="FINESTRA"
                                    className="h-4 w-4 accent-blue-500"
-                                   checked={ formData.tipo === "Finestra" }
+                                   checked={ formData.tipo === "FINESTRA" }
                                    onChange={ handleTipoChange }
                             />
                             <label htmlFor="chk_finestra">Finestra</label>
                         </div>
                         <div className="col-span-2 flex items-center gap-2 px-3 py-2">
-                            <input type="radio" id="chk_finestra"
-                                   name="check_tipo" value="Porta"
+                            <input type="radio" id="chk_porta"
+                                   name="check_tipo" value="PORTA"
                                    className="h-4 w-4 accent-blue-500"
-                                   checked={ formData.tipo === "Porta" }
+                                   checked={ formData.tipo === "PORTA" }
                                    onChange={ handleTipoChange }
                             />
                             <label htmlFor="chk_porta">Porta</label>

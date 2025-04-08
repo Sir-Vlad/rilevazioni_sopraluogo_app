@@ -1,54 +1,33 @@
-# React + TypeScript + Vite
+# App per eseguire i sopralluoghi
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Questa applicazione ha il compito di semplificare l'inserimento dei dati sia sul campo che in ufficio.
 
-Currently, two official plugins are available:
+## Tecnologie utilizzate
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+L'applicazione è stata sviluppata tramite il framework Tauri, che permette lo sviluppo di applicazioni desktop
+multipiattaforma che combina frontend web con un backend nativo in Rust. Per il frontend si è deciso di utilizzare
+React.
 
-## Expanding the ESLint configuration
+## Funzionamento
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+Il sistema prende un file `xmlx`, lo elabora e ne crea una copia dei dati all'interno di un database sqlite all'interno
+della cartella `Documenti` del proprio pc. Dopo la creazione del database, il sistema lo utilizza per aggiornare i dati
+che poi potranno essere esportati in `xmlx` (coming soon).
 
-```js
-export default tseslint.config({
-  extends: [
-    // Remove ...tseslint.configs.recommended and replace with this
-    ...tseslint.configs.recommendedTypeChecked,
-    // Alternatively, use this for stricter rules
-    ...tseslint.configs.strictTypeChecked,
-    // Optionally, add this for stylistic rules
-    ...tseslint.configs.stylisticTypeChecked,
-  ],
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
-```
+## Funzionalità
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+L'applicazione offre:
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+- Inserimento di nuovi infissi, indicandone la dimensione, la tipologia del serramento e la tipologia del vetro
+- Inserimento di nuovi dati per una stanza
+- Cambio da un database a un'altro
 
-export default tseslint.config({
-  plugins: {
-    // Add the react-x and react-dom plugins
-    'react-x': reactX,
-    'react-dom': reactDom,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended typescript rules
-    ...reactX.configs['recommended-typescript'].rules,
-    ...reactDom.configs.recommended.rules,
-  },
-})
-```
+## TODO
+
+Ecco le future implementazioni:
+
+- [ ] Visualizzazione dei dati dell'edificio
+- [ ] Esportazione dei dati in excel
+- [ ] Modifica dei dati sulle tabelle di visualizzazione
+- [ ] ShortKey per le operazioni eseguite maggiormente
+- [ ] Filtri sulla tabella generale

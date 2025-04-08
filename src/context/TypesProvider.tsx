@@ -1,13 +1,14 @@
-import * as React                                    from "react";
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { invoke }                                    from "@tauri-apps/api/core";
-import { TypeContextType, TypesContext }             from "./Context.tsx";
+import * as React                                                         from "react";
+import { useCallback, useEffect, useMemo, useState }                      from "react";
+import { invoke }                                                         from "@tauri-apps/api/core";
+import { TypeContextType, TypesContext }                                  from "./Context.tsx";
+import { Climatizzazione, Illuminazione, MaterialeInfisso, VetroInfisso } from "../models/models.tsx";
 
 interface TypePayload {
-    "materiale_infissi": string[],
-    "vetro_infissi": string[],
-    "climatizzazione": string[],
-    "illuminazione": string[]
+    "materiale_infissi": MaterialeInfisso[],
+    "vetro_infissi": VetroInfisso[],
+    "climatizzazione": Climatizzazione[],
+    "illuminazione": Illuminazione[]
 }
 
 const TypesProvider = ({children}: { children: React.ReactNode }) => {
@@ -23,11 +24,11 @@ const TypesProvider = ({children}: { children: React.ReactNode }) => {
         try {
             setIsLoading(true);
             setError(null);
-            const data: TypePayload = await invoke("get_types");
-            setMaterialiInfissiType(data["materiale_infissi"]);
-            setVetroInfissiType(data["vetro_infissi"]);
-            setClimatizzazioneType(data["climatizzazione"]);
-            setIlluminazioneType(data["illuminazione"]);
+            const data: TypePayload = await invoke("get_all_tipi");
+            setMaterialiInfissiType(data["materiale_infissi"].map(value => value.materiale));
+            setVetroInfissiType(data["vetro_infissi"].map(value => value.vetro));
+            setClimatizzazioneType(data["climatizzazione"].map(value => value.climatizzazione));
+            setIlluminazioneType(data["illuminazione"].map(value => value.lampadina));
         } catch (e) {
             setError("Errore durante il caricamento degli infissi: " + e);
         } finally {

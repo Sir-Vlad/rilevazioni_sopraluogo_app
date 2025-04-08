@@ -1,14 +1,13 @@
-import * as React                                                from "react";
-import { ChangeEvent, useEffect, useState }                      from "react";
-import Label                                                     from "../../components/Label";
-import Input                                                     from "../../components/Input.tsx";
-import Select, { SingleValue }                                   from "react-select";
-import { useDatabase, useStanze, useStanzeConInfissi, useTypes } from "../../context/UseProvider.tsx";
-import CommentsButton                                            from "../../components/CommentsButton.tsx";
-import DynamicSelectsInfissi                                     from "../../components/DynamicSelectsInfissi.tsx";
-import { toast }                                                 from "react-toastify";
-import { capitalize }                                            from "../../helpers/helpers.tsx";
-import { IStanzaConInfissi }                                     from "../../models/models.tsx";
+import * as React                           from "react";
+import { ChangeEvent, useEffect, useState } from "react";
+import Label                                from "../../components/Label";
+import Input                                from "../../components/Input.tsx";
+import Select, { SingleValue }              from "react-select";
+import { useDatabase, useStanze, useTypes } from "../../context/UseProvider.tsx";
+import CommentsButton                       from "../../components/CommentsButton.tsx";
+import DynamicSelectsInfissi                from "../../components/DynamicSelectsInfissi.tsx";
+import { toast }                            from "react-toastify";
+import { capitalize }                       from "../../helpers/helpers.tsx";
 
 interface RoomSpecifications {
     stanza: string,
@@ -56,7 +55,6 @@ const FormStanza = () => {
               climatizzazioneType
           } = useTypes();
     const stanze = useStanze();
-    const stanzeConInfissi = useStanzeConInfissi();
     const {error} = useDatabase();
 
     const illuminazioneTypeOptions = [
@@ -333,12 +331,9 @@ const FormStanza = () => {
         stanza.riscaldamento = formData.riscaldamento === "altro" ? formData.altroRiscaldamento : formData.riscaldamento;
         stanza.raffrescamento = formData.raffrescamento === "altro" ? formData.altroRaffrescamento : formData.raffrescamento;
         stanza.illuminazione = formData.illuminazione === "altro" ? formData.altroIlluminazione : formData.illuminazione;
+        stanza.infissi = infissiValues;
         stanze.updateStanza(stanza);
 
-        stanzeConInfissi.add({
-            id_stanza  : stanza.id,
-            ids_infissi: infissiValues
-        } as IStanzaConInfissi).then(() => console.log("Infissi aggiunti alla stanza"));
         toast.success("Dati salvati");
         setFormData({
             stanza             : "",

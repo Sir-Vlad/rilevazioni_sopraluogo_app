@@ -32,7 +32,7 @@ const Panoramica = () => {
         setRowData(stanze.data);
     }, [ stanze.data ]);
 
-    return (<div className="flex items-center justify-center h-full w-screen">
+    return (<main className="flex items-center justify-center h-full w-screen">
         <div className="ag-theme-quartz"
              style={ {
                  height: "100%",
@@ -48,7 +48,7 @@ const Panoramica = () => {
                 } }
             />
         </div>
-    </div>);
+    </main>);
 };
 
 export default Panoramica;

@@ -24,6 +24,12 @@ const Header = () => {
                         <Link aria-current="page"
                               className="text-white hover:text-blue-300 py-2 px-3 block"
                               to="/"
+                              id="homePage">Dashboard</Link>
+                    </li>
+                    <li>
+                        <Link aria-current="page"
+                              className="text-white hover:text-blue-300 py-2 px-3 block"
+                              to="/inserimento"
                               id="homePage">Inserimento</Link>
                     </li>
                     <li>

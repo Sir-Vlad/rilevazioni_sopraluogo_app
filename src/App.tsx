@@ -4,6 +4,7 @@ import Panoramica                       from "./pages/Panoramica.tsx";
 import Header                           from "./components/Header.tsx";
 import Sidebar                          from "./components/Sidebar.tsx";
 import GlobalProvider                   from "./context/GlobalProvider.tsx";
+import Dashboard                        from "./pages/DashboardPage/Dashboard.tsx";
 
 
 function App() {
@@ -17,7 +18,8 @@ function App() {
                     {/* Sidebar */ }
                     <Sidebar />
                     <Routes>
-                        <Route path="/" element={ <InserimentoData /> } />
+                        <Route path="/" element={ <Dashboard /> } />
+                        <Route path="/inserimento" element={ <InserimentoData /> } />
                         <Route path="/panoramica" element={ <Panoramica /> } />
                     </Routes>
                 </div>

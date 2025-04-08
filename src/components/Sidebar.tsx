@@ -53,7 +53,7 @@ const Sidebar = () => {
         });
         /* Passare il path a rust che ne elabora il contenuto (con polars) e mi ritorna un json del contenuto del file*/
         try {
-            const path_db: string = await invoke("insert_stanze", {
+            const path_db: string = await invoke("init_to_excel", {
                 path: file
             });
             setDatabasesFiles((prev) => [ ...prev, path_db ]);
@@ -62,6 +62,16 @@ const Sidebar = () => {
         } catch (e) {
             console.log("Errore durante l'inserimento: " + e);
             toast.error("Errore durante il cambio di database");
+        }
+    };
+
+    const onClick = async () => {
+        try {
+            await invoke("export_data_to_excel", {nameStanza: null});
+            toast.success("Esportazione effettuata con successo");
+        } catch (e) {
+            console.log(e);
+            toast.error("Errore durante l'esportazione dei dati");
         }
     };
 
@@ -94,8 +104,7 @@ const Sidebar = () => {
                                 <span className="ml-2 truncate">{ nameDatabase }</span>
                             </button>
                             <button className="col-span-2 rounded hover:bg-gray-700 cursor-pointer p-2"
-                                    onClick={ () => {
-                                    } }>
+                                    onClick={ onClick }>
                                 <FontAwesomeIcon icon={ faArrowUpRightFromSquare } />
                             </button>
                             <div
