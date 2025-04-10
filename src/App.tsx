@@ -1,31 +1,28 @@
-import { BrowserRouter, Route, Routes } from "react-router-dom";
-import InserimentoData                  from "./pages/InserimentoDataPage/InserimentoData.tsx";
-import Panoramica                       from "./pages/Panoramica.tsx";
-import Header                           from "./components/Header.tsx";
-import Sidebar                          from "./components/Sidebar.tsx";
-import GlobalProvider                   from "./context/GlobalProvider.tsx";
-import Dashboard                        from "./pages/DashboardPage/Dashboard.tsx";
+import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar.tsx";
+import SiteHeader                        from "@/components/app-header.tsx";
+import { AppSidebar }                    from "@/components/app-sidebar.tsx";
+import { Route, Routes }                 from "react-router-dom";
+import Dashboard                         from "./pages/DashboardPage/Dashboard";
+import InserimentoData                   from "@/pages/InserimentoDataPage/InserimentoData.tsx";
+import Panoramica                        from "@/pages/Panoramica.tsx";
 
 
 function App() {
-    return <GlobalProvider>
-        <BrowserRouter>
-            <div className="flex flex-col h-screen w-full">
-                {/* Header */ }
-                <Header />
-                {/* Contenuto principale */ }
-                <div className="flex flex-1 overflow-hidden">
-                    {/* Sidebar */ }
-                    <Sidebar />
+    return <div className="[--header-height:calc(theme(spacing.14))]">
+        <SidebarProvider className="flex flex-col">
+            <SiteHeader />
+            <div className="flex flex-1">
+                <AppSidebar />
+                <SidebarInset>
                     <Routes>
                         <Route path="/" element={ <Dashboard /> } />
                         <Route path="/inserimento" element={ <InserimentoData /> } />
                         <Route path="/panoramica" element={ <Panoramica /> } />
                     </Routes>
-                </div>
+                </SidebarInset>
             </div>
-        </BrowserRouter>
-    </GlobalProvider>;
+        </SidebarProvider>
+    </div>;
 }
 
 export default App;
