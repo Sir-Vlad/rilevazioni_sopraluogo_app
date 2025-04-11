@@ -21,6 +21,9 @@ import {
 import {
     Separator
 }                      from "@/components/ui/separator.tsx";
+import {
+    ModeToggle
+}                      from "@/components/mode-toggle.tsx";
 
 export default function SiteHeader() {
     const {toggleSidebar} = useSidebar();
@@ -55,23 +58,25 @@ export default function SiteHeader() {
                 <NavigationMenu>
                     <NavigationMenuList>
                         <NavigationMenuItem>
-                            <NavigationMenuLink className={ navigationMenuTriggerStyle() }>
+                            <NavigationMenuLink className={ navigationMenuTriggerStyle() } asChild>
                                 <Link to="/">Dashboard</Link>
                             </NavigationMenuLink>
                         </NavigationMenuItem>
                         <NavigationMenuItem>
-                            <NavigationMenuLink className={ navigationMenuTriggerStyle() }>
+                            <NavigationMenuLink className={ navigationMenuTriggerStyle() } asChild>
                                 <Link to="/inserimento">Inserimento</Link>
                             </NavigationMenuLink>
                         </NavigationMenuItem>
                         <NavigationMenuItem>
-                            <NavigationMenuLink className={ navigationMenuTriggerStyle() }>
+                            <NavigationMenuLink className={ navigationMenuTriggerStyle() } asChild>
                                 <Link to="/panoramica">Panoramica</Link>
                             </NavigationMenuLink>
                         </NavigationMenuItem>
                     </NavigationMenuList>
                 </NavigationMenu>
             </div>
+            <Separator orientation="vertical" className="mx-2" />
+            <ModeToggle />
         </div>
     </header>);
 }

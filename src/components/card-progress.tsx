@@ -15,6 +15,8 @@ const CardProgress = ({
                           title,
                           values
                       }: CardProgressProps) => {
+    const total = values.reduce((acc, value) => acc + value.value, 0);
+
     return <Card className="@container/card">
         <CardHeader className="relative">
             <CardTitle className="text-2xl font-semibold tabular-nums">
@@ -27,7 +29,8 @@ const CardProgress = ({
                     values.map(value => {
                         return <div className="grid grid-cols-10 gap-4 items-center align-middle" key={ value.label }>
                             <Label className="col-span-2">{ value.label }</Label>
-                            <Progress className="col-span-8" value={ value.value } />
+                            <Progress className="col-span-7" value={ value.value } />
+                            <Label className="col-span-1">{ value.value / total * 100 } %</Label>
                         </div>;
                     })
                 }
