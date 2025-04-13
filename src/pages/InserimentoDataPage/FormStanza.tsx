@@ -6,8 +6,8 @@ import Select, { SingleValue }              from "react-select";
 import { useDatabase, useStanze, useTypes } from "../../context/UseProvider.tsx";
 import CommentsButton                       from "../../components/CommentsButton.tsx";
 import DynamicSelectsInfissi                from "../../components/DynamicSelectsInfissi.tsx";
-import { toast }                            from "react-toastify";
-import { capitalize }                       from "../../helpers/helpers.tsx";
+import { toast }                            from "sonner";
+import { capitalize }                       from "@/helpers/helpers.ts";
 
 interface RoomSpecifications {
     stanza: string,

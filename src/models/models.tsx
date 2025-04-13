@@ -9,12 +9,11 @@ export interface IInfisso {
 
 export interface IStanza {
     id: number;
-    fascicolo: string;
+    chiave: string;
     piano: string;
     id_spazio: string;
     stanza: string;
     destinazione_uso: string;
-    cappotto?: boolean;
     altezza?: number,
     spessore_muro?: number,
     riscaldamento?: string,

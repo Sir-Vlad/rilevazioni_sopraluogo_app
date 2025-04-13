@@ -104,9 +104,23 @@ const CardFormInfisso = () => {
             id: nextAlphabeticalID(lastInfissoId)
         };
         try {
-            console.log(newInfisso);
             await infissi.insertInfisso(newInfisso);
             toast.success("Infisso inserito con successo");
+            form.reset({
+                tipo     : infissiType[0],
+                altezza  : 0,
+                larghezza: 0,
+                materiale: "",
+                vetro    : ""
+            }, {
+                keepErrors     : false,
+                keepDirty      : false,
+                keepIsSubmitted: false,
+                keepTouched    : false,
+                keepIsValid    : false,
+                keepSubmitCount: false
+
+            });
         } catch (e) {
             toast.error("Errore durante l'inserimento del nuovo infisso");
             console.error(e);
@@ -135,7 +149,7 @@ const CardFormInfisso = () => {
                                                    <FormItem>
                                                        <FormLabel>Tipo</FormLabel>
                                                        <Select onValueChange={ field.onChange }
-                                                               defaultValue={ infissiType[0] }>
+                                                               defaultValue={ infissiType[0] } value={ field.value }>
                                                            <FormControl>
                                                                <SelectTrigger className="w-full">
                                                                    <SelectValue
@@ -199,7 +213,7 @@ const CardFormInfisso = () => {
                                             <FormItem>
                                                 <FormLabel>Materiale</FormLabel>
                                                 <Select onValueChange={ field.onChange }
-                                                        defaultValue={ field.value }>
+                                                        defaultValue={ field.value } value={ field.value }>
                                                     <FormControl>
                                                         <SelectTrigger className="w-full">
                                                             <SelectValue placeholder="Seleziona un tipo di materiale" />
@@ -223,7 +237,7 @@ const CardFormInfisso = () => {
                                             <FormItem>
                                                 <FormLabel>Vetro</FormLabel>
                                                 <Select onValueChange={ field.onChange }
-                                                        defaultValue={ field.value }>
+                                                        defaultValue={ field.value } value={ field.value }>
                                                     <FormControl>
                                                         <SelectTrigger className="w-full">
                                                             <SelectValue placeholder="Seleziona un tipo di vetro" />

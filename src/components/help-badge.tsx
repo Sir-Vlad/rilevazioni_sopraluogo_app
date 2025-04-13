@@ -2,10 +2,10 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { HelpCircle }                                               from "lucide-react";
 
 const HelpBadge = ({message}: { message: string }) => {
-    return <div>
+    return <div tabIndex={ -1 }>
         <TooltipProvider>
             <Tooltip>
-                <TooltipTrigger>
+                <TooltipTrigger asChild>
                     <HelpCircle className="w-4 h-4 text-red-700" />
                 </TooltipTrigger>
                 <TooltipContent side="right">

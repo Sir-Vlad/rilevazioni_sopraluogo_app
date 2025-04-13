@@ -1,26 +1,26 @@
 "use client";
 
 import {
-  SidebarGroup,
-  SidebarGroupAction,
-  SidebarGroupLabel,
-  SidebarMenu,
-  SidebarMenuAction,
-  SidebarMenuButton,
-  SidebarMenuItem
+    SidebarGroup,
+    SidebarGroupAction,
+    SidebarGroupLabel,
+    SidebarMenu,
+    SidebarMenuAction,
+    SidebarMenuButton,
+    SidebarMenuItem
 }                                                       from "@/components/ui/sidebar";
 import { useCallback, useEffect, useState }             from "react";
 import { useDatabase }                                  from "@/context/UseProvider.tsx";
 import { invoke }                                       from "@tauri-apps/api/core";
 import { open }                                         from "@tauri-apps/plugin-dialog";
-import { toast }                                        from "react-toastify";
+import { toast }                                        from "sonner";
 import { Check, FileSpreadsheet, MoreHorizontal, Plus } from "lucide-react";
-import { getFileName }                                  from "@/helpers/helpers.tsx";
+import { getFileName }                                  from "@/helpers/helpers.ts";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger
 }                                                       from "@/components/ui/dropdown-menu";
 
 export function NavMain() {

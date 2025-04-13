@@ -4,7 +4,7 @@ import { AppSidebar }                    from "@/components/app-sidebar.tsx";
 import { Route, Routes }                 from "react-router-dom";
 import Dashboard                         from "./pages/DashboardPage/Dashboard";
 import PageInserimentoData               from "@/pages/InserimentoDataPage/page-inserimento-data.tsx";
-import Panoramica                        from "@/pages/Panoramica.tsx";
+import Panoramica                        from "@/pages/page-panoramica.tsx";
 import { ThemeProvider }                 from "./theme/theme-provider";
 import { Toaster }                       from "@/components/ui/sonner.tsx";
 

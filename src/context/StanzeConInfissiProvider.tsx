@@ -3,7 +3,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useDatabase }                                       from "./UseProvider.tsx";
 import { IStanzaConInfissiContext, StanzeConInfissiContext } from "./Context.tsx";
 import { invoke }                                            from "@tauri-apps/api/core";
-import { toast }                                             from "react-toastify";
+import { toast }                                             from "sonner";
 import { IStanzaConInfissi }                                 from "../models/models.tsx";
 
 

@@ -16,31 +16,31 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 const CommentButton = () => {
     return <TooltipProvider>
         <Tooltip>
-            <TooltipTrigger>
-                <Dialog>
+            <Dialog>
+                <TooltipTrigger asChild>
                     <DialogTrigger asChild>
                         <Button variant="outline" size="icon" type="button">
                             <PlusIcon />
                         </Button>
                     </DialogTrigger>
-                    <DialogContent className="sm:max-w-md">
-                        <DialogHeader>
-                            <DialogTitle>Inserisci Commento</DialogTitle>
-                            <DialogDescription>Inserisci il commento</DialogDescription>
-                        </DialogHeader>
-                        <div className="flex flex-col gap-2">
-                            <Textarea rows={ 5 } placeholder="Inserisci il commento" />
-                        </div>
-                        <DialogFooter className="sm:justify-end">
-                            <DialogClose asChild>
-                                <Button type="button" className="text-white">
-                                    <PlusIcon /><span>Inserisci Commento</span>
-                                </Button>
-                            </DialogClose>
-                        </DialogFooter>
-                    </DialogContent>
-                </Dialog>
-            </TooltipTrigger>
+                </TooltipTrigger>
+                <DialogContent className="sm:max-w-md">
+                    <DialogHeader>
+                        <DialogTitle>Inserisci Commento</DialogTitle>
+                        <DialogDescription>Inserisci il commento</DialogDescription>
+                    </DialogHeader>
+                    <div className="flex flex-col gap-2">
+                        <Textarea rows={ 5 } placeholder="Inserisci il commento" />
+                    </div>
+                    <DialogFooter className="sm:justify-end">
+                        <DialogClose asChild>
+                            <Button type="button" className="text-white">
+                                <PlusIcon /><span>Inserisci Commento</span>
+                            </Button>
+                        </DialogClose>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
             <TooltipContent side="right">
                 <p className="text-white">Aggiungi un commento</p>
             </TooltipContent>

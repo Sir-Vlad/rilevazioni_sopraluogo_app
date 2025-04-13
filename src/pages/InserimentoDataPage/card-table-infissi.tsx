@@ -17,6 +17,7 @@ import { Button }                                                        from "@
 import { useState }                                                      from "react";
 import { ArrowUpDown }                                                   from "lucide-react";
 import { Input }                                                         from "@/components/ui/input";
+import { capitalize }                                                    from "@/helpers/helpers.ts";
 
 const columns: ColumnDef<IInfisso> [] = [
     {
@@ -50,6 +51,11 @@ const columns: ColumnDef<IInfisso> [] = [
     {
         accessorKey: "vetro",
         header     : "Vetro"
+    },
+    {
+        accessorKey: "tipo",
+        header     : "Tipo",
+        cell       : props => capitalize(props.getValue() as string)
     }
 ];
 
@@ -67,6 +73,9 @@ const CardTableInfissi = () => {
         getSortedRowModel    : getSortedRowModel(),
         onColumnFiltersChange: setColumnFilters,
         getFilteredRowModel  : getFilteredRowModel(),
+        initialState         : {
+            pagination: {pageSize: 5}
+        },
         state                : {
             sorting      : sorting,
             columnFilters: columnFilters
@@ -75,14 +84,14 @@ const CardTableInfissi = () => {
 
     return <div className="*:data-[slot=card]:shadow-xs grid grid-cols-1 gap-0
             px-4 *:data-[slot=card]:bg-gradient-to-t *:data-[slot=card]:from-primary/5 *:data-[slot=card]:to-card
-            dark:*:data-[slot=card]:bg-card lg:px-6 h-full">
-        <Card>
+            dark:*:data-[slot=card]:bg-card lg:px-5 h-full">
+        <Card className="@container/card h-full py-5">
             <CardHeader>
                 <h1 className="text-2xl font-bold text-primary tracking-tight">Visualizzazione Infissi</h1>
             </CardHeader>
             <CardContent>
-                <div>
-                    <div className="flex items-center py-4 gap-5">
+                <div className="flex flex-col">
+                    <div className="flex items-center gap-5 pb-4">
                         <Input
                             placeholder="Filter ids..."
                             value={ (table.getColumn("id")?.getFilterValue() as string) ?? "" }
@@ -151,7 +160,7 @@ const CardTableInfissi = () => {
                             </TableBody>
                         </Table>
                     </div>
-                    <div className="flex items-center justify-end space-x-2 py-4">
+                    <div className="flex items-center justify-end space-x-3 pt-3">
                         <Button
                             variant="outline"
                             size="sm"

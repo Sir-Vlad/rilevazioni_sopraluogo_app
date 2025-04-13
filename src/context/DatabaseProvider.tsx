@@ -3,7 +3,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { invoke }                                    from "@tauri-apps/api/core";
 import { listen }                                    from "@tauri-apps/api/event";
 import { DatabaseContext, DatabaseContextType }      from "./Context.tsx";
-import { getFileName }                               from "../helpers/helpers.tsx";
+import { getFileName }                               from "../helpers/helpers.ts";
 
 interface DatabaseEventPayload {
     type_event: string;
