@@ -22,6 +22,8 @@ const dataFake = [
 
 
 const CardDataEdificio = () => {
+    // todo: implementare il retrieve nel backend
+
     return <Card className="@container/card col-span-3">
         <CardHeader>
             <h1 className="text-2xl font-bold text-primary tracking-tight">Dati Edificio</h1>

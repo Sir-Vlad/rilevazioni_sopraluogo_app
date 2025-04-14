@@ -2,7 +2,7 @@ import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar.tsx";
 import SiteHeader                        from "@/components/app-header.tsx";
 import { AppSidebar }                    from "@/components/app-sidebar.tsx";
 import { Route, Routes }                 from "react-router-dom";
-import Dashboard                         from "./pages/DashboardPage/Dashboard";
+import PageDashboard                     from "./pages/DashboardPage/page-dashboard.tsx";
 import PageInserimentoData               from "@/pages/InserimentoDataPage/page-inserimento-data.tsx";
 import Panoramica                        from "@/pages/page-panoramica.tsx";
 import { ThemeProvider }                 from "./theme/theme-provider";
@@ -18,7 +18,7 @@ function App() {
                     <AppSidebar />
                     <SidebarInset>
                         <Routes>
-                            <Route path="/" element={ <Dashboard /> } />
+                            <Route path="/" element={ <PageDashboard /> } />
                             <Route path="/inserimento" element={ <PageInserimentoData /> } />
                             <Route path="/panoramica" element={ <Panoramica /> } />
                         </Routes>

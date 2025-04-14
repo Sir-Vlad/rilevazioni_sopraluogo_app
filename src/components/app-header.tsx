@@ -6,7 +6,7 @@ import {
     useSidebar
 }                      from "@/components/ui/sidebar";
 import {
-    Link
+    NavLink
 }                      from "react-router-dom";
 import {
     NavigationMenu,
@@ -48,10 +48,8 @@ export default function SiteHeader() {
             </div>
             <div className="w-full justify-center align-middle">
                 <p className="text-sm">
-                    { error !== "Database non settato" ?
-                        <>Stai lavorando su <b>{ databaseName }</b></> :
-                        "Selezionare un file"
-                    }
+                    { error !== "Database non settato" ? <>Stai lavorando
+                        su <b>{ databaseName }</b></> : "Selezionare un file" }
                 </p>
             </div>
             <div className="flex justify-end">
@@ -59,17 +57,23 @@ export default function SiteHeader() {
                     <NavigationMenuList>
                         <NavigationMenuItem>
                             <NavigationMenuLink className={ navigationMenuTriggerStyle() } asChild>
-                                <Link to="/">Dashboard</Link>
+                                <NavLink to="/" end>
+                                    Dashboard
+                                </NavLink>
                             </NavigationMenuLink>
                         </NavigationMenuItem>
                         <NavigationMenuItem>
                             <NavigationMenuLink className={ navigationMenuTriggerStyle() } asChild>
-                                <Link to="/inserimento">Inserimento</Link>
+                                <NavLink to="/inserimento" end>
+                                    Inserimento
+                                </NavLink>
                             </NavigationMenuLink>
                         </NavigationMenuItem>
                         <NavigationMenuItem>
                             <NavigationMenuLink className={ navigationMenuTriggerStyle() } asChild>
-                                <Link to="/panoramica">Panoramica</Link>
+                                <NavLink to="/panoramica" end>
+                                    Panoramica
+                                </NavLink>
                             </NavigationMenuLink>
                         </NavigationMenuItem>
                     </NavigationMenuList>

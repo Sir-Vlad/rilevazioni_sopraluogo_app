@@ -16,6 +16,7 @@ const datafake = [
 
 
 const CardFotovoltaico = () => {
+    // todo: implementare il retrieve nel backend
     return <Card>
         <CardHeader>
             <h1 className="text-2xl font-bold text-primary tracking-tight">Fotovoltaico</h1>

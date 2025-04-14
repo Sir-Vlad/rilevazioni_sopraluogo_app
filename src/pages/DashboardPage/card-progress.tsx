@@ -1,6 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card.tsx";
 import { Label }                                    from "@/components/ui/label.tsx";
-import { Progress }                                 from "@/components/ui/progress";
+import { Progress }                                 from "@/components/ui/progress.tsx";
 
 interface CardProgressProps {
     title: string;
@@ -27,10 +27,13 @@ const CardProgress = ({
             <div className="flex flex-col gap-6">
                 {
                     values.map(value => {
-                        return <div className="grid grid-cols-10 gap-4 items-center align-middle" key={ value.label }>
+                        const valuePercent = value.value / total * 100;
+                        return <div className="grid grid-cols-12 gap-4 items-center align-middle" key={ value.label }>
                             <Label className="col-span-2">{ value.label }</Label>
-                            <Progress className="col-span-7" value={ value.value } />
-                            <Label className="col-span-1">{ value.value / total * 100 } %</Label>
+                            <Progress className="col-span-9" value={ valuePercent } />
+                            <div className="flex justify-end">
+                                <Label className="col-span-1">{ Math.round(valuePercent) } %</Label>
+                            </div>
                         </div>;
                     })
                 }

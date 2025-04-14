@@ -1,5 +1,5 @@
-import CardUtenzeEdificio from "@/components/card-utenze-edificio.tsx";
-import CardFotovoltaico   from "@/components/card-fotovoltaico.tsx";
+import CardUtenzeEdificio from "@/pages/DashboardPage/card-utenze-edificio.tsx";
+import CardFotovoltaico   from "@/pages/DashboardPage/card-fotovoltaico.tsx";
 
 const SectionDataEdificio = () => {
     return <div className="*:data-[slot=card]:shadow-xs grid grid-cols-2 gap-4

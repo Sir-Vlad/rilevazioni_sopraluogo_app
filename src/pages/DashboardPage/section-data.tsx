@@ -1,5 +1,5 @@
 import CardTableStanze  from "@/card-table-stanze.tsx";
-import CardDataEdificio from "@/components/card-data-edificio.tsx";
+import CardDataEdificio from "@/pages/DashboardPage/card-data-edificio.tsx";
 
 const SectionData = () => {
     return <div className="*:data-[slot=card]:shadow-xs grid grid-cols-8 gap-4

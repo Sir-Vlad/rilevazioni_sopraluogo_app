@@ -1,5 +1,5 @@
 import { Card, CardContent, CardHeader }                                 from "@/components/ui/card.tsx";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table.tsx";
 
 const datafake = [
     {
@@ -20,6 +20,7 @@ const datafake = [
 ];
 
 const CardUtenzeEdificio = () => {
+    // todo: implementare il retrieve nel backend
     return <Card>
         <CardHeader>
             <h1 className="text-2xl font-bold text-primary tracking-tight">Utenze</h1>
