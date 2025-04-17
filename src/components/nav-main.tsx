@@ -15,7 +15,7 @@ import { invoke }                                       from "@tauri-apps/api/co
 import { open }                                         from "@tauri-apps/plugin-dialog";
 import { toast }                                        from "sonner";
 import { Check, FileSpreadsheet, MoreHorizontal, Plus } from "lucide-react";
-import { getFileName }                                  from "@/helpers/helpers.ts";
+import { getFileName, getFileNameWithExtension }        from "@/helpers/helpers.ts";
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -24,13 +24,13 @@ import {
 }                                                       from "@/components/ui/dropdown-menu";
 
 export function NavMain() {
-    const [ databasesFiles, setDatabasesFiles ] = useState<string[]>([]);
+    const [ databasesNameFiles, setDatabasesNameFiles ] = useState<string[]>([]);
     const database = useDatabase();
     const [ selectedDatabase, setSelectedDatabase ] = useState<string>(database.databaseName);
 
     const retrieveNameDatabases = useCallback(async () => {
         const dbs: string[] = await invoke("get_all_name_database");
-        setDatabasesFiles(dbs);
+        setDatabasesNameFiles(dbs);
     }, []);
 
     useEffect(() => {
@@ -53,12 +53,17 @@ export function NavMain() {
                 }
             ]
         });
-        /* Passare il path a rust che ne elabora il contenuto (con polars) e mi ritorna un json del contenuto del file*/
+        if (!file) {
+            return;
+        }
+
+        /* Passare il path a rust che ne elabora il contenuto (con polars) e imposta il database */
         try {
             const path_db: string = await invoke("init_to_excel", {
                 path: file
             });
-            setDatabasesFiles((prev) => [ ...prev, path_db ]);
+            const name_db: string = getFileNameWithExtension(path_db);
+            setDatabasesNameFiles((prev) => [ ...prev, name_db ]);
             console.log("Inserimento avvenuto con successo");
             toast.success("Inserimento avvenuto con successo");
         } catch (e) {
@@ -74,7 +79,7 @@ export function NavMain() {
                 <Plus /> <span className="sr-only">Aggiungi Fascicolo</span>
             </SidebarGroupAction>
             <SidebarMenu>
-                { databasesFiles.map((file) => {
+                { databasesNameFiles.map((file) => {
                     const nameDatabase = getFileName(file);
                     return <SidebarMenuItem key={ file }>
                         <div className="flex grow-1">
@@ -84,7 +89,7 @@ export function NavMain() {
                             } }>
                                 <div className="flex items-center">
                                     <FileSpreadsheet />
-                                    <span>{ file }</span>
+                                    <span>{ nameDatabase }</span>
                                     <div
                                         className={ `flex w-full justify-end ${ selectedDatabase === nameDatabase ? "" : "hidden" }` }>
                                         <Check />

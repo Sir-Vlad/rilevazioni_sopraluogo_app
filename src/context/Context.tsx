@@ -1,5 +1,5 @@
-import { createContext }                        from "react";
-import { IInfisso, IStanza, IStanzaConInfissi } from "../models/models.tsx";
+import { createContext }                                   from "react";
+import { IEdificio, IInfisso, IStanza, IStanzaConInfissi } from "../models/models.tsx";
 
 export interface DatabaseContextType {
     databasePath: string;
@@ -43,3 +43,13 @@ export interface TypeContextType {
 }
 
 export const TypesContext = createContext<TypeContextType | null>(null);
+
+export interface EdificioContextType {
+    data: IEdificio[];
+    selectedEdificio: string | undefined;
+    setSelectedEdificio: (chiave: string) => void;
+    error: string | null;
+    isLoading: boolean;
+}
+
+export const EdificioContext = createContext<EdificioContextType | null>(null);

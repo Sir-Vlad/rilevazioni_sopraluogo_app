@@ -37,7 +37,7 @@ const InfissiProvider = ({children}: { children: React.ReactNode }) => {
         if (needReload) {
             loadInfissi().then(() => {
                 providerRef.current?.notifyReloadComplete();
-            });
+            }).catch(console.error);
         }
     }, [ loadInfissi, needReload ]);
 

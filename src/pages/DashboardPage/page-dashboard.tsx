@@ -6,13 +6,11 @@ import SectionDataEdificio
                                                                          from "@/pages/DashboardPage/section-data-edificio.tsx";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select.tsx";
 import TitlePage                                                         from "@/components/title-page.tsx";
-import { useContext }                                                    from "react";
-import { StanzeContext }                                                 from "@/context/Context.tsx";
+import { useEdifici }                                                    from "@/context/UseProvider.tsx";
 
 const PageDashboard = () => {
-    const stanzeContext = useContext(StanzeContext);
-    const edifici = [ ...new Set(stanzeContext?.data.map(value => value.chiave)) ];
-
+    const edificioContext = useEdifici();
+    const edifici = [ ...edificioContext.data.map(value => value.chiave) ];
 
     return <div className="flex flex-1 flex-col">
         <div className="@container/main flex flex-1 flex-col gap-2">
@@ -22,7 +20,9 @@ const PageDashboard = () => {
                         <TitlePage title={ "Dashboard" } />
                     </div>
                     <div>
-                        <Select disabled={ edifici.length < 2 } value={ edifici[0] }>
+                        <Select disabled={ edifici.length < 2 } value={ edificioContext.selectedEdificio }
+                                onValueChange={ edificioContext.setSelectedEdificio }
+                        >
                             <SelectTrigger className="w-[10em] border-none dark:bg-transparent">
                                 <SelectValue placeholder="" defaultValue={ edifici[0] } />
                             </SelectTrigger>

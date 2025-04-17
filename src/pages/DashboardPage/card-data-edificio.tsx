@@ -1,28 +1,12 @@
 import { Card, CardContent, CardHeader } from "@/components/ui/card.tsx";
 import { Fragment }                      from "react";
-
-const dataFake = [
-    {
-        label: "Fascicolo",
-        value: 100
-    }, {
-        label: "Chiave",
-        value: 100
-    }, {
-        label: "Indirizzo",
-        value: 100
-    }, {
-        label: "Anno costruzione",
-        value: 100
-    }, {
-        label: "Anno riqualificazione",
-        value: null
-    }
-];
-
+import { useEdifici }                    from "@/context/UseProvider.tsx";
 
 const CardDataEdificio = () => {
-    // todo: implementare il retrieve nel backend
+    const {
+              data,
+              selectedEdificio
+          } = useEdifici();
 
     return <Card className="@container/card col-span-3">
         <CardHeader>
@@ -30,18 +14,21 @@ const CardDataEdificio = () => {
         </CardHeader>
         <CardContent>
             <div className="grid grid-cols-2 justify-start items-center gap-6">
-                {
-                    dataFake.map(item => {
-                        return <Fragment key={ item.label }>
-                            <div>
-                                <p className="font-medium">{ item.label }</p>
-                            </div>
-                            <div className="flex items-center justify-center">
-                                <p className="font-semibold">{ item.value ?? "Dato non disponibile" }</p>
-                            </div>
-                        </Fragment>;
-                    })
-                }
+                { data
+                    .filter(value => value.chiave === selectedEdificio)
+                    .map((value) => {
+                        return Object.entries(value)
+                                     .map(([ key, value ]) => {
+                                         return <Fragment key={ key }>
+                                             <div>
+                                                 <p className="font-medium">{ key }</p>
+                                             </div>
+                                             <div className="flex items-center justify-center">
+                                                 <p className="font-semibold">{ value ?? "Dato non disponibile" }</p>
+                                             </div>
+                                         </Fragment>;
+                                     });
+                    }) }
             </div>
         </CardContent>
     </Card>;

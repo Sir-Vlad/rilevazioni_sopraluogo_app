@@ -12,7 +12,7 @@ import { Fragment }                                                       from "
 import { Pencil }                                                         from "lucide-react";
 import CommentButton                                                      from "@/components/comment-button.tsx";
 import HelpBadge                                                          from "@/components/help-badge.tsx";
-import { useDatabase, useStanze, useTypes }                               from "@/context/UseProvider.tsx";
+import { useDatabase, useEdifici, useStanze, useTypes }                   from "@/context/UseProvider.tsx";
 import { handleInputNumericChange }                                       from "@/helpers/helpers";
 import { IStanza }                                                        from "@/models/models.tsx";
 import { toast }                                                          from "sonner";
@@ -41,7 +41,8 @@ const CardFormStanza = () => {
         resolver     : zodResolver(FormSchema),
         defaultValues: {
             altezza      : 0,
-            spessore_muro: 0
+            spessore_muro: 0,
+            infissi      : []
         }
     });
     const stanzaContext = useStanze();
@@ -50,9 +51,14 @@ const CardFormStanza = () => {
               climatizzazioneType
           } = useTypes();
     const {error} = useDatabase();
+    const {selectedEdificio} = useEdifici();
 
     const stanzeOptions = [
-        ...[ ...new Set(stanzaContext.data.map((item) => item.stanza)) ]
+        ...[
+            ...new Set(stanzaContext.data
+                                    .filter(value => value.chiave === selectedEdificio)
+                                    .map((item) => item.stanza))
+        ]
             .sort((a, b) => {
                 if (a.startsWith("_") && !b.startsWith("_")) return -1;
                 if (!a.startsWith("_") && b.startsWith("_")) return 1;
@@ -67,10 +73,17 @@ const CardFormStanza = () => {
             })
     ];
     const destinazioneUsoOptions = [
-        ...[ ...new Set(stanzaContext.data.map((item) => item.destinazione_uso)) ]
+        ...[
+            ...new Set(stanzaContext.data.filter(value => value.chiave === selectedEdificio)
+                                    .map((item) => item.destinazione_uso))
+        ]
     ];
     const pianoOptions = [
-        ...[ ...new Set(stanzaContext.data.map((item) => item.piano)) ]
+        ...[
+            ...new Set(stanzaContext.data
+                                    .filter(value => value.chiave === selectedEdificio)
+                                    .map((item) => item.piano))
+        ]
     ];
 
     function handleChangeStanza(newValue: string, field: ControllerRenderProps<z.infer<typeof FormSchema>>) {
@@ -82,7 +95,6 @@ const CardFormStanza = () => {
         }
     }
 
-
     function onSubmit(data: z.infer<typeof FormSchema>) {
         if (error === "Database non settato") {
             toast.warning("Non hai selezionato un file");
@@ -90,7 +102,10 @@ const CardFormStanza = () => {
         }
 
         const stanza = stanzaContext.data.find((item) => {
-            return item.stanza === data.stanza && item.destinazione_uso === data.destinazione_uso && item.piano === data.piano;
+            return item.chiave === selectedEdificio
+                && item.stanza === data.stanza
+                && item.destinazione_uso === data.destinazione_uso
+                && item.piano === data.piano;
         });
         if (stanza === undefined) {
             toast.error("Stanza non trovata");
@@ -103,8 +118,11 @@ const CardFormStanza = () => {
             riscaldamento : data.riscaldamento === "Altro" ? data.riscaldamento_altro : data.riscaldamento,
             raffrescamento: data.raffrescamento === "Altro" ? data.raffrescamento_altro : data.raffrescamento,
             illuminazione : data.illuminazione === "Altro" ? data.illuminazione_altro : data.illuminazione,
-            infissi       : data.infissi
+            infissi       : data.infissi?.filter(infisso => {
+                return infisso !== null && infisso !== undefined && infisso !== "";
+            })
         };
+        console.log(newStanza);
         try {
             stanzaContext.updateStanza(newStanza);
             toast.success(`Stanza ${ data.stanza } modificata`);
@@ -146,7 +164,7 @@ const CardFormStanza = () => {
                                                                 placeholder="Seleziona una stanza" />
                                                         </SelectTrigger>
                                                     </FormControl>
-                                                    <SelectContent>
+                                                    <SelectContent className="max-h-65">
                                                         { stanzeOptions.map(value => {
                                                             return <Fragment key={ value }>
                                                                 <SelectItem
@@ -173,7 +191,7 @@ const CardFormStanza = () => {
                                                             <SelectValue placeholder="" />
                                                         </SelectTrigger>
                                                     </FormControl>
-                                                    <SelectContent>
+                                                    <SelectContent className="max-h-65">
                                                         { destinazioneUsoOptions.map(value => {
                                                             return <Fragment key={ value }>
                                                                 <SelectItem value={ value }>{ value }</SelectItem>

@@ -1,8 +1,9 @@
 import * as React                                                         from "react";
-import { useCallback, useEffect, useMemo, useState }                      from "react";
+import { useCallback, useEffect, useMemo, useRef, useState }              from "react";
 import { invoke }                                                         from "@tauri-apps/api/core";
 import { TypeContextType, TypesContext }                                  from "./Context.tsx";
 import { Climatizzazione, Illuminazione, MaterialeInfisso, VetroInfisso } from "../models/models.tsx";
+import { useDatabase }                                                    from "@/context/UseProvider.tsx";
 
 interface TypePayload {
     "materiale_infissi": MaterialeInfisso[],
@@ -12,6 +13,11 @@ interface TypePayload {
 }
 
 const TypesProvider = ({children}: { children: React.ReactNode }) => {
+    const {
+              needReload,
+              registerProvider
+          } = useDatabase();
+    const providerRef = useRef<{ notifyReloadComplete: () => void; } | null>(null);
     const [ materialiInfissiType, setMaterialiInfissiType ] = useState<string[]>([]);
     const [ vetroInfissiType, setVetroInfissiType ] = useState<string[]>([]);
     const [ climatizzazioneType, setClimatizzazioneType ] = useState<string[]>([]);
@@ -19,6 +25,9 @@ const TypesProvider = ({children}: { children: React.ReactNode }) => {
     const [ error, setError ] = useState<string | null>(null);
     const [ isLoading, setIsLoading ] = useState(true);
 
+    useEffect(() => {
+        providerRef.current = registerProvider("tipi");
+    }, [ registerProvider ]);
 
     const loadTypes = useCallback(async () => {
         try {
@@ -35,6 +44,14 @@ const TypesProvider = ({children}: { children: React.ReactNode }) => {
             setIsLoading(false);
         }
     }, []);
+
+    useEffect(() => {
+        if (needReload) {
+            loadTypes().then(() => {
+                providerRef.current?.notifyReloadComplete();
+            }).catch(console.error);
+        }
+    }, [ loadTypes, needReload ]);
 
     useEffect(() => {
         loadTypes().catch(console.error);

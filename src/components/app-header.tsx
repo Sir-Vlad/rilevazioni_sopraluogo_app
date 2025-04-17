@@ -24,6 +24,10 @@ import {
 import {
     ModeToggle
 }                      from "@/components/mode-toggle.tsx";
+import {
+    ReactNode,
+    useMemo
+}                      from "react";
 
 export default function SiteHeader() {
     const {toggleSidebar} = useSidebar();
@@ -31,6 +35,11 @@ export default function SiteHeader() {
               databaseName,
               error
           } = useDatabase();
+
+    const fileSelected = useMemo((): ReactNode => {
+        return error !== "Database non settato" ? <>Stai lavorando
+            su <b>{ databaseName }</b></> : <>Selezionare un file</>;
+    }, [ databaseName, error ]);
 
     return (<header className="flex sticky top-0 z-50 w-full items-center border-b bg-background">
         <div className="flex h-[var(--header-height)] w-full items-center justify-between gap-2 px-4">
@@ -48,8 +57,7 @@ export default function SiteHeader() {
             </div>
             <div className="w-full justify-center align-middle">
                 <p className="text-sm">
-                    { error !== "Database non settato" ? <>Stai lavorando
-                        su <b>{ databaseName }</b></> : "Selezionare un file" }
+                    { fileSelected }
                 </p>
             </div>
             <div className="flex justify-end">

@@ -4,10 +4,15 @@ export const capitalize = (str: string) => {
     return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
 };
 
-export const getFileName = (filePath: string): string => {
-    const fileNameWithExt = filePath.split(/[/\\]/).pop() ?? "";
-    return fileNameWithExt.split(".").slice(0, -1).join(".");
+export const getFileNameWithExtension = (filePath: string) => {
+    return filePath.split(/[/\\]/).pop() ?? "";
 };
+
+export const getFileName = (filePath: string): string => {
+    const fileNameWithExt = getFileNameWithExtension(filePath);
+    return fileNameWithExt.split(".")[0];
+};
+
 
 export const handleInputNumericChange = <T extends (value: number) => void>(event: ChangeEvent<HTMLInputElement>, onChange: T) => {
     const {value} = event.target;

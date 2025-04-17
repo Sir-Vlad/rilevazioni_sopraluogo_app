@@ -1,11 +1,17 @@
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card.tsx";
-import { useInfissi, useStanze }                        from "@/context/UseProvider.tsx";
+import { useEdifici, useInfissi, useStanze }            from "@/context/UseProvider.tsx";
 
 export function SectionCards() {
     const stanzeContext = useStanze();
     const infissiContext = useInfissi();
-    const totPiani = [ ...new Set(stanzeContext.data.map(value => value.piano)) ].length;
-    const totStanze = stanzeContext.data.length;
+    const {selectedEdificio} = useEdifici();
+    const totPiani = [
+        ...new Set(stanzeContext.data
+                                .filter(value => value.chiave === selectedEdificio)
+                                .map(value => value.piano))
+    ].length;
+    const totStanze = stanzeContext.data
+                                   .filter(value => value.chiave === selectedEdificio).length;
     const totInfissi = infissiContext.data.length;
     // fixme: il valore non è giusto bisogna incrociarlo con le stanze
     const totMqInfissi = infissiContext.data.map(value => value.altezza * value.larghezza).reduce((a, b) => a + b, 0);

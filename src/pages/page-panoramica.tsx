@@ -21,6 +21,7 @@ import {
 }                               from "@/components/ui/dropdown-menu";
 import { Button }               from "@/components/ui/button";
 import { ChevronDown }          from "lucide-react";
+import { useEdifici }           from "@/context/UseProvider.tsx";
 
 const columns: ColumnDef<IStanza>[] = [
     {
@@ -28,16 +29,18 @@ const columns: ColumnDef<IStanza>[] = [
         header     : "Stanza",
         filterFn   : "includesString"
     }, {
+        accessorKey: "chiave",
+        header     : "Chiave",
+        filterFn   : "includesString"
+    }, {
         accessorKey       : "destinazione_uso",
         header            : "Destinazione Uso",
         enableColumnFilter: false
-    },
-    {
+    }, {
         accessorKey       : "piano",
         header            : "Piano",
         enableColumnFilter: false
-    },
-    {
+    }, {
         accessorKey: "altezza",
         header     : "Altezza",
         filterFn   : "includesString"
@@ -68,23 +71,19 @@ const columns: ColumnDef<IStanza>[] = [
                 valueCounts[value] = (valueCounts[value] || 0) + 1;
             });
             const uniqueValues = Object.keys(valueCounts);
-            return (
-                <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" className="p-0 m-0">
-                            ({ values.length })
-                            <ChevronDown className="ml-2 h-4 w-4" />
-                        </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent>
-                        { uniqueValues.map((value, index) => (
-                            <DropdownMenuItem key={ index }>
-                                { value } ({ valueCounts[value] })
-                            </DropdownMenuItem>
-                        )) }
-                    </DropdownMenuContent>
-                </DropdownMenu>
-            );
+            return (<DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" className="p-0 m-0">
+                        ({ values.length })
+                        <ChevronDown className="ml-2 h-4 w-4" />
+                    </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent>
+                    { uniqueValues.map((value, index) => (<DropdownMenuItem key={ index }>
+                        { value } ({ valueCounts[value] })
+                    </DropdownMenuItem>)) }
+                </DropdownMenuContent>
+            </DropdownMenu>);
         },
         enableColumnFilter: false
     }
@@ -92,11 +91,13 @@ const columns: ColumnDef<IStanza>[] = [
 
 const Panoramica = () => {
     const stanzeContext = useContext(StanzeContext);
+    // todo: decidere se la visualizzazione deve essere condizionata dal context oppure avere qualcosa di locale
+    const {selectedEdificio} = useEdifici();
     const [ sorting, setSorting ] = useState<SortingState>([]);
     const [ columnFilters, setColumnFilters ] = useState<ColumnFiltersState>([]);
 
     const table = useReactTable({
-        data                 : stanzeContext!.data,
+        data                 : stanzeContext!.data.filter(value => value.chiave === selectedEdificio),
         columns              : columns,
         getCoreRowModel      : getCoreRowModel(),
         getPaginationRowModel: getPaginationRowModel(),

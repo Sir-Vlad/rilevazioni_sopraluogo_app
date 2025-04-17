@@ -27,6 +27,9 @@ const StanzeProvider = ({children}: { children: React.ReactNode }) => {
             const data: IStanza[] = await invoke("get_stanze");
             setStanze(data);
         } catch (e) {
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-expect-error
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-call
             setError("Errore durante il caricamento degli infissi: " + e.toString());
         } finally {
             setLoading(false);
@@ -61,6 +64,9 @@ const StanzeProvider = ({children}: { children: React.ReactNode }) => {
                 toast.info("Nessun record aggiornato");
                 return;
             }
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-expect-error
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-call
             console.error("Errore durante l'aggiornamento della stanza: " + e.toString());
             toast.error("Errore durante l'aggiornamento della stanza");
             throw e;

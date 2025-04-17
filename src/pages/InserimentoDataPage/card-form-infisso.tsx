@@ -144,12 +144,13 @@ const CardFormInfisso = () => {
                         <div className="grid grid-cols-12 gap-5">
                             <div className="row-start-1 col-span-12">
                                 <div className="grid grid-cols-12 gap-5">
-                                    <FormField control={ form.control } name="tipo"
+                                    <FormField control={ form.control }
+                                               name="tipo"
                                                render={ ({field}) => (<div className="col-span-6">
                                                    <FormItem>
                                                        <FormLabel>Tipo</FormLabel>
                                                        <Select onValueChange={ field.onChange }
-                                                               defaultValue={ infissiType[0] } value={ field.value }>
+                                                               value={ field.value }>
                                                            <FormControl>
                                                                <SelectTrigger className="w-full">
                                                                    <SelectValue
@@ -181,7 +182,7 @@ const CardFormInfisso = () => {
                                                 </FormLabel>
                                                 <Input value={ field.value }
                                                        onChange={ e => handleInputNumericChange(e, field) }
-                                                       defaultValue={ field.value } />
+                                                />
                                                 <FormMessage />
                                             </FormItem>
                                         </div>) }
@@ -196,7 +197,8 @@ const CardFormInfisso = () => {
                                                     <HelpBadge message="Il valore va inserito in cm" />
                                                 </FormLabel>
                                                 <Input value={ field.value }
-                                                       onChange={ e => handleInputNumericChange(e, field) } />
+                                                       onChange={ e => handleInputNumericChange(e, field) }
+                                                />
                                                 <FormMessage />
                                             </FormItem>
                                         </div>) }

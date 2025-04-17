@@ -1,17 +1,23 @@
 import { Card, CardContent, CardHeader }                                 from "@/components/ui/card.tsx";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table.tsx";
-import { useStanze }                                                     from "@/context/UseProvider.tsx";
+import { useEdifici, useStanze }                                         from "@/context/UseProvider.tsx";
 import { useMemo }                                                       from "react";
 
 const CardTableStanze = () => {
     const stanzeContext = useStanze();
+    const {selectedEdificio} = useEdifici();
     const stanze = useMemo(() => {
-        const piani = [ ...new Set(stanzeContext.data.map(stanza => stanza.piano)) ];
+        const piani = [
+            ...new Set(stanzeContext.data
+                                    .filter(value => value.chiave === selectedEdificio)
+                                    .map(stanza => stanza.piano))
+        ];
         return piani.map(piano => {
-            const stanzaPerPiano = stanzeContext.data.filter(stanza => stanza.piano === piano);
+            const stanzaPerPiano = stanzeContext.data
+                                                .filter(value => value.chiave === selectedEdificio)
+                                                .filter(stanza => stanza.piano === piano);
             const stanzeVisitate = stanzaPerPiano.filter(stanza => {
-                if (stanza.altezza === undefined) return false;
-                else return stanza.altezza > 0;
+                if (stanza.altezza === undefined) return false; else return stanza.altezza > 0;
             }).length;
 
             return {
@@ -21,7 +27,7 @@ const CardTableStanze = () => {
             };
         });
 
-    }, [ stanzeContext.data ]);
+    }, [ selectedEdificio, stanzeContext.data ]);
 
 
     return <Card className="@container/card col-span-5">
