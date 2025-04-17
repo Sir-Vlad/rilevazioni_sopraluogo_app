@@ -19,7 +19,7 @@ impl From<&Infisso> for InfissoDto {
             altezza: infisso.altezza,
             larghezza: infisso.larghezza,
             materiale: infisso.materiale.clone(),
-            vetro: infisso.vetro.clone()
+            vetro: infisso.vetro.clone(),
         }
     }
 }

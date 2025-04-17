@@ -1,10 +1,9 @@
-use std::fs;
 use crate::database::Database;
 use dirs_next::document_dir;
-use itertools::Itertools;
 use rusqlite::{Connection, Error};
 use rust_xlsxwriter::{Workbook, Worksheet};
 use serde::Serialize;
+use std::fs;
 use tauri::State;
 
 #[derive(Debug, Serialize)]
@@ -63,7 +62,7 @@ impl ExportData for ExportDatiStanzaToExcel {
                     Err(e) => return Err(format!("Errore nella creazione della cartella: {}", e)),
                 }
             }
-            
+
             export_path.push(format!(
                 "{}.xlsx",
                 match name_file {
@@ -71,7 +70,7 @@ impl ExportData for ExportDatiStanzaToExcel {
                     None => dati_stanze.ok().unwrap().first().unwrap().fascicolo.clone(),
                 }
             ));
-            
+
             // Salva il file
             workbook
                 .save(export_path.to_str().unwrap())

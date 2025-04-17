@@ -54,6 +54,7 @@ impl InfissoDao for InfissoDaoImpl {
         Ok(Infisso::from(infisso))
     }
 
+    #[allow(dead_code, unused_variables)]
     fn update(conn: &Connection, infisso: &InfissoDto) -> Result<Infisso, String> {
         todo!()
     }

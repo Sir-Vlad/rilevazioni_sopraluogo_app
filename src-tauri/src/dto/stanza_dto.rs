@@ -1,5 +1,5 @@
-use serde::{Deserialize, Serialize};
 use crate::dao::Stanza;
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct StanzaDto {
@@ -19,7 +19,7 @@ pub struct StanzaDto {
 
 impl From<&Stanza> for StanzaDto {
     fn from(value: &Stanza) -> Self {
-        StanzaDto{
+        StanzaDto {
             id: value.id,
             chiave: value.chiave.clone(),
             piano: value.piano.clone(),

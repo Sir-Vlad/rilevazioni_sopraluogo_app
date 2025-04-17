@@ -22,15 +22,16 @@ serde_json = "1.0"
 serde = { version = "1.0", features = ["derive"] }
 log = "0.4"
 dirs-next = "2.0.0"
-tauri = { version = "2.3.1", features = [] }
+tauri = { version = "2.3.1", features = ["devtools"] }
 tauri-plugin-log = "2.0.0-rc"
 tauri-plugin-dialog = "2"
-polars = { version = "0.46.0", features = ["sql"] }
+polars = { version = "0.46.0", features = ["sql", "lazy"] }
 calamine = "0.26.1"
 rusqlite = { version = "0.34.0", features = ["bundled"] }
 itertools = "0.14.0"
 rust_xlsxwriter = "0.85.0"
 zip = "=2.5.0"
+tauri-plugin-fs = "2"
 
 [target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
 tauri-plugin-single-instance = "2"

@@ -1,12 +1,13 @@
 use crate::dao::entity::Stanza;
+use crate::database::DatabaseConnection;
 use crate::dto::StanzaDto;
 use itertools::Itertools;
 use rusqlite::{params, Connection};
 
 pub trait StanzaDao {
     fn get_all(conn: &Connection) -> Result<Vec<Stanza>, String>;
-    fn insert(conn: &Connection, stanza: StanzaDto) -> Result<Stanza, String>;
-    fn update(conn: &Connection, stanza: StanzaDto) -> Result<Stanza, String>;
+    fn insert<C: DatabaseConnection>(conn: &C, stanza: StanzaDto) -> Result<Stanza, String>;
+    fn update<C: DatabaseConnection>(conn: &C, stanza: StanzaDto) -> Result<Stanza, String>;
     fn get_with_infissi(conn: &Connection, id: i64) -> Result<Stanza, String>;
 }
 
@@ -45,7 +46,7 @@ impl StanzaDao for StanzaDaoImpl {
         }
     }
 
-    fn insert(conn: &Connection, stanza: StanzaDto) -> Result<Stanza, String> {
+    fn insert<C: DatabaseConnection>(conn: &C, stanza: StanzaDto) -> Result<Stanza, String> {
         let mut stmt = conn.prepare(
             "INSERT INTO STANZA(CHIAVE, PIANO, ID_SPAZIO, STANZA, DESTINAZIONE_USO, ALTEZZA, SPESSORE_MURO, RISCALDAMENTO, RAFFRESCAMENTO, ILLUMINAZIONE)
                 VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10)"
@@ -65,7 +66,7 @@ impl StanzaDao for StanzaDaoImpl {
         Ok(Stanza::from(&stanza))
     }
 
-    fn update(conn: &Connection, stanza: StanzaDto) -> Result<Stanza, String> {
+    fn update<C: DatabaseConnection>(conn: &C, stanza: StanzaDto) -> Result<Stanza, String> {
         // fixme: creare un builder delle query rispetto ai campi non null del dto
         conn.execute(
             "
@@ -110,8 +111,8 @@ impl StanzaDao for StanzaDaoImpl {
 
         Ok(Stanza::from(&stanza))
     }
-    
-    #[allow(dead_code)]
+
+    #[allow(dead_code, unused_variables)]
     fn get_with_infissi(conn: &Connection, id: i64) -> Result<Stanza, String> {
         todo!()
     }

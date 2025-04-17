@@ -1,9 +1,9 @@
-use std::ffi::OsStr;
 use crate::database::utils::{get_db_path, init_database, NAME_DIR_DATABASE};
 use crate::database::{Database, DatabaseEventPayload};
 use dirs_next::document_dir;
 use log::{info, warn};
 use rusqlite::Connection;
+use std::ffi::OsStr;
 use std::fs;
 use tauri::{AppHandle, Emitter, State};
 
@@ -76,7 +76,9 @@ pub fn get_all_name_database() -> Result<Vec<String>, String> {
         let entries = fs::read_dir(path)
             .map_err(|e| e.to_string())?
             .filter_map(Result::ok)
-            .filter(|entry| entry.path().is_file() && entry.path().extension() == Some(OsStr::new("db")))
+            .filter(|entry| {
+                entry.path().is_file() && entry.path().extension() == Some(OsStr::new("db"))
+            })
             .map(|entry| entry.file_name().to_string_lossy().into_owned())
             .collect::<Vec<String>>();
         return Ok(entries);

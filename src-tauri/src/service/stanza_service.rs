@@ -44,11 +44,11 @@ impl StanzaService for StanzaServiceImpl {
         }
     }
 
-    #[allow(dead_code)]
+    #[allow(dead_code, unused_variables)]
     fn get_with_infissi(db: State<'_, Database>, id: i64) -> Result<Vec<StanzaDto>, String> {
         todo!()
     }
-    #[allow(dead_code)]
+    #[allow(dead_code, unused_variables)]
     fn insert_with_infissi(
         db: State<'_, Database>,
         stanza: StanzaDto,

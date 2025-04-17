@@ -8,7 +8,7 @@ use std::fs::File;
 use tauri::path::BaseDirectory;
 use tauri::{AppHandle, Manager};
 
-pub(crate) const NAME_DIR_DATABASE: &str = "Dati_Sopralluogo";
+pub const NAME_DIR_DATABASE: &str = "Dati_Sopralluogo";
 
 pub fn get_db_path(db_name: String) -> Result<String, String> {
     if let Some(mut path) = document_dir() {
@@ -104,10 +104,8 @@ fn insert_values_into_table(
         .prepare(&query)
         .expect("Errore nella preparazione della query per inserire i dati nel database");
     for value in values {
-        stmt.execute(params![
-            value.value, value.efficienza_energetica
-        ])
-        .expect("Errore nell'inserimento dei dati nel database");
+        stmt.execute(params![value.value, value.efficienza_energetica])
+            .expect("Errore nell'inserimento dei dati nel database");
     }
     info!("Tabella {} popolata con successo", table_name);
 }
