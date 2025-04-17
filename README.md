@@ -26,8 +26,8 @@ L'applicazione offre:
 
 Ecco le future implementazioni:
 
-- [ ] Visualizzazione dei dati dell'edificio
-- [ ] Esportazione dei dati in excel
+- [x] Visualizzazione dei dati dell'edificio
+- [x] Esportazione dei dati in excel
 - [ ] Modifica dei dati sulle tabelle di visualizzazione
 - [ ] ShortKey per le operazioni eseguite maggiormente
-- [ ] Filtri sulla tabella generale
+- [x] Filtri sulla tabella generale

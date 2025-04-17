@@ -9,18 +9,27 @@ export interface IInfisso {
 
 export interface IStanza {
     id: number;
-    fascicolo: string;
+    chiave: string;
     piano: string;
     id_spazio: string;
     stanza: string;
     destinazione_uso: string;
-    cappotto?: boolean;
     altezza?: number,
     spessore_muro?: number,
     riscaldamento?: string,
     raffrescamento?: string,
     illuminazione?: string,
     infissi?: string[];
+}
+
+export interface IEdificio {
+    chiave: string,
+    fascicolo: string,
+    indirizzo: string,
+    anno_costruzione: string,
+    anno_riqualificazione: string,
+    isolamento_tetto: boolean,
+    cappotto: boolean,
 }
 
 export interface IStanzaConInfissi {

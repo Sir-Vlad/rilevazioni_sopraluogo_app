@@ -3,7 +3,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { invoke }                                    from "@tauri-apps/api/core";
 import { listen }                                    from "@tauri-apps/api/event";
 import { DatabaseContext, DatabaseContextType }      from "./Context.tsx";
-import { getFileName }                               from "../helpers/helpers.tsx";
+import { getFileName }                               from "../helpers/helpers.ts";
 
 interface DatabaseEventPayload {
     type_event: string;
@@ -32,6 +32,7 @@ const DatabaseProvider = ({children}: { children: React.ReactNode }) => {
                 const dbPath: string = await invoke("set_database", {dbName: dbName ?? databaseName});
                 setDatabasePath(dbPath);
                 setDatabaseName(getFileName(dbPath) ?? "");
+                setError(null);
             } catch (e) {
                 setError("Errore durante l'inizializzazione del database");
                 console.error(e);
@@ -51,6 +52,8 @@ const DatabaseProvider = ({children}: { children: React.ReactNode }) => {
         } catch (e) {
             setError("Errore durante il cambio di database: " + e);
             setIsLoading(false);
+        } finally {
+            setIsLoading(false);
         }
     }, []);
 
@@ -58,9 +61,9 @@ const DatabaseProvider = ({children}: { children: React.ReactNode }) => {
     useEffect(() => {
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-expect-error
-        const databaseChangeListener = listen("database-changed", (e: Event<DatabaseEventPayload>) => {
+        const databaseChangeListener = listen<DatabaseEventPayload>("database-changed", (e: Event<DatabaseEventPayload>) => {
             console.log("Evento ricevuto: ", e);
-            const {payload} = e;
+            const {payload}: { payload: DatabaseEventPayload } = e;
 
             if (payload.type_event === "database_switched") {
                 const databaseName = getFileName(payload.path);
@@ -69,11 +72,14 @@ const DatabaseProvider = ({children}: { children: React.ReactNode }) => {
                 setDatabaseName(databaseName ?? "");
                 setNeedReload(true);
                 setIsLoading(false);
+                setError(null);
             }
         });
 
         return () => {
-            databaseChangeListener.then(callback => callback());
+            databaseChangeListener
+                .then(callback => callback())
+                .catch(console.error);
         };
     });
 

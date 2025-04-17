@@ -4,7 +4,7 @@ import { useDatabase }                                       from "./UseProvider
 import { IStanza }                                           from "../models/models.tsx";
 import { IStanzaContext, StanzeContext }                     from "./Context.tsx";
 import { invoke }                                            from "@tauri-apps/api/core";
-import { toast }                                             from "react-toastify";
+import { toast }                                             from "sonner";
 
 const StanzeProvider = ({children}: { children: React.ReactNode }) => {
     const {
@@ -27,7 +27,10 @@ const StanzeProvider = ({children}: { children: React.ReactNode }) => {
             const data: IStanza[] = await invoke("get_stanze");
             setStanze(data);
         } catch (e) {
-            setError("Errore durante il caricamento degli infissi: " + e);
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-expect-error
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+            setError("Errore durante il caricamento degli infissi: " + e.toString());
         } finally {
             setLoading(false);
         }
@@ -37,7 +40,7 @@ const StanzeProvider = ({children}: { children: React.ReactNode }) => {
         if (needReload) {
             loadStanze().then(() => {
                 providerRef.current?.notifyReloadComplete();
-            });
+            }).catch(console.error);
         }
     }, [ loadStanze, needReload ]);
 
@@ -61,7 +64,10 @@ const StanzeProvider = ({children}: { children: React.ReactNode }) => {
                 toast.info("Nessun record aggiornato");
                 return;
             }
-            console.error("Errore durante l'aggiornamento della stanza: " + e);
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-expect-error
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+            console.error("Errore durante l'aggiornamento della stanza: " + e.toString());
             toast.error("Errore durante l'aggiornamento della stanza");
             throw e;
         }

@@ -9,6 +9,7 @@
     "core:default",
     "dialog:default",
     "core:resources:default",
-    "core:app:default"
+    "core:app:default",
+    "log:default"
   ]
 }

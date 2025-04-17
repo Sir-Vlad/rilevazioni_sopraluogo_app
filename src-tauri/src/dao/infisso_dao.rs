@@ -1,5 +1,6 @@
 use crate::dao::entity::Infisso;
 use crate::dto::InfissoDto;
+use log::{error, info};
 use rusqlite::Connection;
 
 pub trait InfissoDao {
@@ -38,22 +39,33 @@ impl InfissoDao for InfissoDaoImpl {
     }
 
     fn insert(conn: &Connection, infisso: &InfissoDto) -> Result<Infisso, String> {
-        conn.execute(
-            "INSERT INTO INFISSO(ID, TIPO, ALTEZZA, LARGHEZZA, MATERIALE, VETRO) 
+        match conn
+            .execute(
+                "INSERT INTO INFISSO(ID, TIPO, ALTEZZA, LARGHEZZA, MATERIALE, VETRO) 
                 VALUES (?1, ?2, ?3, ?4, ?5, ?6)",
-            (
-                &infisso.id,
-                &infisso.tipo,
-                &infisso.altezza,
-                &infisso.larghezza,
-                &infisso.materiale,
-                &infisso.vetro,
-            ),
-        )
-        .map_err(|e| e.to_string())?;
-        Ok(Infisso::from(infisso))
+                (
+                    &infisso.id,
+                    &infisso.tipo,
+                    &infisso.altezza,
+                    &infisso.larghezza,
+                    &infisso.materiale,
+                    &infisso.vetro,
+                ),
+            )
+            .map_err(|e| e.to_string())
+        {
+            Ok(_) => {
+                info!("Infisso inserito con successo");
+                Ok(Infisso::from(infisso))
+            }
+            Err(e) => {
+                error!("Errore durante l'inserimento {{ infisso }}: {}", e);
+                Err(e.to_string())
+            }
+        }
     }
 
+    #[allow(dead_code, unused_variables)]
     fn update(conn: &Connection, infisso: &InfissoDto) -> Result<Infisso, String> {
         todo!()
     }

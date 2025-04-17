@@ -1,21 +1,21 @@
 pub mod command_tauri {
+    use crate::dao::{Edificio, EdificioDAO, EdificioDAOImpl, Stanza, StanzaDao, StanzaDaoImpl};
     use crate::database::{set_database, Database, DatabaseEventPayload};
     use crate::dto::{
-        ClimatizzazioneDto, IlluminazioneDto, InfissoDto, MaterialeInfissoDto, StanzaDto,
-        VetroInfissoDto,
+        ClimatizzazioneDto, EdificioDTO, IlluminazioneDto, InfissoDto, MaterialeInfissoDto,
+        StanzaDto, VetroInfissoDto,
     };
     use crate::service::{
-        ExportData, ExportDatiStanzaToExcel, InfissoService, InfissoServiceImpl, StanzaService,
-        StanzaServiceImpl, TypeService, TypeServiceImpl,
+        EdificioService, EdificioServiceImpl, ExportData, ExportDatiStanzaToExcel, InfissoService,
+        InfissoServiceImpl, StanzaService, StanzaServiceImpl, TypeService, TypeServiceImpl,
     };
     use calamine::{open_workbook, Reader, Xlsx};
+    use itertools::izip;
     use polars::frame::{DataFrame, UniqueKeepStrategy};
-    use polars::prelude::{NamedFrom, Series};
-    use rusqlite::params;
+    use polars::prelude::{col, ChunkExplode, IntoLazy, NamedFrom, Series};
     use serde_json::Value;
     use std::collections::HashMap;
     use tauri::{AppHandle, Emitter, State};
-
     /**************************************************************************************************/
     /***************************** COMMAND PER INIZIALIZZARE IL SISTEMA *******************************/
     /**************************************************************************************************/
@@ -38,32 +38,62 @@ pub mod command_tauri {
         let path_db = set_database(app_handle.clone(), db.clone(), name_db)?;
 
         db.with_transaction(|tx| {
-            let chiave = retrieve_string_field_df(&df, "chiave", 0)?;
-            let fascicolo = retrieve_string_field_df(&df, "fascicolo", 0)?;
-            let indirizzo_edificio = retrieve_string_field_df(&df, "nome_via", 0)?;
-            tx.execute(
-                "INSERT INTO EDIFICIO(CHIAVE, FASCICOLO, INDIRIZZO)
-                VALUES (?1, ?2, ?3)",
-                params![chiave, fascicolo, indirizzo_edificio],
-            )
-            .map_err(|e| format!("Errore nella esecuzione della query: {}", e))?;
+            let df_cloned = df.clone().lazy();
+            let grouped_addresses = df_cloned
+                .group_by(["chiave"])
+                .agg([col("nome_via").unique().explode()])
+                .collect()
+                .map_err(|e| e.to_string())?;
+            let chiavi: Vec<&str> = grouped_addresses
+                .column("chiave")
+                .map_err(|err| err.to_string())?
+                .str()
+                .map_err(|err| err.to_string())?
+                .into_iter()
+                .flatten()
+                .collect();
+            let col_nome_via = grouped_addresses
+                .column("nome_via")
+                .map_err(|err| err.to_string())?;
+            let indirizzi: Vec<String> = if col_nome_via.len() > 1 {
+                col_nome_via
+                    .as_series()
+                    .unwrap()
+                    .explode()
+                    .map_err(|err| err.to_string())?
+                    .explode()
+                    .map_err(|err| err.to_string())?
+                    .iter()
+                    .map(|el| el.get_str().unwrap().to_string())
+                    .collect()
+            } else {
+                col_nome_via
+                    .list()
+                    .unwrap()
+                    .explode()
+                    .unwrap()
+                    .iter()
+                    .map(|el| el.get_str().unwrap().to_string())
+                    .collect()
+            };
 
-            let mut stmt = tx
-                .prepare(
-                    "INSERT INTO STANZA(CHIAVE, PIANO, ID_SPAZIO, STANZA, DESTINAZIONE_USO)
-                    VALUES (?1, ?2, ?3, ?4, ?5)",
-                )
-                .map_err(|e| format!("Errore nella preparazione della query: {}", e))?;
+            let fascicolo = retrieve_string_field_df(&df, "fascicolo", 0)?;
+            for (chiave, indirizzo) in izip!(chiavi, indirizzi) {
+                let edificio = Edificio::new(chiave.to_string(), fascicolo.clone(), indirizzo);
+                EdificioDAOImpl::insert(tx, edificio)?;
+            }
 
             for i in 0..df.height() {
-                let piano = retrieve_string_field_df(&df, "piano", i)?;
-                let id_spazio = retrieve_string_field_df(&df, "id_spazio", i)?;
-                let stanza = retrieve_string_field_df(&df, "cod_stanza", i)?;
-                let destinazione_uso = retrieve_string_field_df(&df, "destinazione_uso", i)?;
-
-                stmt.execute(params![chiave, piano, id_spazio, stanza, destinazione_uso])
-                    .map_err(|e| format!("Errore nella esecuzione della query: {}", e))?;
+                let stanza = Stanza::new(
+                    retrieve_string_field_df(&df, "chiave", i)?,
+                    retrieve_string_field_df(&df, "piano", i)?,
+                    retrieve_string_field_df(&df, "id_spazio", i)?,
+                    retrieve_string_field_df(&df, "cod_stanza", i)?,
+                    retrieve_string_field_df(&df, "destinazione_uso", i)?,
+                );
+                StanzaDaoImpl::insert(tx, stanza)?;
             }
+
             Ok(())
         })?;
 
@@ -242,7 +272,27 @@ pub mod command_tauri {
     /**************************************************************************************************/
 
     #[tauri::command]
-    pub fn export_data_to_excel(db: State<'_, Database>, name_file: Option<String>) -> Result<(), String> {
+    pub fn export_data_to_excel(
+        db: State<'_, Database>,
+        name_file: Option<String>,
+    ) -> Result<(), String> {
         ExportDatiStanzaToExcel::export(db, name_file)
+    }
+
+    /**************************************************************************************************/
+    /***************************** COMMAND PER INIZIALIZZARE IL SISTEMA *******************************/
+    /**************************************************************************************************/
+
+    #[tauri::command]
+    pub fn get_edifici(db: State<'_, Database>) -> Result<Vec<EdificioDTO>, String> {
+        EdificioServiceImpl::get_all(db)
+    }
+
+    #[tauri::command]
+    pub fn update_edificio(
+        db: State<'_, Database>,
+        edificio: EdificioDTO,
+    ) -> Result<EdificioDTO, String> {
+        EdificioServiceImpl::update(db, edificio)
     }
 }

@@ -1,20 +1,20 @@
-import * as React               from "react";
-import DatabaseProvider         from "./DatabaseProvider.tsx";
-import TypesProvider            from "./TypesProvider.tsx";
-import InfissiProvider          from "./InfissiProvider.tsx";
-import StanzeProvider           from "./StanzeProvider.tsx";
-import StanzeConInfissiProvider from "./StanzeConInfissiProvider.tsx";
+import * as React       from "react";
+import DatabaseProvider from "./DatabaseProvider.tsx";
+import TypesProvider    from "./TypesProvider.tsx";
+import InfissiProvider  from "./InfissiProvider.tsx";
+import StanzeProvider   from "./StanzeProvider.tsx";
+import EdificioProvider from "@/context/EdificioProvider.tsx";
 
 const GlobalProvider = ({children}: { children: React.ReactNode }) => {
     return <DatabaseProvider>
         <TypesProvider>
-            <InfissiProvider>
-                <StanzeProvider>
-                    <StanzeConInfissiProvider>
+            <EdificioProvider>
+                <InfissiProvider>
+                    <StanzeProvider>
                         { children }
-                    </StanzeConInfissiProvider>
-                </StanzeProvider>
-            </InfissiProvider>
+                    </StanzeProvider>
+                </InfissiProvider>
+            </EdificioProvider>
         </TypesProvider>
     </DatabaseProvider>;
 };
