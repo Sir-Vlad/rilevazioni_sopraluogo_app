@@ -8,6 +8,7 @@ pub struct EdificioDTO {
     pub indirizzo: String,
     pub anno_costruzione: Option<String>,
     pub anno_riqualificazione: Option<String>,
+    pub note_riqualificazione: Option<String>,
     pub isolamento_tetto: Option<bool>,
     pub cappotto: Option<bool>,
 }
@@ -20,6 +21,7 @@ impl From<&Edificio> for EdificioDTO {
             indirizzo: value.indirizzo.to_string(),
             anno_costruzione: value.anno_costruzione.clone(),
             anno_riqualificazione: value.anno_riqualificazione.clone(),
+            note_riqualificazione: value.note_riqualificazione.clone(),
             isolamento_tetto: value.isolamento_tetto,
             cappotto: value.cappotto,
         }

@@ -1,5 +1,6 @@
 use crate::dao::Edificio;
 use crate::database::DatabaseConnection;
+use log::{error, info};
 use rusqlite::{params, Connection};
 
 pub trait EdificioDAO {
@@ -30,8 +31,9 @@ impl EdificioDAO for EdificioDAOImpl {
                     indirizzo: row.get::<_, String>(2)?,
                     anno_costruzione: row.get::<_, Option<String>>(3)?,
                     anno_riqualificazione: row.get::<_, Option<String>>(4)?,
-                    isolamento_tetto: row.get::<_, Option<bool>>(5)?,
-                    cappotto: row.get::<_, Option<bool>>(6)?,
+                    note_riqualificazione: row.get::<_, Option<String>>(5)?,
+                    isolamento_tetto: row.get::<_, Option<bool>>(6)?,
+                    cappotto: row.get::<_, Option<bool>>(7)?,
                 })
             })
             .expect("Errore nella lettura dei dati di tipo materiale")
@@ -43,20 +45,30 @@ impl EdificioDAO for EdificioDAOImpl {
         connection: &C,
         edificio: Edificio,
     ) -> Result<Edificio, String> {
-        connection.execute(
-            "INSERT INTO EDIFICIO(CHIAVE, FASCICOLO, INDIRIZZO)
+        match connection
+            .execute(
+                "INSERT INTO EDIFICIO(CHIAVE, FASCICOLO, INDIRIZZO)
                     VALUES (?1, ?2, ?3)",
-            params![edificio.chiave, edificio.fascicolo, edificio.indirizzo],
-        ).map_err(|e| e.to_string())?;
-        
-        Ok(edificio)
+                params![edificio.chiave, edificio.fascicolo, edificio.indirizzo],
+            )
+            .map_err(|e| e.to_string())
+        {
+            Ok(_) => {
+                info!("Edificio inserito con successo");
+                Ok(edificio)
+            }
+            Err(e) => {
+                error!("Errore durante l'inserimento {{ edificio }}: {}", e);
+                Err(e)
+            }
+        }
     }
 
     fn update<C: DatabaseConnection>(
         connection: &C,
         edificio: Edificio,
     ) -> Result<Edificio, String> {
-        connection
+        match connection
             .execute(
                 "UPDATE EDIFICIO
                     SET anno_costruzione      = ?1,
@@ -73,7 +85,16 @@ impl EdificioDAO for EdificioDAOImpl {
                     edificio.chiave,
                 ],
             )
-            .map_err(|e| e.to_string())?;
-        Ok(edificio)
+            .map_err(|e| e.to_string())
+        {
+            Ok(_) => {
+                info!("Edificio aggiornato con successo");
+                Ok(edificio)
+            }
+            Err(e) => {
+                error!("Errore durante l'aggiornamento {{ edificio }}: {}", e);
+                Err(e)
+            }
+        }
     }
 }

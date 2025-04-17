@@ -1,7 +1,7 @@
 use crate::dao::Stanza;
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct StanzaDto {
     pub id: u64,
     pub chiave: String,
@@ -17,21 +17,34 @@ pub struct StanzaDto {
     pub infissi: Option<Vec<String>>,
 }
 
-impl From<&Stanza> for StanzaDto {
-    fn from(value: &Stanza) -> Self {
+impl StanzaDto {
+    fn from_stanza_common(stanza: &Stanza) -> Self {
         StanzaDto {
-            id: value.id,
-            chiave: value.chiave.clone(),
-            piano: value.piano.clone(),
-            id_spazio: value.id_spazio.clone(),
-            stanza: value.stanza.clone(),
-            destinazione_uso: value.destinazione_uso.clone(),
-            altezza: value.altezza,
-            spessore_muro: value.spessore_muro,
-            riscaldamento: value.riscaldamento.clone(),
-            raffrescamento: value.raffrescamento.clone(),
-            illuminazione: value.illuminazione.clone(),
+            id: stanza.id.unwrap_or(0),
+            chiave: stanza.chiave.clone(),
+            piano: stanza.piano.clone(),
+            id_spazio: stanza.id_spazio.clone(),
+            stanza: stanza.stanza.clone(),
+            destinazione_uso: stanza.destinazione_uso.clone(),
+            altezza: stanza.altezza,
+            spessore_muro: stanza.spessore_muro,
+            riscaldamento: stanza.riscaldamento.clone(),
+            raffrescamento: stanza.raffrescamento.clone(),
+            illuminazione: stanza.illuminazione.clone(),
             infissi: None,
         }
+    }
+
+}
+
+impl From<Stanza> for StanzaDto {
+    fn from(value: Stanza) -> Self {
+        StanzaDto::from_stanza_common(&value)
+    }
+}
+
+impl From<&Stanza> for StanzaDto {
+    fn from(value: &Stanza) -> Self {
+        StanzaDto::from_stanza_common(value)   
     }
 }

@@ -1,7 +1,7 @@
 use crate::database::utils::{get_db_path, init_database, NAME_DIR_DATABASE};
 use crate::database::{Database, DatabaseEventPayload};
 use dirs_next::document_dir;
-use log::{info, warn};
+use log::{error, info};
 use rusqlite::Connection;
 use std::ffi::OsStr;
 use std::fs;
@@ -29,7 +29,7 @@ pub fn set_database(
     ) {
         Ok(_) => info!("Database inizializzato"),
         Err(e) => {
-            warn!("Errore nell'inizializzazione del database: {}", e);
+            error!("Errore nell'inizializzazione del database: {}", e);
             return Err(e.to_string());
         }
     };
@@ -42,6 +42,7 @@ pub fn switch_database(
     db: State<'_, Database>,
     db_name: String,
 ) -> Result<(), String> {
+    info!("Switching database to {}", db_name);
     let db_path = get_db_path(db_name)?;
     let mut conn = db.get_conn();
     let mut path_to_database = db.get_path_to_database();
@@ -62,6 +63,7 @@ pub fn switch_database(
         )
         .map_err(|e| e.to_string())?;
 
+    info!("Database switched");
     Ok(())
 }
 

@@ -1,5 +1,5 @@
 pub mod command_tauri {
-    use crate::dao::{Edificio, EdificioDAO, EdificioDAOImpl};
+    use crate::dao::{Edificio, EdificioDAO, EdificioDAOImpl, Stanza, StanzaDao, StanzaDaoImpl};
     use crate::database::{set_database, Database, DatabaseEventPayload};
     use crate::dto::{
         ClimatizzazioneDto, EdificioDTO, IlluminazioneDto, InfissoDto, MaterialeInfissoDto,
@@ -10,10 +10,9 @@ pub mod command_tauri {
         InfissoServiceImpl, StanzaService, StanzaServiceImpl, TypeService, TypeServiceImpl,
     };
     use calamine::{open_workbook, Reader, Xlsx};
-    use itertools::{izip, Itertools};
+    use itertools::izip;
     use polars::frame::{DataFrame, UniqueKeepStrategy};
     use polars::prelude::{col, ChunkExplode, IntoLazy, NamedFrom, Series};
-    use rusqlite::params;
     use serde_json::Value;
     use std::collections::HashMap;
     use tauri::{AppHandle, Emitter, State};
@@ -84,24 +83,17 @@ pub mod command_tauri {
                 EdificioDAOImpl::insert(tx, edificio)?;
             }
 
-            // fixme: utilizzare i dao specifico
-            let mut stmt = tx
-                .prepare(
-                    "INSERT INTO STANZA(CHIAVE, PIANO, ID_SPAZIO, STANZA, DESTINAZIONE_USO)
-                    VALUES (?1, ?2, ?3, ?4, ?5)",
-                )
-                .map_err(|e| format!("Errore nella preparazione della query: {}", e))?;
-
             for i in 0..df.height() {
-                let chiave = retrieve_string_field_df(&df, "chiave", i)?;
-                let piano = retrieve_string_field_df(&df, "piano", i)?;
-                let id_spazio = retrieve_string_field_df(&df, "id_spazio", i)?;
-                let stanza = retrieve_string_field_df(&df, "cod_stanza", i)?;
-                let destinazione_uso = retrieve_string_field_df(&df, "destinazione_uso", i)?;
-
-                stmt.execute(params![chiave, piano, id_spazio, stanza, destinazione_uso])
-                    .map_err(|e| format!("Errore nella esecuzione della query: {}", e))?;
+                let stanza = Stanza::new(
+                    retrieve_string_field_df(&df, "chiave", i)?,
+                    retrieve_string_field_df(&df, "piano", i)?,
+                    retrieve_string_field_df(&df, "id_spazio", i)?,
+                    retrieve_string_field_df(&df, "cod_stanza", i)?,
+                    retrieve_string_field_df(&df, "destinazione_uso", i)?,
+                );
+                StanzaDaoImpl::insert(tx, stanza)?;
             }
+
             Ok(())
         })?;
 

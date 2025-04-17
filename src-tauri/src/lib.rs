@@ -63,6 +63,7 @@ fn setup_logger(app: &mut App) -> Result<(), Box<dyn std::error::Error>> {
                 path: log_directory,
                 file_name: None,
             }))
+            .target(Target::new(TargetKind::Webview))
             .level(log::LevelFilter::Info)
             .rotation_strategy(RotationStrategy::KeepAll)
             .max_file_size(50000)

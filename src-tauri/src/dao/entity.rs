@@ -7,18 +7,20 @@ pub struct Edificio {
     pub indirizzo: String,
     pub anno_costruzione: Option<String>,
     pub anno_riqualificazione: Option<String>,
+    pub note_riqualificazione: Option<String>,
     pub isolamento_tetto: Option<bool>,
     pub cappotto: Option<bool>,
 }
 
 impl Edificio {
     pub fn new(chiave: String, fascicolo: String, indirizzo: String) -> Self {
-        Edificio{
+        Edificio {
             chiave,
             fascicolo,
             indirizzo,
             anno_costruzione: None,
             anno_riqualificazione: None,
+            note_riqualificazione: None,
             isolamento_tetto: None,
             cappotto: None,
         }
@@ -33,6 +35,7 @@ impl From<EdificioDTO> for Edificio {
             indirizzo: value.indirizzo.to_string(),
             anno_costruzione: value.anno_costruzione.clone(),
             anno_riqualificazione: value.anno_riqualificazione.clone(),
+            note_riqualificazione: None,
             isolamento_tetto: value.isolamento_tetto,
             cappotto: value.cappotto,
         }
@@ -62,9 +65,9 @@ impl From<&InfissoDto> for Infisso {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Stanza {
-    pub id: u64,
+    pub id: Option<u64>,
     pub chiave: String,
     pub piano: String,
     pub id_spazio: String,
@@ -77,10 +80,34 @@ pub struct Stanza {
     pub illuminazione: Option<String>,
 }
 
-impl From<&StanzaDto> for Stanza {
-    fn from(value: &StanzaDto) -> Self {
+impl Stanza {
+    pub fn new(
+        chiave: String,
+        piano: String,
+        id_spazio: String,
+        stanza: String,
+        destinazione_uso: String,
+    ) -> Self {
         Stanza {
-            id: value.id,
+            id: None,
+            chiave,
+            piano,
+            id_spazio,
+            stanza,
+            destinazione_uso,
+            altezza: None,
+            spessore_muro: None,
+            riscaldamento: None,
+            raffrescamento: None,
+            illuminazione: None,
+        }
+    }
+}
+
+impl From<StanzaDto> for Stanza {
+    fn from(value: StanzaDto) -> Self {
+        Stanza {
+            id: Some(value.id),
             chiave: value.chiave.clone(),
             piano: value.piano.clone(),
             id_spazio: value.id_spazio.clone(),

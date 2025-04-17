@@ -1,7 +1,7 @@
 use crate::database::Database;
 use dirs_next::document_dir;
 use rusqlite::{Connection, Error};
-use rust_xlsxwriter::{Workbook, Worksheet};
+use rust_xlsxwriter::{Format, Workbook, Worksheet};
 use serde::Serialize;
 use std::fs;
 use tauri::State;
@@ -20,7 +20,7 @@ pub struct DatiStanza {
     pub(crate) riscaldamento: Option<String>,
     pub(crate) raffrescamento: Option<String>,
     pub(crate) illuminazione: Option<String>,
-    pub(crate) mq_infissi: Option<u16>,
+    pub(crate) mq_infissi: Option<f32>,
     pub(crate) materiale: Option<String>,
     pub(crate) vetro: Option<String>,
 }
@@ -138,6 +138,7 @@ impl ExportDatiStanzaToExcel {
         row: u32,
         row_value: &DatiStanza,
     ) -> Result<(), String> {
+        let format = Format::new().set_num_format("0.00");
         worksheet
             .write_number(row, 0, row_value.id as f64)
             .map_err(|e| e.to_string())?;
@@ -191,7 +192,7 @@ impl ExportDatiStanzaToExcel {
         }
         if let Some(mq_infissi) = row_value.mq_infissi {
             worksheet
-                .write_number(row, 12, mq_infissi)
+                .write_number_with_format(row, 12, mq_infissi, &format)
                 .map_err(|e| e.to_string())?;
         }
         if let Some(materiale) = &row_value.materiale {
