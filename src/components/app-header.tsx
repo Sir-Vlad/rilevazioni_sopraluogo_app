@@ -38,7 +38,7 @@ export default function SiteHeader() {
 
     const fileSelected = useMemo((): ReactNode => {
         return error !== "Database non settato" ? <>Stai lavorando
-            su <b>{ databaseName }</b></> : <>Selezionare un file</>;
+            sul fascicolo <b>{ Number(databaseName) }</b></> : <>Selezionare un file</>;
     }, [ databaseName, error ]);
 
     return (<header className="flex sticky top-0 z-50 w-full items-center border-b bg-background">

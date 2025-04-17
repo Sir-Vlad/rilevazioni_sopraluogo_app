@@ -1,5 +1,5 @@
-import { createContext }                                   from "react";
-import { IEdificio, IInfisso, IStanza, IStanzaConInfissi } from "../models/models.tsx";
+import { createContext }                from "react";
+import { IEdificio, IInfisso, IStanza } from "../models/models.tsx";
 
 export interface DatabaseContextType {
     databasePath: string;
@@ -19,13 +19,6 @@ export interface InfissiContextType {
 }
 
 export const InfissiContext = createContext<InfissiContextType | null>(null);
-
-export interface IStanzaConInfissiContext {
-    data: IStanzaConInfissi[];
-    add: (new_value: IStanzaConInfissi) => Promise<void>;
-}
-
-export const StanzeConInfissiContext = createContext<IStanzaConInfissiContext | null>(null);
 
 export interface IStanzaContext {
     data: IStanza[];

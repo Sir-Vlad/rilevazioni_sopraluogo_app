@@ -1,12 +1,5 @@
-import { useContext } from "react";
-import {
-    DatabaseContext,
-    EdificioContext,
-    InfissiContext,
-    StanzeConInfissiContext,
-    StanzeContext,
-    TypesContext
-}                     from "./Context.tsx";
+import { useContext }                                                                    from "react";
+import { DatabaseContext, EdificioContext, InfissiContext, StanzeContext, TypesContext } from "./Context.tsx";
 
 export const useDatabase = () => {
     const context = useContext(DatabaseContext);
@@ -30,14 +23,6 @@ export const useTypes = () => {
         throw new Error("useType must be used within the DatabaseProvider");
     }
     return type;
-};
-
-export const useStanzeConInfissi = () => {
-    const context = useContext(StanzeConInfissiContext);
-    if (!context) {
-        throw new Error("useStanzeConInfissi must be defined");
-    }
-    return context;
 };
 
 export const useStanze = () => {

@@ -22,7 +22,7 @@ function App() {
                             <Route path="/inserimento" element={ <PageInserimentoData /> } />
                             <Route path="/panoramica" element={ <Panoramica /> } />
                         </Routes>
-                        <Toaster richColors expand={ true } />
+                        <Toaster richColors expand={ true } closeButton />
                     </SidebarInset>
                 </div>
             </SidebarProvider>

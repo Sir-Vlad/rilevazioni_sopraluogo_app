@@ -72,10 +72,26 @@ export function NavMain() {
         }
     };
 
+    const handleExcelExport = async () => {
+        try {
+            await invoke("export_data_to_excel");
+            toast.success("Esportazione avvenuta con successo");
+        } catch (e) {
+            console.error(e);
+            toast.error("Esportazione fallita");
+        }
+    };
+
+
+    const selectDatabase = (nameDatabase: string) => async () => {
+        await database.changeDatabase(nameDatabase);
+        setSelectedDatabase(nameDatabase);
+    };
+
     return (
         <SidebarGroup>
             <SidebarGroupLabel>Fascicoli</SidebarGroupLabel>
-            <SidebarGroupAction title="Aggiungi Fascicolo" onClick={ addNewFascicolo }>
+            <SidebarGroupAction title="Aggiungi Fascicolo" onClick={ () => void addNewFascicolo() }>
                 <Plus /> <span className="sr-only">Aggiungi Fascicolo</span>
             </SidebarGroupAction>
             <SidebarMenu>
@@ -83,13 +99,11 @@ export function NavMain() {
                     const nameDatabase = getFileName(file);
                     return <SidebarMenuItem key={ file }>
                         <div className="flex grow-1">
-                            <SidebarMenuButton asChild tooltip={ file } onClick={ async () => {
-                                await database.changeDatabase(nameDatabase);
-                                setSelectedDatabase(nameDatabase);
-                            } }>
+                            <SidebarMenuButton asChild tooltip={ file }
+                                               onClick={ () => selectDatabase(nameDatabase) }>
                                 <div className="flex items-center">
                                     <FileSpreadsheet />
-                                    <span>{ nameDatabase }</span>
+                                    <span>{ Number(nameDatabase) }</span>
                                     <div
                                         className={ `flex w-full justify-end ${ selectedDatabase === nameDatabase ? "" : "hidden" }` }>
                                         <Check />
@@ -104,7 +118,7 @@ export function NavMain() {
                                 </SidebarMenuAction>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent side="right" align="start">
-                                <DropdownMenuItem>
+                                <DropdownMenuItem onClick={ () => void handleExcelExport() }>
                                     <span>Esporta in excel</span>
                                 </DropdownMenuItem>
                             </DropdownMenuContent>

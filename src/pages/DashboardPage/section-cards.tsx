@@ -10,11 +10,21 @@ export function SectionCards() {
                                 .filter(value => value.chiave === selectedEdificio)
                                 .map(value => value.piano))
     ].length;
-    const totStanze = stanzeContext.data
-                                   .filter(value => value.chiave === selectedEdificio).length;
-    const totInfissi = infissiContext.data.length;
-    // fixme: il valore non è giusto bisogna incrociarlo con le stanze
-    const totMqInfissi = infissiContext.data.map(value => value.altezza * value.larghezza).reduce((a, b) => a + b, 0);
+
+    const stanzeEdificioSelezionato = stanzeContext.data
+                                                   .filter(value => value.chiave === selectedEdificio);
+    const totStanze = stanzeEdificioSelezionato.length;
+    const infissiList = stanzeEdificioSelezionato.flatMap(value => value.infissi || []);
+    const totInfissi = infissiList.length;
+    const totMqInfissi = infissiList
+        .reduce((totale, infissoId) => {
+            const infisso = infissiContext.data.find(i => i.id === infissoId);
+            if (infisso) {
+                return totale + (infisso.altezza * infisso.larghezza) / 10000;
+            }
+            return totale;
+        }, 0);
+
 
     return (<div
         className="*:data-[slot=card]:shadow-xs @xl/main:grid-cols-2 @5xl/main:grid-cols-4 grid grid-cols-1 gap-4

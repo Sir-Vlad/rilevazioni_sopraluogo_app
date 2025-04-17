@@ -101,34 +101,33 @@ const CardFormStanza = () => {
             return;
         }
 
-        const stanza = stanzaContext.data.find((item) => {
-            return item.chiave === selectedEdificio
-                && item.stanza === data.stanza
-                && item.destinazione_uso === data.destinazione_uso
-                && item.piano === data.piano;
+        const stanze = stanzaContext.data.filter((item) => {
+            return item.chiave === selectedEdificio && item.stanza === data.stanza && item.destinazione_uso === data.destinazione_uso && item.piano === data.piano;
         });
-        if (stanza === undefined) {
+        if (stanze.length === 0) {
             toast.error("Stanza non trovata");
             return;
         }
-        const newStanza: IStanza = {
-            ...stanza,
-            altezza       : data.altezza,
-            spessore_muro : data.spessore_muro,
-            riscaldamento : data.riscaldamento === "Altro" ? data.riscaldamento_altro : data.riscaldamento,
-            raffrescamento: data.raffrescamento === "Altro" ? data.raffrescamento_altro : data.raffrescamento,
-            illuminazione : data.illuminazione === "Altro" ? data.illuminazione_altro : data.illuminazione,
-            infissi       : data.infissi?.filter(infisso => {
-                return infisso !== null && infisso !== undefined && infisso !== "";
-            })
-        };
-        console.log(newStanza);
-        try {
-            stanzaContext.updateStanza(newStanza);
-            toast.success(`Stanza ${ data.stanza } modificata`);
-        } catch (e) {
-            toast.error("Errore durante la modifica della stanza");
-            console.log(e);
+        for (const stanza of stanze) {
+            const newStanza: IStanza = {
+                ...stanza,
+                altezza       : data.altezza,
+                spessore_muro : data.spessore_muro,
+                riscaldamento : data.riscaldamento === "Altro" ? data.riscaldamento_altro : data.riscaldamento,
+                raffrescamento: data.raffrescamento === "Altro" ? data.raffrescamento_altro : data.raffrescamento,
+                illuminazione : data.illuminazione === "Altro" ? data.illuminazione_altro : data.illuminazione,
+                infissi       : data.infissi?.filter(infisso => {
+                    return infisso !== null && infisso !== undefined && infisso !== "";
+                })
+            };
+            console.log(newStanza);
+            try {
+                stanzaContext.updateStanza(newStanza);
+                toast.success(`Stanza ${ data.stanza } modificata`);
+            } catch (e) {
+                toast.error(`Errore durante la modifica della stanza ${ data.stanza }`);
+                console.log(e);
+            }
         }
     }
 

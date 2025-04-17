@@ -113,7 +113,7 @@ function AddInfissiDialog({
 
     const handleAddInfissi = () => {
         // Conversione a numero
-        if (isNaN(numberOfInfissi) || numberOfInfissi <= 0) {
+        if (isNaN(numberOfInfissi) || numberOfInfissi <= 0 || numberOfInfissi > 20) {
             alert("Inserisci un numero valido di infissi");
             return;
         }
@@ -153,7 +153,6 @@ function AddInfissiDialog({
                         onChange={ (e) =>
                             handleInputNumericChange(e, setNumberOfInfissi)
                         }
-                        min="1"
                     />
                     <Select
                         value={ selectedType }

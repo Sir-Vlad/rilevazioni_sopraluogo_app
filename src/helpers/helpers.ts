@@ -15,19 +15,28 @@ export const getFileName = (filePath: string): string => {
 
 
 export const handleInputNumericChange = <T extends (value: number) => void>(event: ChangeEvent<HTMLInputElement>, onChange: T) => {
-    const {value} = event.target;
+    const input = event.target;
+    const {
+              value,
+              selectionStart
+          } = input;
     if (value.length === 0) {
         onChange(0);
         return;
     }
-    if (/^\D$/.test(value[value.length - 1])) {
-        const newValue = value.slice(0, -1);
-        if (newValue.length === 0) {
-            onChange(0);
-        } else {
-            onChange(Number(newValue));
-        }
-        return;
+    const cursorPosition = selectionStart ?? 0;
+    const valueBeforeCursor = value.substring(0, cursorPosition);
+    const nonNumericBeforeCursor = (valueBeforeCursor.match(/\D/g) || []).length;
+
+    const newValue = value.replace(/\D/g, "");
+    if (newValue.length === 0) {
+        onChange(0);
+    } else {
+        onChange(parseInt(newValue));
     }
-    onChange(Number(value));
+
+    setTimeout(() => {
+        const newCursorPosition = Math.max(0, cursorPosition - nonNumericBeforeCursor);
+        input.setSelectionRange(newCursorPosition, newCursorPosition);
+    }, 0);
 };

@@ -10,6 +10,8 @@ interface CardDataGridProps<TData> {
     title?: string,
 }
 
+// todo: https://tanstack.com/table/latest/docs/framework/react/examples/editable-data?panel=code
+
 function CardDataGrid<TData>({
                                  table,
                                  title

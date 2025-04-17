@@ -1,12 +1,22 @@
 import { Card, CardContent, CardHeader } from "@/components/ui/card.tsx";
-import { Fragment }                      from "react";
+import { Fragment, ReactNode }           from "react";
 import { useEdifici }                    from "@/context/UseProvider.tsx";
+import { CheckIcon, XIcon }              from "lucide-react";
 
 const CardDataEdificio = () => {
     const {
               data,
               selectedEdificio
           } = useEdifici();
+
+    const valueElement = (value: unknown) => {
+        if (typeof value === "boolean") {
+            return value ? <CheckIcon /> : <XIcon />;
+        } else {
+            const v: ReactNode = value as ReactNode ?? "Dato non disponibile";
+            return <p className="font-semibold">{ v }</p>;
+        }
+    };
 
     return <Card className="@container/card col-span-3">
         <CardHeader>
@@ -18,13 +28,14 @@ const CardDataEdificio = () => {
                     .filter(value => value.chiave === selectedEdificio)
                     .map((value) => {
                         return Object.entries(value)
+                                     .filter(([ key, _ ]) => key !== "note_riqualificazione")
                                      .map(([ key, value ]) => {
                                          return <Fragment key={ key }>
                                              <div>
                                                  <p className="font-medium">{ key }</p>
                                              </div>
                                              <div className="flex items-center justify-center">
-                                                 <p className="font-semibold">{ value ?? "Dato non disponibile" }</p>
+                                                 { valueElement(value) }
                                              </div>
                                          </Fragment>;
                                      });
