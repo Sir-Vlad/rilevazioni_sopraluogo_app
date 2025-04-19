@@ -7,9 +7,28 @@ import PageInserimentoData               from "@/pages/InserimentoDataPage/page-
 import Panoramica                        from "@/pages/page-panoramica.tsx";
 import { ThemeProvider }                 from "./theme/theme-provider";
 import { Toaster }                       from "@/components/ui/sonner.tsx";
+import { useEffect }                     from "react";
+import { invoke }                        from "@tauri-apps/api/core";
 
 
 function App() {
+    useEffect(() => {
+        const handleBeforeUnload = async () => {
+            try {
+                await invoke("close_database");
+                console.log("Chiusura database ....");
+            } catch (e) {
+                console.error("Errore durante la chiusura del database: ", e);
+            }
+        };
+
+        window.addEventListener("beforeunload", handleBeforeUnload);
+
+        return () => {
+            window.removeEventListener("beforeunload", handleBeforeUnload);
+        };
+    }, []);
+
     return <ThemeProvider>
         <div className="[--header-height:calc(theme(spacing.14))]">
             <SidebarProvider className="flex flex-col" defaultOpen={ false }>

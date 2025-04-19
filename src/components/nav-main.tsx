@@ -83,49 +83,45 @@ export function NavMain() {
     };
 
 
-    const selectDatabase = (nameDatabase: string) => async () => {
-        await database.changeDatabase(nameDatabase);
-        setSelectedDatabase(nameDatabase);
-    };
-
-    return (
-        <SidebarGroup>
-            <SidebarGroupLabel>Fascicoli</SidebarGroupLabel>
-            <SidebarGroupAction title="Aggiungi Fascicolo" onClick={ () => void addNewFascicolo() }>
-                <Plus /> <span className="sr-only">Aggiungi Fascicolo</span>
-            </SidebarGroupAction>
-            <SidebarMenu>
-                { databasesNameFiles.map((file) => {
-                    const nameDatabase = getFileName(file);
-                    return <SidebarMenuItem key={ file }>
-                        <div className="flex grow-1">
-                            <SidebarMenuButton asChild tooltip={ file }
-                                               onClick={ () => selectDatabase(nameDatabase) }>
-                                <div className="flex items-center">
-                                    <FileSpreadsheet />
-                                    <span>{ Number(nameDatabase) }</span>
-                                    <div
-                                        className={ `flex w-full justify-end ${ selectedDatabase === nameDatabase ? "" : "hidden" }` }>
-                                        <Check />
-                                    </div>
+    return (<SidebarGroup>
+        <SidebarGroupLabel>Fascicoli</SidebarGroupLabel>
+        <SidebarGroupAction title="Aggiungi Fascicolo" onClick={ () => void addNewFascicolo() }>
+            <Plus /> <span className="sr-only">Aggiungi Fascicolo</span>
+        </SidebarGroupAction>
+        <SidebarMenu>
+            { databasesNameFiles.map((file) => {
+                const nameDatabase = getFileName(file);
+                return <SidebarMenuItem key={ file }>
+                    <div className="flex grow-1">
+                        <SidebarMenuButton asChild tooltip={ file }
+                                           onClick={ async () => {
+                                               await database.changeDatabase(nameDatabase);
+                                               setSelectedDatabase(nameDatabase);
+                                           } }>
+                            <div className="flex items-center">
+                                <FileSpreadsheet />
+                                <span>{ Number(nameDatabase) }</span>
+                                <div
+                                    className={ `flex w-full justify-end ${ selectedDatabase === nameDatabase ? "" : "hidden" }` }>
+                                    <Check />
                                 </div>
-                            </SidebarMenuButton>
-                        </div>
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <SidebarMenuAction>
-                                    <MoreHorizontal />
-                                </SidebarMenuAction>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent side="right" align="start">
-                                <DropdownMenuItem onClick={ () => void handleExcelExport() }>
-                                    <span>Esporta in excel</span>
-                                </DropdownMenuItem>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
-                    </SidebarMenuItem>;
-                }) }
-            </SidebarMenu>
-        </SidebarGroup>
-    );
+                            </div>
+                        </SidebarMenuButton>
+                    </div>
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <SidebarMenuAction>
+                                <MoreHorizontal />
+                            </SidebarMenuAction>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent side="right" align="start">
+                            <DropdownMenuItem onClick={ () => void handleExcelExport() }>
+                                <span>Esporta in excel</span>
+                            </DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+                </SidebarMenuItem>;
+            }) }
+        </SidebarMenu>
+    </SidebarGroup>);
 }

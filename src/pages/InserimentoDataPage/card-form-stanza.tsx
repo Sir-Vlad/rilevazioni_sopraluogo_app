@@ -24,8 +24,12 @@ const FormSchema = z.object({
     }),
     destinazione_uso    : z.string(),
     piano               : z.string(),
-    altezza             : z.number().min(0).optional(),
-    spessore_muro       : z.number().min(0).optional(),
+    altezza             : z.number().max(65000, {
+        message: "L'altezza deve essere maggiore di 0 e minore di 65000"
+    }).optional(),
+    spessore_muro       : z.number().max(256, {
+        message: "Lo spessore del muro deve essere maggiore di 0 e minore di 256"
+    }).optional(),
     riscaldamento       : z.string().optional(),
     riscaldamento_altro : z.string().optional(),
     raffrescamento      : z.string().optional(),

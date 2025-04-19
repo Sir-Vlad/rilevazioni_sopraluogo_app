@@ -24,18 +24,24 @@ const CardProgress = ({
             </CardTitle>
         </CardHeader>
         <CardContent>
-            <div className="flex flex-col gap-6">
-                {
-                    values.map(value => {
+            <div className="flex flex-col gap-3">
+                { values.length > 0 ?
+                    (values.map(value => {
                         const valuePercent = value.value / total * 100;
-                        return <div className="grid grid-cols-12 gap-4 items-center align-middle" key={ value.label }>
+                        return <div
+                            className="grid grid-cols-12 items-center align-middle rounded-md border p-4 hover:bg-sidebar-accent/90"
+                            key={ value.label }>
                             <Label className="col-span-2">{ value.label }</Label>
                             <Progress className="col-span-9" value={ valuePercent } />
                             <div className="flex justify-end">
                                 <Label className="col-span-1">{ Math.round(valuePercent) } %</Label>
                             </div>
                         </div>;
-                    })
+                    })) : (
+                        <div className="h-24 flex items-center justify-center rounded-md border p-4">
+                            <span>No results</span>
+                        </div>
+                    )
                 }
             </div>
         </CardContent>

@@ -22,26 +22,32 @@ const CardFotovoltaico = () => {
             <h1 className="text-2xl font-bold text-primary tracking-tight">Fotovoltaico</h1>
         </CardHeader>
         <CardContent>
-            <Table>
-                <TableHeader>
-                    <TableRow>
-                        <TableHead className="text-center font-bold">Numero</TableHead>
-                        <TableHead className="text-center font-bold">Potenza</TableHead>
-                        <TableHead className="text-center font-bold">Proprietario</TableHead>
-                    </TableRow>
-                </TableHeader>
-                <TableBody>
-                    {
-                        datafake.map(value => {
-                            return <TableRow key={ value.id }>
-                                <TableCell className="text-center">{ value.id }</TableCell>
-                                <TableCell className="text-center">{ value.potenza } KW</TableCell>
-                                <TableCell className="text-center">{ value.proprietario }</TableCell>
-                            </TableRow>;
-                        })
-                    }
-                </TableBody>
-            </Table>
+            <div className="rounded-md border">
+                <Table>
+                    <TableHeader>
+                        <TableRow>
+                            <TableHead className="text-center font-bold">Numero</TableHead>
+                            <TableHead className="text-center font-bold">Potenza</TableHead>
+                            <TableHead className="text-center font-bold">Proprietario</TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        { datafake.length > 0 ?
+                            (datafake.map(value => {
+                                return <TableRow key={ value.id }>
+                                    <TableCell className="text-center">{ value.id }</TableCell>
+                                    <TableCell className="text-center">{ value.potenza } KW</TableCell>
+                                    <TableCell className="text-center">{ value.proprietario }</TableCell>
+                                </TableRow>;
+                            })) : (
+                                <TableCell colSpan={ 5 } className="h-24 text-center">
+                                    No results
+                                </TableCell>
+                            )
+                        }
+                    </TableBody>
+                </Table>
+            </div>
         </CardContent>
     </Card>;
 };

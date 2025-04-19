@@ -21,7 +21,6 @@ import {
 }                               from "@/components/ui/dropdown-menu";
 import { Button }               from "@/components/ui/button";
 import { ChevronDown }          from "lucide-react";
-import { useEdifici }           from "@/context/UseProvider.tsx";
 
 const columns: ColumnDef<IStanza>[] = [
     {
@@ -91,13 +90,11 @@ const columns: ColumnDef<IStanza>[] = [
 
 const Panoramica = () => {
     const stanzeContext = useContext(StanzeContext);
-    // todo: decidere se la visualizzazione deve essere condizionata dal context oppure avere qualcosa di locale
-    const {selectedEdificio} = useEdifici();
     const [ sorting, setSorting ] = useState<SortingState>([]);
     const [ columnFilters, setColumnFilters ] = useState<ColumnFiltersState>([]);
 
     const table = useReactTable({
-        data                 : stanzeContext!.data.filter(value => value.chiave === selectedEdificio),
+        data                 : stanzeContext!.data,
         columns              : columns,
         getCoreRowModel      : getCoreRowModel(),
         getPaginationRowModel: getPaginationRowModel(),

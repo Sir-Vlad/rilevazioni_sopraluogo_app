@@ -31,15 +31,12 @@ import {
 
 export default function SiteHeader() {
     const {toggleSidebar} = useSidebar();
-    const {
-              databaseName,
-              error
-          } = useDatabase();
+    const {databaseName} = useDatabase();
 
     const fileSelected = useMemo((): ReactNode => {
-        return error !== "Database non settato" ? <>Stai lavorando
+        return databaseName !== null ? <>Stai lavorando
             sul fascicolo <b>{ Number(databaseName) }</b></> : <>Selezionare un file</>;
-    }, [ databaseName, error ]);
+    }, [ databaseName ]);
 
     return (<header className="flex sticky top-0 z-50 w-full items-center border-b bg-background">
         <div className="flex h-[var(--header-height)] w-full items-center justify-between gap-2 px-4">

@@ -24,7 +24,7 @@ const CardDataEdificio = () => {
         </CardHeader>
         <CardContent>
             <div className="grid grid-cols-2 justify-start items-center gap-6">
-                { data
+                { data.length > 0 ? (data
                     .filter(value => value.chiave === selectedEdificio)
                     .map((value) => {
                         return Object.entries(value)
@@ -39,7 +39,12 @@ const CardDataEdificio = () => {
                                              </div>
                                          </Fragment>;
                                      });
-                    }) }
+
+                    })) : (
+                    <div className="col-span-2 h-34 flex items-center justify-center rounded-md border p-4">
+                        <span>No results</span>
+                    </div>)
+                }
             </div>
         </CardContent>
     </Card>;

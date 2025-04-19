@@ -35,27 +35,34 @@ const CardTableStanze = () => {
             <h1 className="text-2xl font-bold text-primary tracking-tight">Stanze</h1>
         </CardHeader>
         <CardContent>
-            <Table>
-                <TableHeader>
-                    <TableRow>
-                        <TableHead className="text-center font-bold">Piani</TableHead>
-                        <TableHead className="text-center font-bold">Numero di stanze</TableHead>
-                        <TableHead className="text-center font-bold">Stanze visitate</TableHead>
-                        <TableHead className="text-center font-bold">Completamento</TableHead>
-                    </TableRow>
-                </TableHeader>
-                <TableBody>
-                    { stanze.map(value => {
-                        const visitPercentage = Math.ceil(value.visitate / value.stanze * 100);
-                        return <TableRow key={ value.piano }>
-                            <TableCell className="text-center">{ value.piano }</TableCell>
-                            <TableCell className="text-center">{ value.stanze }</TableCell>
-                            <TableCell className="text-center">{ value.visitate }</TableCell>
-                            <TableCell className="text-center">{ visitPercentage } %</TableCell>
-                        </TableRow>;
-                    }) }
-                </TableBody>
-            </Table>
+            <div className="rounded-md border">
+                <Table>
+                    <TableHeader>
+                        <TableRow>
+                            <TableHead className="text-center font-bold">Piani</TableHead>
+                            <TableHead className="text-center font-bold">Numero di stanze</TableHead>
+                            <TableHead className="text-center font-bold">Stanze visitate</TableHead>
+                            <TableHead className="text-center font-bold">Completamento</TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        { stanze.length > 0 ?
+                            (stanze.map(value => {
+                                const visitPercentage = Math.ceil(value.visitate / value.stanze * 100);
+                                return <TableRow key={ value.piano }>
+                                    <TableCell className="text-center">{ value.piano }</TableCell>
+                                    <TableCell className="text-center">{ value.stanze }</TableCell>
+                                    <TableCell className="text-center">{ value.visitate }</TableCell>
+                                    <TableCell className="text-center">{ visitPercentage } %</TableCell>
+                                </TableRow>;
+                            })) : (
+                                <TableCell colSpan={ 5 } className="h-24 text-center">
+                                    No results
+                                </TableCell>
+                            ) }
+                    </TableBody>
+                </Table>
+            </div>
         </CardContent>
     </Card>;
 };

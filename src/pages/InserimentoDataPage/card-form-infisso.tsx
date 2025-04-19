@@ -36,8 +36,12 @@ const nextAlphabeticalID = (prevID: string | null) => {
 
 const FormInfisso = z.object({
     tipo     : z.string(),
-    altezza  : z.number().positive(),
-    larghezza: z.number().positive(),
+    altezza  : z.number().positive().max(65000, {
+        message: "L'altezza deve essere maggiore di 0 e minore di 65000"
+    }),
+    larghezza: z.number().positive().max(65000, {
+        message: "La larghezza deve essere maggiore di 0 e minore di 65000"
+    }),
     materiale: z.string(),
     vetro    : z.string()
 });
