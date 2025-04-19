@@ -23,8 +23,8 @@ impl InfissoDao for InfissoDaoImpl {
                 Ok(Infisso {
                     id: row.get::<_, String>(0)?,
                     tipo: row.get::<_, String>(1)?,
-                    altezza: row.get::<_, i32>(2)?,
-                    larghezza: row.get::<_, i32>(3)?,
+                    altezza: row.get::<_, u16>(2)?,
+                    larghezza: row.get::<_, u16>(3)?,
                     materiale: row.get::<_, String>(4)?,
                     vetro: row.get::<_, String>(5)?,
                 })

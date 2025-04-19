@@ -46,8 +46,8 @@ impl From<EdificioDTO> for Edificio {
 pub struct Infisso {
     pub id: String,
     pub tipo: String,
-    pub altezza: i32,
-    pub larghezza: i32,
+    pub altezza: u16,
+    pub larghezza: u16,
     pub materiale: String,
     pub vetro: String,
 }
@@ -126,26 +126,26 @@ impl From<StanzaDto> for Stanza {
 pub struct MaterialeInfisso {
     pub id: u64,
     pub materiale: String,
-    pub efficienza_energetica: i8,
+    pub efficienza_energetica: u8,
 }
 
 #[derive(Debug)]
 pub struct VetroInfisso {
     pub id: u64,
     pub vetro: String,
-    pub efficienza_energetica: i8,
+    pub efficienza_energetica: u8,
 }
 
 #[derive(Debug)]
 pub struct Illuminazione {
     pub id: u64,
     pub lampadina: String,
-    pub efficienza_energetica: i8,
+    pub efficienza_energetica: u8,
 }
 
 #[derive(Debug, PartialEq)]
 pub struct Climatizzazione {
     pub id: u64,
     pub climatizzazione: String,
-    pub efficienza_energetica: i8,
+    pub efficienza_energetica: u8,
 }

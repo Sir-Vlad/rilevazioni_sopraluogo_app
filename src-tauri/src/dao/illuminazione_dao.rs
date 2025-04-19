@@ -18,7 +18,7 @@ impl IlluminazioneDao for IlluminazioneDaoImpl {
                 Ok(Illuminazione {
                     id: row.get::<_, u64>(0)?,
                     lampadina: row.get::<_, String>(1)?,
-                    efficienza_energetica: row.get::<_, i8>(2)?,
+                    efficienza_energetica: row.get::<_, u8>(2)?,
                 })
             })
             .expect("Errore nella lettura dei dati di tipo materiale")

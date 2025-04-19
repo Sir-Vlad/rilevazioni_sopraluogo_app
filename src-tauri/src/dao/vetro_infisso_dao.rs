@@ -18,7 +18,7 @@ impl VetroInfissoDao for VetroInfissoDaoImpl {
                 Ok(VetroInfisso {
                     id: row.get::<_, u64>(0)?,
                     vetro: row.get::<_, String>(1)?,
-                    efficienza_energetica: row.get::<_, i8>(2)?,
+                    efficienza_energetica: row.get::<_, u8>(2)?,
                 })
             })
             .expect("Errore nella lettura dei dati di tipo materiale")

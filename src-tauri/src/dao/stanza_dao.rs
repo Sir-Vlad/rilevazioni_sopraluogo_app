@@ -1,8 +1,8 @@
 use crate::dao::entity::Stanza;
 use crate::database::DatabaseConnection;
 use itertools::Itertools;
-use log::{error, info};
-use rusqlite::{params, Connection};
+use log::{ error, info };
+use rusqlite::{ params, Connection };
 use std::collections::HashMap;
 
 pub trait StanzaDao {
@@ -14,7 +14,7 @@ pub trait StanzaDao {
     fn set_infissi_by_id<C: DatabaseConnection>(
         conn: &C,
         id_stanza: u64,
-        infissi: Vec<String>,
+        infissi: Vec<String>
     ) -> Result<(), String>;
 }
 
@@ -40,10 +40,7 @@ impl StanzaDao for StanzaDaoImpl {
                 })
             })
             .map_err(|e| {
-                format!(
-                    "Errore nella lettura dei dati dal database: {:?}",
-                    e.to_string()
-                )
+                format!("Errore nella lettura dei dati dal database: {:?}", e.to_string())
             })?
             .collect();
 
@@ -54,24 +51,29 @@ impl StanzaDao for StanzaDaoImpl {
     }
 
     fn insert<C: DatabaseConnection>(conn: &C, stanza: Stanza) -> Result<Stanza, String> {
-        let mut stmt = conn.prepare(
-            "INSERT INTO STANZA(CHIAVE, PIANO, ID_SPAZIO, STANZA, DESTINAZIONE_USO, ALTEZZA, SPESSORE_MURO, RISCALDAMENTO, RAFFRESCAMENTO, ILLUMINAZIONE)
+        let mut stmt = conn
+            .prepare(
+                "INSERT INTO STANZA(CHIAVE, PIANO, ID_SPAZIO, STANZA, DESTINAZIONE_USO, ALTEZZA, SPESSORE_MURO, RISCALDAMENTO, RAFFRESCAMENTO, ILLUMINAZIONE)
                 VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10)"
-        ).map_err(|e| e.to_string())?;
-        match stmt
-            .execute(params![
-                &stanza.chiave,
-                &stanza.piano,
-                &stanza.id_spazio,
-                &stanza.stanza,
-                &stanza.destinazione_uso,
-                &stanza.altezza,
-                &stanza.spessore_muro,
-                &stanza.riscaldamento,
-                &stanza.raffrescamento,
-                &stanza.illuminazione
-            ])
-            .map_err(|e| e.to_string())
+            )
+            .map_err(|e| e.to_string())?;
+        match
+            stmt
+                .execute(
+                    params![
+                        &stanza.chiave,
+                        &stanza.piano,
+                        &stanza.id_spazio,
+                        &stanza.stanza,
+                        &stanza.destinazione_uso,
+                        &stanza.altezza,
+                        &stanza.spessore_muro,
+                        &stanza.riscaldamento,
+                        &stanza.raffrescamento,
+                        &stanza.illuminazione
+                    ]
+                )
+                .map_err(|e| e.to_string())
         {
             Ok(_) => {
                 info!("Stanza inserita con successo");
@@ -85,9 +87,10 @@ impl StanzaDao for StanzaDaoImpl {
     }
 
     fn update<C: DatabaseConnection>(conn: &C, stanza: Stanza) -> Result<Stanza, String> {
-        match conn
-            .execute(
-                "
+        match
+            conn
+                .execute(
+                    "
         UPDATE STANZA 
         SET ALTEZZA = ?1, 
             SPESSORE_MURO = ?2, 
@@ -96,16 +99,16 @@ impl StanzaDao for StanzaDaoImpl {
             ILLUMINAZIONE = ?5
         WHERE ID = ?6
         ",
-                params![
-                    stanza.altezza,
-                    stanza.spessore_muro,
-                    stanza.riscaldamento,
-                    stanza.raffrescamento,
-                    stanza.illuminazione,
-                    stanza.id
-                ],
-            )
-            .map_err(|e| e.to_string())
+                    params![
+                        stanza.altezza,
+                        stanza.spessore_muro,
+                        stanza.riscaldamento,
+                        stanza.raffrescamento,
+                        stanza.illuminazione,
+                        stanza.id
+                    ]
+                )
+                .map_err(|e| e.to_string())
         {
             Ok(_) => {
                 info!("Stanza aggiornata con successo");
@@ -117,12 +120,13 @@ impl StanzaDao for StanzaDaoImpl {
             }
         }
     }
+    
     fn get_infissi_by_id(conn: &Connection, id: i64) -> Result<Vec<String>, String> {
         let mut stmt = conn
             .prepare(
                 "
                     SELECT * FROM STANZA_CON_INFISSI WHERE ID_STANZA = ?1
-                    ",
+                    "
             )
             .map_err(|e| e.to_string())?;
 
@@ -146,11 +150,9 @@ impl StanzaDao for StanzaDaoImpl {
 
     fn get_infissi_by_all(conn: &Connection) -> Result<HashMap<String, Vec<String>>, String> {
         let mut stmt = conn
-            .prepare(
-                "
+            .prepare("
                     SELECT * FROM STANZA_CON_INFISSI
-                ",
-            )
+                ")
             .map_err(|e| e.to_string())?;
 
         let mut infissi: HashMap<String, Vec<String>> = HashMap::new();
@@ -161,9 +163,7 @@ impl StanzaDao for StanzaDaoImpl {
             let id_infisso = row.get::<_, String>(1).map_err(|e| e.to_string())?;
             let num_infissi = row.get::<_, i32>(2).map_err(|e| e.to_string())?;
 
-            let stanza_infissi = infissi
-                .entry(id_stanza.to_string())
-                .or_insert_with(Vec::new);
+            let stanza_infissi = infissi.entry(id_stanza.to_string()).or_insert_with(Vec::new);
 
             for _ in 0..num_infissi {
                 stanza_infissi.push(id_infisso.clone());
@@ -176,7 +176,7 @@ impl StanzaDao for StanzaDaoImpl {
     fn set_infissi_by_id<C: DatabaseConnection>(
         conn: &C,
         id: u64,
-        infissi: Vec<String>,
+        infissi: Vec<String>
     ) -> Result<(), String> {
         let mut infissi = infissi;
         infissi.sort();
@@ -189,11 +189,13 @@ impl StanzaDao for StanzaDaoImpl {
             .collect();
 
         for (id_infisso, conteggio) in conteggio_infissi {
-            match conn.execute(
-                "INSERT INTO STANZA_CON_INFISSI(ID_STANZA, ID_INFISSO, NUM_INFISSI) \
+            match
+                conn.execute(
+                    "INSERT INTO STANZA_CON_INFISSI(ID_STANZA, ID_INFISSO, NUM_INFISSI) \
                     VALUES (?1, ?2, ?3)",
-                params![id, id_infisso, conteggio],
-            ) {
+                    params![id, id_infisso, conteggio]
+                )
+            {
                 Ok(_) => info!("Stanze_con_infissi inserito con successo"),
                 Err(e) => {
                     error!("Errore durante l'inserimento {{ stanze_con_infissi }}: {e}");

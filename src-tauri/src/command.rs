@@ -17,6 +17,25 @@ pub mod command_tauri {
     use std::collections::HashMap;
     use tauri::{AppHandle, Emitter, State};
     /**************************************************************************************************/
+    /******************************* COMMAND PER GESTIRE IL DATABASE **********************************/
+    /**************************************************************************************************/
+
+    #[tauri::command]
+    pub fn close_database(db: State<'_, Database>) -> Result<(), String> {
+        let mut conn = db.get_conn();
+        if let Some(conn) = conn.take() {
+            drop(conn);
+        }
+        *conn = None;
+        let mut path_database = db.get_path_to_database();
+        if let Some(path) = path_database.take() {
+            drop(path);
+        }
+        *path_database = None;
+        Ok(())
+    }
+
+    /**************************************************************************************************/
     /***************************** COMMAND PER INIZIALIZZARE IL SISTEMA *******************************/
     /**************************************************************************************************/
 

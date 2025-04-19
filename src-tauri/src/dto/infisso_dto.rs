@@ -5,8 +5,8 @@ use serde::{Deserialize, Serialize};
 pub struct InfissoDto {
     pub id: String,
     pub tipo: String,
-    pub altezza: i32,
-    pub larghezza: i32,
+    pub altezza: u16,
+    pub larghezza: u16,
     pub materiale: String,
     pub vetro: String,
 }

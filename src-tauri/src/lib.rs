@@ -8,6 +8,7 @@ use crate::command::command_tauri::*;
 use crate::database::*;
 use database::NAME_DIR_DATABASE;
 use dirs_next::document_dir;
+use log::{error, info};
 use tauri::{App, Manager};
 use tauri_plugin_log::{RotationStrategy, Target, TargetKind};
 
@@ -31,6 +32,7 @@ pub fn run() {
             init_to_excel,
             set_database,
             switch_database,
+            close_database,
             get_all_name_database,
             get_all_tipi,
             get_materiali_infisso,
@@ -49,8 +51,19 @@ pub fn run() {
             get_edifici,
             update_edificio
         ])
+        .on_window_event(handle_window_events)
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
+}
+
+fn handle_window_events(windows: &tauri::Window, event: &tauri::WindowEvent) {
+    if let tauri::WindowEvent::CloseRequested { .. } = event {
+        let db = windows.app_handle().state::<Database>();
+        match close_database(db) {
+            Ok(..) => info!("Database chiuso correttamente"),
+            Err(e) => error!("Errore durante la chiusura del database: {}", e),
+        }
+    }
 }
 
 fn setup_logger(app: &mut App) -> Result<(), Box<dyn std::error::Error>> {
@@ -66,7 +79,7 @@ fn setup_logger(app: &mut App) -> Result<(), Box<dyn std::error::Error>> {
             .target(Target::new(TargetKind::Webview))
             .level(log::LevelFilter::Info)
             .rotation_strategy(RotationStrategy::KeepAll)
-            .max_file_size(50000)
+            .max_file_size(50000 /* 50kb */)
             .build(),
     )?;
     Ok(())
