@@ -1,6 +1,9 @@
 pub mod command_tauri {
     use crate::dao::{Edificio, EdificioDAO, EdificioDAOImpl, Stanza, StanzaDao, StanzaDaoImpl};
-    use crate::database::{set_database, Database, DatabaseEventPayload};
+    use crate::database::{
+        get_db_path, init_database, setup_database, Database, DatabaseEventPayload,
+        NAME_DIR_DATABASE,
+    };
     use crate::dto::{
         ClimatizzazioneDto, EdificioDTO, IlluminazioneDto, InfissoDto, MaterialeInfissoDto,
         StanzaDto, VetroInfissoDto,
@@ -10,15 +13,106 @@ pub mod command_tauri {
         InfissoServiceImpl, StanzaService, StanzaServiceImpl, TypeService, TypeServiceImpl,
     };
     use calamine::{open_workbook, Reader, Xlsx};
+    use dirs_next::document_dir;
     use itertools::izip;
-    use polars::frame::{DataFrame, UniqueKeepStrategy};
-    use polars::prelude::{col, ChunkExplode, IntoLazy, NamedFrom, Series};
+    use log::{error, info};
+    use polars::{
+        frame::{DataFrame, UniqueKeepStrategy},
+        prelude::{col, ChunkExplode, IntoLazy, NamedFrom, Series},
+    };
+    use rusqlite::Connection;
     use serde_json::Value;
-    use std::collections::HashMap;
+    use std::{collections::HashMap, ffi::OsStr, fs};
     use tauri::{AppHandle, Emitter, State};
+
+    /**************************************************************************************************/
+    /******************************* COMMAND PER MISCELLANEOUS **********************************/
+    /**************************************************************************************************/
+
+    #[tauri::command]
+    pub fn get_all_name_database() -> Result<Vec<String>, String> {
+        if let Some(mut path) = document_dir() {
+            path.push(NAME_DIR_DATABASE);
+            if !path.exists() {
+                return Err("Cartella non esiste".to_string());
+            }
+            // recupero tutti i nomi dei file all'interno della cartella
+            let entries = fs::read_dir(path)
+                .map_err(|e| e.to_string())?
+                .filter_map(Result::ok)
+                .filter(|entry| {
+                    entry.path().is_file() && entry.path().extension() == Some(OsStr::new("db"))
+                })
+                .map(|entry| entry.file_name().to_string_lossy().into_owned())
+                .collect::<Vec<String>>();
+            return Ok(entries);
+        }
+        Err("La cartella Documenti non è stata trovata".to_string())
+    }
+
     /**************************************************************************************************/
     /******************************* COMMAND PER GESTIRE IL DATABASE **********************************/
     /**************************************************************************************************/
+
+    #[tauri::command]
+    pub fn set_database(
+        app_handle: AppHandle,
+        db: State<'_, Database>,
+        db_name: String,
+    ) -> Result<String, String> {
+        let db_path = get_db_path(db_name)?;
+        let mut conn = db.get_conn();
+        let mut path_to_database = db.get_path_to_database();
+        if let Some(existing_conn) = conn.take() {
+            drop(existing_conn);
+        }
+        *conn = Some(Connection::open(&db_path).map_err(|c| c.to_string())?);
+        *path_to_database = Some(db_path.clone());
+
+        setup_database(conn.as_ref().unwrap())?;
+        match init_database(
+            app_handle.clone(),
+            conn.as_ref().ok_or("Database connection not initialized")?,
+        ) {
+            Ok(_) => info!("Database inizializzato"),
+            Err(e) => {
+                error!("Errore nell'inizializzazione del database: {}", e);
+                return Err(e.to_string());
+            }
+        };
+        Ok(db_path)
+    }
+
+    #[tauri::command]
+    pub fn switch_database(
+        app_handle: AppHandle,
+        db: State<'_, Database>,
+        db_name: String,
+    ) -> Result<(), String> {
+        info!("Switching database to {}", db_name);
+        let db_path = get_db_path(db_name)?;
+        let mut conn = db.get_conn();
+        let mut path_to_database = db.get_path_to_database();
+        if let Some(existing_conn) = conn.take() {
+            drop(existing_conn);
+        }
+        *conn = Some(Connection::open(&db_path).map_err(|c| c.to_string())?);
+        *path_to_database = Some(db_path.clone());
+        setup_database(conn.as_ref().unwrap())?;
+
+        app_handle
+            .emit(
+                "database-changed",
+                DatabaseEventPayload {
+                    type_event: "database_switched",
+                    path: db_path.clone(),
+                },
+            )
+            .map_err(|e| e.to_string())?;
+
+        info!("Database switched");
+        Ok(())
+    }
 
     #[tauri::command]
     pub fn close_database(db: State<'_, Database>) -> Result<(), String> {

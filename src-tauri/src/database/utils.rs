@@ -72,6 +72,18 @@ pub fn init_database(app_handle: AppHandle, conn: &Connection) -> Result<(), rus
     Ok(())
 }
 
+pub fn setup_database(connection: &Connection) -> Result<(), String> {
+    connection
+        .pragma_update(None, "foreign_keys", "ON")
+        .map_err(|e| format!("Errore durante l'impostazione delle pragma: {}", e))?;
+    info!("Foreign keys enabled");
+    connection
+        .pragma_update(None, "journal_mode", "WAL")
+        .map_err(|e| format!("Errore durante l'impostazione del pragma: {}", e))?;
+    info!("Journal mode enabled");
+    Ok(())
+}
+
 #[derive(Deserialize)]
 struct TypeRecord {
     value: String,

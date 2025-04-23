@@ -1,6 +1,5 @@
 use crate::dto::{EdificioDTO, InfissoDto, StanzaDto};
 
-#[derive(Debug)]
 pub struct Edificio {
     pub chiave: String,
     pub fascicolo: String,
@@ -42,7 +41,6 @@ impl From<EdificioDTO> for Edificio {
     }
 }
 
-#[derive(Debug)]
 pub struct Infisso {
     pub id: String,
     pub tipo: String,
@@ -65,7 +63,7 @@ impl From<&InfissoDto> for Infisso {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct Stanza {
     pub id: Option<u64>,
     pub chiave: String,
@@ -122,22 +120,22 @@ impl From<StanzaDto> for Stanza {
     }
 }
 
-#[derive(Debug)]
 pub struct MaterialeInfisso {
+    #[allow(dead_code)]
     pub id: u64,
     pub materiale: String,
     pub efficienza_energetica: u8,
 }
 
-#[derive(Debug)]
 pub struct VetroInfisso {
+    #[allow(dead_code)]
     pub id: u64,
     pub vetro: String,
     pub efficienza_energetica: u8,
 }
 
-#[derive(Debug)]
 pub struct Illuminazione {
+    #[allow(dead_code)]
     pub id: u64,
     pub lampadina: String,
     pub efficienza_energetica: u8,
@@ -145,6 +143,7 @@ pub struct Illuminazione {
 
 #[derive(Debug, PartialEq)]
 pub struct Climatizzazione {
+    #[allow(dead_code)]
     pub id: u64,
     pub climatizzazione: String,
     pub efficienza_energetica: u8,

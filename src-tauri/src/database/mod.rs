@@ -1,9 +1,8 @@
-mod db;
-mod model;
-mod utils;
 mod database_connection;
+mod model;
+mod query_builder;
+pub(crate) mod utils;
 
-pub use db::{get_all_name_database, set_database, switch_database};
+pub use database_connection::DatabaseConnection;
 pub use model::{Database, DatabaseEventPayload};
-pub use database_connection::{DatabaseConnection};
-pub use utils::NAME_DIR_DATABASE;
+pub use utils::{get_db_path, init_database, setup_database, NAME_DIR_DATABASE};
