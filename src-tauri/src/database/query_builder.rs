@@ -1,15 +1,18 @@
+#[derive(Debug)]
 pub enum QueryType {
     Select,
     Insert,
     Update,
     Delete,
 }
+
+#[derive(Debug)]
 pub struct QueryBuilder {
     query_type: QueryType,
     table: Option<String>,
     columns: Vec<String>,
     values: Vec<Vec<QueryParam>>,
-    selected_columns: Option<String>,
+    selected_columns: Option<Vec<String>>,
     where_clauses: Vec<WhereClause>,
     order_by: Option<String>,
     limit: Option<usize>,
@@ -18,6 +21,7 @@ pub struct QueryBuilder {
     set_clauses: Vec<(String, QueryParam)>,
 }
 
+#[derive(Debug)]
 struct WhereClause {
     condition: String,
     params: Vec<QueryParam>,
@@ -91,8 +95,8 @@ impl QueryBuilder {
     }
 
     // methods specific to select query type
-    pub fn columns(mut self, columns: &str) -> Self {
-        self.selected_columns = Some(columns.to_string());
+    pub fn columns(mut self, columns: Vec<&str>) -> Self {
+        self.selected_columns = Some(columns.into_iter().map(|c| c.to_string()).collect());
         self
     }
 
@@ -112,13 +116,23 @@ impl QueryBuilder {
     }
 
     // methods specific to insert query type
+    pub fn into_columns(mut self, columns: Vec<&str>) -> Self {
+        self.columns = columns.into_iter().map(|c| c.to_string()).collect();
+        self
+    }
+
+    pub fn with_columns_mut(&mut self, columns: Vec<&str>) -> &mut Self {
+        self.columns = columns.into_iter().map(|c| c.to_string()).collect();
+        self
+    }
+
     pub fn values(mut self, values: Vec<QueryParam>) -> Self {
         self.values.push(values);
         self
     }
 
-    pub fn into_columns(mut self, columns: Vec<&str>) -> Self {
-        self.columns = columns.into_iter().map(|c| c.to_string()).collect();
+    pub fn values_mut(&mut self, values: Vec<QueryParam>) -> &mut Self {
+        self.values.push(values);
         self
     }
 
@@ -210,7 +224,7 @@ impl QueryBuilder {
     ) -> Result<(), QueryBuilderError> {
         query.push_str("SELECT ");
         if let Some(columns) = &self.selected_columns {
-            query.push_str(columns);
+            query.push_str(&columns.join(", "));
         } else {
             query.push('*');
         }
@@ -396,18 +410,9 @@ impl QueryBuilder {
 
         Ok(())
     }
-
-    pub fn from_dto<T: FilterDTO>(dto: &T, table: &str) -> Self {
-        let mut builder = Self::select().table(table);
-        dto.apply_filter(&mut builder);
-        builder
-    }
 }
 
-pub trait FilterDTO {
-    fn apply_filter(&self, builder: &mut QueryBuilder);
-}
-
+#[derive(Debug)]
 pub enum QueryParam {
     String(String),
     Integer(i64),
@@ -476,6 +481,18 @@ impl From<bool> for QueryParam {
     }
 }
 
+impl<T> From<Option<T>> for QueryParam
+where
+    T: Into<QueryParam>,
+{
+    fn from(value: Option<T>) -> Self {
+        match value {
+            Some(val) => val.into(),
+            None => QueryParam::Null,
+        }
+    }
+}
+
 impl Clone for QueryParam {
     fn clone(&self) -> Self {
         match self {
@@ -515,10 +532,13 @@ impl std::error::Error for QueryBuilderError {}
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::dao::Stanza;
 
     #[test]
     fn test_select_query() {
-        let binding = QueryBuilder::select().table("users").columns("id, name");
+        let binding = QueryBuilder::select()
+            .table("users")
+            .columns(vec!["id", "name"]);
         let query = binding.build();
         assert_eq!(query.unwrap().0, "SELECT id, name FROM users");
     }
@@ -628,6 +648,64 @@ mod tests {
             assert_eq!(val, "elettronica");
         } else {
             panic!("Tipo di parametro errato per il terzo parametro");
+        }
+    }
+
+    #[test]
+    fn test_insert_into_columns() {
+        // INSERT INTO INFISSO(ID, TIPO, ALTEZZA, LARGHEZZA, MATERIALE, VETRO)
+        //                 VALUES (?1, ?2, ?3, ?4, ?5, ?6)
+
+        let builder = QueryBuilder::insert()
+            .table("INFISSO")
+            .into_columns(vec![
+                "ID",
+                "TIPO",
+                "ALTEZZA",
+                "LARGHEZZA",
+                "MATERIALE",
+                "VETRO",
+            ])
+            .values(vec![
+                "A".into(),
+                "Porta".into(),
+                150.into(),
+                300.into(),
+                "Legno".into(),
+                "Singolo".into(),
+            ]);
+
+        let result = builder.build().unwrap();
+        assert_eq!(result.0, "INSERT INTO INFISSO (ID, TIPO, ALTEZZA, LARGHEZZA, MATERIALE, VETRO) VALUES ($1, $2, $3, $4, $5, $6)");
+    }
+    #[test]
+    fn test_query_dto_stanza() {
+        let stanza_dto = Stanza {
+            id: Some(10),
+            chiave: "AbYa".to_string(),
+            piano: "T".to_string(),
+            id_spazio: "1458".to_string(),
+            stanza: "045".to_string(),
+            destinazione_uso: "Ufficio".to_string(),
+            altezza: None,
+            spessore_muro: None,
+            riscaldamento: None,
+            raffrescamento: None,
+            illuminazione: None,
+        };
+
+        let builder = QueryBuilder::update()
+            .table("STANZE")
+            .set_if("ALTEZZA", stanza_dto.altezza)
+            .set_if("SPESSORE_MURO", stanza_dto.spessore_muro)
+            .set_if("RISCALDAMENTO", stanza_dto.riscaldamento.clone())
+            .set_if("RAFFRESCAMENTO", stanza_dto.raffrescamento.clone())
+            .set_if("ILLUMINAZIONE", stanza_dto.illuminazione.clone())
+            .where_eq("ID", stanza_dto.id.unwrap());
+
+        match builder.build() {
+            Ok(query) => println!("{:?}", query),
+            Err(e) => println!("{:?}", e),
         }
     }
 }

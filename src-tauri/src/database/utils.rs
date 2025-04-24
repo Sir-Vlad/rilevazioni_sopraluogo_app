@@ -1,3 +1,4 @@
+use crate::database::QueryParam;
 use dirs_next::document_dir;
 use log::{info, warn};
 use rusqlite::{params, Connection};
@@ -120,4 +121,17 @@ fn insert_values_into_table(
             .expect("Errore nell'inserimento dei dati nel database");
     }
     info!("Tabella {} popolata con successo", table_name);
+}
+
+pub fn convert_param(params: Vec<&QueryParam>) -> Vec<rusqlite::types::Value> {
+    params
+        .iter()
+        .map(|p| match p {
+            QueryParam::String(s) => rusqlite::types::Value::Text(s.clone()),
+            QueryParam::Integer(i) => rusqlite::types::Value::Integer(*i),
+            QueryParam::Float(f) => rusqlite::types::Value::Real(*f),
+            QueryParam::Boolean(b) => rusqlite::types::Value::Integer(if *b { 1 } else { 0 }),
+            QueryParam::Null => rusqlite::types::Value::Null,
+        })
+        .collect()
 }

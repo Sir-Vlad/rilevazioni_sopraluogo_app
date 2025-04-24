@@ -1,8 +1,8 @@
 use crate::dao::entity::Stanza;
-use crate::database::DatabaseConnection;
+use crate::database::{convert_param, DatabaseConnection, QueryBuilder};
 use itertools::Itertools;
-use log::{ error, info };
-use rusqlite::{ params, Connection };
+use log::{error, info};
+use rusqlite::{params, Connection};
 use std::collections::HashMap;
 
 pub trait StanzaDao {
@@ -14,7 +14,7 @@ pub trait StanzaDao {
     fn set_infissi_by_id<C: DatabaseConnection>(
         conn: &C,
         id_stanza: u64,
-        infissi: Vec<String>
+        infissi: Vec<String>,
     ) -> Result<(), String>;
 }
 
@@ -22,7 +22,11 @@ pub struct StanzaDaoImpl;
 
 impl StanzaDao for StanzaDaoImpl {
     fn get_all(conn: &Connection) -> Result<Vec<Stanza>, String> {
-        let mut stmt = conn.prepare("SELECT * FROM STANZA").ok().unwrap();
+        let query = match QueryBuilder::select().table("STANZA").build() {
+            Ok((q, p)) => q,
+            Err(e) => return Err(e.to_string()),
+        };
+        let mut stmt = conn.prepare(query.as_str()).ok().unwrap();
         let result: Result<Vec<Stanza>, rusqlite::Error> = stmt
             .query_map([], |row| {
                 Ok(Stanza {
@@ -40,7 +44,10 @@ impl StanzaDao for StanzaDaoImpl {
                 })
             })
             .map_err(|e| {
-                format!("Errore nella lettura dei dati dal database: {:?}", e.to_string())
+                format!(
+                    "Errore nella lettura dei dati dal database: {:?}",
+                    e.to_string()
+                )
             })?
             .collect();
 
@@ -51,29 +58,41 @@ impl StanzaDao for StanzaDaoImpl {
     }
 
     fn insert<C: DatabaseConnection>(conn: &C, stanza: Stanza) -> Result<Stanza, String> {
-        let mut stmt = conn
-            .prepare(
-                "INSERT INTO STANZA(CHIAVE, PIANO, ID_SPAZIO, STANZA, DESTINAZIONE_USO, ALTEZZA, SPESSORE_MURO, RISCALDAMENTO, RAFFRESCAMENTO, ILLUMINAZIONE)
-                VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10)"
-            )
-            .map_err(|e| e.to_string())?;
-        match
-            stmt
-                .execute(
-                    params![
-                        &stanza.chiave,
-                        &stanza.piano,
-                        &stanza.id_spazio,
-                        &stanza.stanza,
-                        &stanza.destinazione_uso,
-                        &stanza.altezza,
-                        &stanza.spessore_muro,
-                        &stanza.riscaldamento,
-                        &stanza.raffrescamento,
-                        &stanza.illuminazione
-                    ]
-                )
-                .map_err(|e| e.to_string())
+        let builder = QueryBuilder::insert()
+            .table("STANZA")
+            .into_columns(vec![
+                "CHIAVE",
+                "PIANO",
+                "ID_SPAZIO",
+                "STANZA",
+                "DESTINAZIONE_USO",
+                "ALTEZZA",
+                "SPESSORE_MURO",
+                "RISCALDAMENTO",
+                "RAFFRESCAMENTO",
+                "ILLUMINAZIONE",
+            ])
+            .values(vec![
+                stanza.chiave.clone().into(),
+                stanza.piano.clone().into(),
+                stanza.id_spazio.clone().into(),
+                stanza.stanza.clone().into(),
+                stanza.destinazione_uso.clone().into(),
+                stanza.altezza.into(),
+                stanza.spessore_muro.into(),
+                stanza.riscaldamento.clone().into(),
+                stanza.raffrescamento.clone().into(),
+                stanza.illuminazione.clone().into(),
+            ]);
+        let (query, param) = match builder.build() {
+            Ok((q, p)) => (q, p),
+            Err(e) => return Err(e.to_string()),
+        };
+
+        let mut stmt = conn.prepare(query.as_str()).map_err(|e| e.to_string())?;
+        match stmt
+            .execute(rusqlite::params_from_iter(convert_param(param)))
+            .map_err(|e| e.to_string())
         {
             Ok(_) => {
                 info!("Stanza inserita con successo");
@@ -87,28 +106,25 @@ impl StanzaDao for StanzaDaoImpl {
     }
 
     fn update<C: DatabaseConnection>(conn: &C, stanza: Stanza) -> Result<Stanza, String> {
-        match
-            conn
-                .execute(
-                    "
-        UPDATE STANZA 
-        SET ALTEZZA = ?1, 
-            SPESSORE_MURO = ?2, 
-            RISCALDAMENTO = ?3, 
-            RAFFRESCAMENTO = ?4, 
-            ILLUMINAZIONE = ?5
-        WHERE ID = ?6
-        ",
-                    params![
-                        stanza.altezza,
-                        stanza.spessore_muro,
-                        stanza.riscaldamento,
-                        stanza.raffrescamento,
-                        stanza.illuminazione,
-                        stanza.id
-                    ]
-                )
-                .map_err(|e| e.to_string())
+        let builder = QueryBuilder::update()
+            .table("STANZA")
+            .set_if("ALTEZZA", stanza.altezza)
+            .set_if("SPESSORE_MURO", stanza.spessore_muro)
+            .set_if("RISCALDAMENTO", stanza.riscaldamento.clone())
+            .set_if("RAFFRESCAMENTO", stanza.raffrescamento.clone())
+            .set_if("ILLUMINAZIONE", stanza.illuminazione.clone())
+            .where_eq("ID", stanza.id.unwrap());
+        let (query, param) = match builder.build() {
+            Ok((q, p)) => (q, p),
+            Err(e) => return Err(e.to_string()),
+        };
+
+        match conn
+            .execute(
+                query.as_str(),
+                rusqlite::params_from_iter(convert_param(param)),
+            )
+            .map_err(|e| e.to_string())
         {
             Ok(_) => {
                 info!("Stanza aggiornata con successo");
@@ -120,16 +136,16 @@ impl StanzaDao for StanzaDaoImpl {
             }
         }
     }
-    
-    fn get_infissi_by_id(conn: &Connection, id: i64) -> Result<Vec<String>, String> {
-        let mut stmt = conn
-            .prepare(
-                "
-                    SELECT * FROM STANZA_CON_INFISSI WHERE ID_STANZA = ?1
-                    "
-            )
-            .map_err(|e| e.to_string())?;
 
+    fn get_infissi_by_id(conn: &Connection, id: i64) -> Result<Vec<String>, String> {
+        let builder = QueryBuilder::select()
+            .table("STANZA_CON_INFISSI")
+            .where_eq("ID_STANZA", id);
+        let query = match builder.build() {
+            Ok((q, _p)) => q,
+            Err(e) => return Err(e.to_string()),
+        };
+        let mut stmt = conn.prepare(query.as_str()).map_err(|e| e.to_string())?;
         let rows = stmt
             .query_map(params![id], |row| {
                 let id_infisso = row.get::<_, String>(1)?;
@@ -150,9 +166,14 @@ impl StanzaDao for StanzaDaoImpl {
 
     fn get_infissi_by_all(conn: &Connection) -> Result<HashMap<String, Vec<String>>, String> {
         let mut stmt = conn
-            .prepare("
-                    SELECT * FROM STANZA_CON_INFISSI
-                ")
+            .prepare(
+                QueryBuilder::select()
+                    .table("STANZA_CON_INFISSI")
+                    .build()
+                    .map_err(|e| e.to_string())?
+                    .0
+                    .as_str(),
+            )
             .map_err(|e| e.to_string())?;
 
         let mut infissi: HashMap<String, Vec<String>> = HashMap::new();
@@ -163,7 +184,9 @@ impl StanzaDao for StanzaDaoImpl {
             let id_infisso = row.get::<_, String>(1).map_err(|e| e.to_string())?;
             let num_infissi = row.get::<_, i32>(2).map_err(|e| e.to_string())?;
 
-            let stanza_infissi = infissi.entry(id_stanza.to_string()).or_insert_with(Vec::new);
+            let stanza_infissi = infissi
+                .entry(id_stanza.to_string())
+                .or_insert_with(Vec::new);
 
             for _ in 0..num_infissi {
                 stanza_infissi.push(id_infisso.clone());
@@ -176,7 +199,7 @@ impl StanzaDao for StanzaDaoImpl {
     fn set_infissi_by_id<C: DatabaseConnection>(
         conn: &C,
         id: u64,
-        infissi: Vec<String>
+        infissi: Vec<String>,
     ) -> Result<(), String> {
         let mut infissi = infissi;
         infissi.sort();
@@ -188,14 +211,17 @@ impl StanzaDao for StanzaDaoImpl {
             .map(|(id, group)| (id, group.count() as i32))
             .collect();
 
+        let builder = QueryBuilder::insert()
+            .table("STANZA_CON_INFISSI")
+            .into_columns(vec!["ID_STANZA", "ID_INFISSO", "NUM_INFISSI"])
+            .values(vec![0.into(), "A".into(), 0.into()]); // param fake
+        let query = match builder.build() {
+            Ok((q, _p)) => q,
+            Err(e) => return Err(e.to_string()),
+        };
+
         for (id_infisso, conteggio) in conteggio_infissi {
-            match
-                conn.execute(
-                    "INSERT INTO STANZA_CON_INFISSI(ID_STANZA, ID_INFISSO, NUM_INFISSI) \
-                    VALUES (?1, ?2, ?3)",
-                    params![id, id_infisso, conteggio]
-                )
-            {
+            match conn.execute(query.as_str(), params![id, id_infisso, conteggio]) {
                 Ok(_) => info!("Stanze_con_infissi inserito con successo"),
                 Err(e) => {
                     error!("Errore durante l'inserimento {{ stanze_con_infissi }}: {e}");

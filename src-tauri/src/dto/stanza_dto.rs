@@ -34,7 +34,6 @@ impl StanzaDto {
             infissi: None,
         }
     }
-
 }
 
 impl From<Stanza> for StanzaDto {
@@ -45,6 +44,6 @@ impl From<Stanza> for StanzaDto {
 
 impl From<&Stanza> for StanzaDto {
     fn from(value: &Stanza) -> Self {
-        StanzaDto::from_stanza_common(value)   
+        StanzaDto::from_stanza_common(value)
     }
 }
