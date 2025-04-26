@@ -1,4 +1,5 @@
 use crate::dao::entities::entity::Climatizzazione;
+use crate::database::{QueryBuilder, SqlQueryBuilder};
 use rusqlite::Connection;
 
 pub trait ClimatizzazioneDAO {
@@ -9,16 +10,21 @@ pub struct ClimatizzazioneDAOImpl;
 
 impl ClimatizzazioneDAO for ClimatizzazioneDAOImpl {
     fn get_all(conn: &Connection) -> Result<Vec<Climatizzazione>, String> {
+        let (query, _) = QueryBuilder::select()
+            .table("CLIMATIZZAZIONE")
+            .build()
+            .map_err(|e| e.to_string())?;
+
         let mut stmt = conn
-            .prepare("SELECT * FROM CLIMATIZZAZIONE")
+            .prepare(query.as_str())
             .map_err(|e| format!("Errore nella creazione della query: {}", e))?;
 
         let result: Result<Vec<Climatizzazione>, rusqlite::Error> = stmt
             .query_map([], |row| {
                 Ok(Climatizzazione {
-                    id: row.get::<_, u64>(0)?,
-                    climatizzazione: row.get::<_, String>(1)?,
-                    efficienza_energetica: row.get::<_, u8>(2)?,
+                    id: row.get::<_, u64>("ID")?,
+                    climatizzazione: row.get::<_, String>("CLIMATIZZAZIONE")?,
+                    efficienza_energetica: row.get::<_, u8>("EFFICIENZA_ENERGETICA")?,
                 })
             })
             .expect("Errore nella lettura dei dati di tipo materiale")

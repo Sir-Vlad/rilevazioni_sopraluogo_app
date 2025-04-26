@@ -24,24 +24,24 @@ pub struct StanzaDAOImpl;
 impl StanzaDAO for StanzaDAOImpl {
     fn get_all(conn: &Connection) -> Result<Vec<Stanza>, String> {
         let query = match QueryBuilder::select().table("STANZA").build() {
-            Ok((q, p)) => q,
+            Ok((q, _)) => q,
             Err(e) => return Err(e.to_string()),
         };
         let mut stmt = conn.prepare(query.as_str()).ok().unwrap();
         let result: Result<Vec<Stanza>, rusqlite::Error> = stmt
             .query_map([], |row| {
                 Ok(Stanza {
-                    id: row.get::<_, Option<u64>>(0)?,
-                    chiave: row.get::<_, String>(1)?,
-                    piano: row.get::<_, String>(2)?,
-                    id_spazio: row.get::<_, String>(3)?,
-                    stanza: row.get::<_, String>(4)?,
-                    destinazione_uso: row.get::<_, String>(5)?,
-                    altezza: row.get::<_, Option<u16>>(6)?,
-                    spessore_muro: row.get::<_, Option<u8>>(7)?,
-                    riscaldamento: row.get::<_, Option<String>>(8)?,
-                    raffrescamento: row.get::<_, Option<String>>(9)?,
-                    illuminazione: row.get::<_, Option<String>>(10)?,
+                    id: row.get::<_, Option<u64>>("ID")?,
+                    chiave: row.get::<_, String>("CHIAVE")?,
+                    piano: row.get::<_, String>("PIANO")?,
+                    id_spazio: row.get::<_, String>("ID_SPAZIO")?,
+                    stanza: row.get::<_, String>("STANZA")?,
+                    destinazione_uso: row.get::<_, String>("DESTINAZIONE_USO")?,
+                    altezza: row.get::<_, Option<u16>>("ALTEZZA")?,
+                    spessore_muro: row.get::<_, Option<u8>>("SPESSORE_MURO")?,
+                    riscaldamento: row.get::<_, Option<String>>("RISCALDAMENTO")?,
+                    raffrescamento: row.get::<_, Option<String>>("RAFFRESCAMENTO")?,
+                    illuminazione: row.get::<_, Option<String>>("ILLUMINAZIONE")?,
                 })
             })
             .map_err(|e| {
@@ -149,8 +149,8 @@ impl StanzaDAO for StanzaDAOImpl {
         let mut stmt = conn.prepare(query.as_str()).map_err(|e| e.to_string())?;
         let rows = stmt
             .query_map(params![id], |row| {
-                let id_infisso = row.get::<_, String>(1)?;
-                let ripetizioni = row.get::<_, u16>(2)?;
+                let id_infisso = row.get::<_, String>("ID_INFISSO")?;
+                let ripetizioni = row.get::<_, u16>("NUM_INFISSI")?;
                 Ok((id_infisso, ripetizioni))
             })
             .map_err(|e| e.to_string())?;
@@ -166,24 +166,23 @@ impl StanzaDAO for StanzaDAOImpl {
     }
 
     fn get_infissi_by_all(conn: &Connection) -> Result<HashMap<String, Vec<String>>, String> {
-        let mut stmt = conn
-            .prepare(
-                QueryBuilder::select()
-                    .table("STANZA_CON_INFISSI")
-                    .build()
-                    .map_err(|e| e.to_string())?
-                    .0
-                    .as_str(),
-            )
+        let (query, _) = QueryBuilder::select()
+            .table("STANZA_CON_INFISSI")
+            .build()
             .map_err(|e| e.to_string())?;
+        let mut stmt = conn.prepare(query.as_str()).map_err(|e| e.to_string())?;
 
         let mut infissi: HashMap<String, Vec<String>> = HashMap::new();
         let mut rows = stmt.query([]).map_err(|e| e.to_string())?;
 
         while let Some(row) = rows.next().map_err(|e| e.to_string())? {
-            let id_stanza = row.get::<_, i64>(0).map_err(|e| e.to_string())?;
-            let id_infisso = row.get::<_, String>(1).map_err(|e| e.to_string())?;
-            let num_infissi = row.get::<_, i32>(2).map_err(|e| e.to_string())?;
+            let id_stanza = row.get::<_, i64>("ID_STANZA").map_err(|e| e.to_string())?;
+            let id_infisso = row
+                .get::<_, String>("ID_INFISSO")
+                .map_err(|e| e.to_string())?;
+            let num_infissi = row
+                .get::<_, i32>("NUM_INFISSI")
+                .map_err(|e| e.to_string())?;
 
             let stanza_infissi = infissi
                 .entry(id_stanza.to_string())
