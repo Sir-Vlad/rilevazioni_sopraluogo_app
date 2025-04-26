@@ -16,6 +16,7 @@ import { useDatabase, useEdifici, useStanze, useTypes }                   from "
 import { handleInputNumericChange }                                       from "@/helpers/helpers";
 import { IStanza }                                                        from "@/models/models.tsx";
 import { toast }                                                          from "sonner";
+import TitleCard                                                          from "@/components/title-card";
 
 
 const FormSchema = z.object({
@@ -142,7 +143,7 @@ const CardFormStanza = () => {
             <CardHeader>
                 <CardTitle>
                     <div className="flex gap-5 items-center">
-                        <h1 className="text-xl font-bold text-primary tracking-tight">Modifica Stanza</h1>
+                        <TitleCard title="Modifica Stanza" />
                         <CommentButton />
                     </div>
                 </CardTitle>

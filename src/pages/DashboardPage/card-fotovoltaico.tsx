@@ -1,5 +1,6 @@
 import { Card, CardContent, CardHeader }                                 from "@/components/ui/card.tsx";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table.tsx";
+import TitleCard                                                         from "@/components/title-card.tsx";
 
 const datafake = [
     {
@@ -19,7 +20,7 @@ const CardFotovoltaico = () => {
     // todo: implementare il retrieve nel backend
     return <Card>
         <CardHeader>
-            <h1 className="text-2xl font-bold text-primary tracking-tight">Fotovoltaico</h1>
+            <TitleCard title="Fotovoltaico" />
         </CardHeader>
         <CardContent>
             <div className="rounded-md border">
@@ -40,9 +41,9 @@ const CardFotovoltaico = () => {
                                     <TableCell className="text-center">{ value.proprietario }</TableCell>
                                 </TableRow>;
                             })) : (
-                                <TableCell colSpan={ 5 } className="h-24 text-center">
-                                    No results
-                                </TableCell>
+                                <TableRow>
+                                    <TableCell colSpan={ 5 } className="h-24 text-center">No results</TableCell>
+                                </TableRow>
                             )
                         }
                     </TableBody>

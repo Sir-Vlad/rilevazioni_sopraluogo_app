@@ -13,6 +13,7 @@ import CommentsButton                                                     from "
 import { toast }                                                          from "sonner";
 import { IInfisso }                                                       from "@/models/models.tsx";
 import HelpBadge                                                          from "@/components/help-badge.tsx";
+import TitleCard                                                          from "@/components/title-card.tsx";
 
 const nextAlphabeticalID = (prevID: string | null) => {
     if (!prevID || prevID === "") return "A";
@@ -138,7 +139,7 @@ const CardFormInfisso = () => {
         <Card>
             <CardHeader>
                 <div className="flex gap-5 items-center">
-                    <h1 className="text-2xl font-bold text-primary tracking-tight">Inserisci Infisso</h1>
+                    <TitleCard title="Inserisci Infisso" />
                     <CommentsButton />
                 </div>
             </CardHeader>

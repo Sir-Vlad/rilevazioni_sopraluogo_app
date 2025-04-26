@@ -4,6 +4,7 @@ import { Column, flexRender, RowData, Table as ReactTable }              from "@
 import { Button }                                                        from "@/components/ui/button.tsx";
 import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight }        from "lucide-react";
 import { Input }                                                         from "@/components/ui/input";
+import TitleCard                                                         from "@/components/title-card.tsx";
 
 interface CardDataGridProps<TData> {
     table: ReactTable<TData>
@@ -18,7 +19,7 @@ function CardDataGrid<TData>({
                              }: Readonly<CardDataGridProps<TData>>) {
     return <Card className="@container/card h-full py-5">
         <CardHeader>
-            <h1 className="text-2xl font-bold text-primary tracking-tight">{ title }</h1>
+            <TitleCard title={ title ?? "Dati" } />
         </CardHeader>
         <CardContent>
             <div className="flex flex-col gap-3">

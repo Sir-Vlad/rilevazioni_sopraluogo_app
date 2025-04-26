@@ -1,3 +1,4 @@
+import TitleCard                                                         from "@/components/title-card";
 import { Card, CardContent, CardHeader }                                 from "@/components/ui/card.tsx";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table.tsx";
 import { useEdifici, useStanze }                                         from "@/context/UseProvider.tsx";
@@ -32,7 +33,7 @@ const CardTableStanze = () => {
 
     return <Card className="@container/card col-span-5">
         <CardHeader>
-            <h1 className="text-2xl font-bold text-primary tracking-tight">Stanze</h1>
+            <TitleCard title="Stanze" />
         </CardHeader>
         <CardContent>
             <div className="rounded-md border">
@@ -56,9 +57,9 @@ const CardTableStanze = () => {
                                     <TableCell className="text-center">{ visitPercentage } %</TableCell>
                                 </TableRow>;
                             })) : (
-                                <TableCell colSpan={ 5 } className="h-24 text-center">
-                                    No results
-                                </TableCell>
+                                <TableRow>
+                                    <TableCell colSpan={ 5 } className="h-24 text-center">No results</TableCell>
+                                </TableRow>
                             ) }
                     </TableBody>
                 </Table>
