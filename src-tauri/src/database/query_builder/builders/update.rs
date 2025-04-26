@@ -1,4 +1,4 @@
-use crate::database::query_builder::where_builder::{WhereBuilder, WhereClause};
+use crate::database::query_builder::{WhereBuilder, WhereClause};
 use crate::{
     database::query_builder::{LogicalOperator, SqlQueryBuilder},
     database::{QueryBuilderError, QueryParam},
@@ -94,7 +94,6 @@ impl SqlQueryBuilder for UpdateQueryBuilder {
             query.push_str(&where_str);
             params_refs.extend(where_params);
         }
-
 
         // RETURNING
         if let Some(returning) = &self.returning {

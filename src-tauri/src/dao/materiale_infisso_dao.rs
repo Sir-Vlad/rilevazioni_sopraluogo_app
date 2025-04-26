@@ -1,13 +1,13 @@
-use crate::dao::entity::MaterialeInfisso;
+use crate::dao::entities::entity::MaterialeInfisso;
 use rusqlite::Connection;
 
-pub trait MaterialeInfissoDao {
+pub trait MaterialeInfissoDAO {
     fn get_all(conn: &Connection) -> Result<Vec<MaterialeInfisso>, String>;
 }
 
-pub struct MaterialeInfissoDaoImpl;
+pub struct MaterialeInfissoDAOImpl;
 
-impl MaterialeInfissoDao for MaterialeInfissoDaoImpl {
+impl MaterialeInfissoDAO for MaterialeInfissoDAOImpl {
     fn get_all(conn: &Connection) -> Result<Vec<MaterialeInfisso>, String> {
         let mut stmt = conn
             .prepare("SELECT * FROM MATERIALE_INFISSO")

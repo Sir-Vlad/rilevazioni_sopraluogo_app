@@ -1,6 +1,6 @@
 mod climatizzazione_dao;
 mod edificio_dao;
-mod entity;
+mod entities;
 mod illuminazione_dao;
 mod infisso_dao;
 mod materiale_infisso_dao;
@@ -9,7 +9,7 @@ mod vetro_infisso_dao;
 
 pub use climatizzazione_dao::*;
 pub use edificio_dao::*;
-pub use entity::*;
+pub use entities::entity::*;
 pub use illuminazione_dao::*;
 pub use infisso_dao::*;
 pub use materiale_infisso_dao::*;

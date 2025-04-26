@@ -1,13 +1,13 @@
-use crate::dao::entity::VetroInfisso;
+use crate::dao::entities::entity::VetroInfisso;
 use rusqlite::Connection;
 
-pub trait VetroInfissoDao {
+pub trait VetroInfissoDAO {
     fn get_all(conn: &Connection) -> Result<Vec<VetroInfisso>, String>;
 }
 
-pub struct VetroInfissoDaoImpl;
+pub struct VetroInfissoDAOImpl;
 
-impl VetroInfissoDao for VetroInfissoDaoImpl {
+impl VetroInfissoDAO for VetroInfissoDAOImpl {
     fn get_all(conn: &Connection) -> Result<Vec<VetroInfisso>, String> {
         let mut stmt = conn
             .prepare("SELECT * FROM VETRO_INFISSO")

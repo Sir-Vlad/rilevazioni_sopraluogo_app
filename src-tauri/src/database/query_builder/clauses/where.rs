@@ -2,7 +2,7 @@ use crate::database::query_builder::LogicalOperator;
 use crate::database::QueryParam;
 
 #[derive(Debug)]
-pub(crate) struct WhereClause {
+pub struct WhereClause {
     pub(crate) condition: String,
     pub(crate) params: Vec<QueryParam>,
     pub(crate) operator: LogicalOperator,

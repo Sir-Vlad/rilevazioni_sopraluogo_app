@@ -1,4 +1,4 @@
-use crate::database::query_builder::where_builder::{WhereBuilder, WhereClause};
+use crate::database::query_builder::{WhereBuilder, WhereClause};
 use crate::{
     database::query_builder::{LogicalOperator, SqlQueryBuilder},
     database::{QueryBuilderError, QueryParam},

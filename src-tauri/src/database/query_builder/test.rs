@@ -1,7 +1,7 @@
 #[cfg(test)]
 mod tests {
-    use crate::database::query_builder::where_builder::WhereBuilder;
     use crate::database::query_builder::SqlQueryBuilder;
+    use crate::database::query_builder::WhereBuilder;
     use crate::database::QueryBuilder;
 
     #[test]

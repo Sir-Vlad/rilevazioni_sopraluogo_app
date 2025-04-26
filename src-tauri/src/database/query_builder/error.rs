@@ -1,6 +1,5 @@
 #[derive(Debug)]
 pub enum QueryBuilderError {
-    MissingFrom,
     MissingTable,
     MissingColumns,
     MissingValues,
@@ -11,7 +10,6 @@ pub enum QueryBuilderError {
 impl std::fmt::Display for QueryBuilderError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Self::MissingFrom => write!(f, "Missing FROM clause"),
             Self::MissingTable => write!(f, "Missing table name"),
             Self::MissingColumns => write!(f, "Missing columns"),
             Self::MissingValues => write!(f, "Missing values"),

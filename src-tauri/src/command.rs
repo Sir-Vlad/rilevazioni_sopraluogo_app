@@ -1,12 +1,12 @@
 pub mod command_tauri {
-    use crate::dao::{Edificio, EdificioDAO, EdificioDAOImpl, Stanza, StanzaDao, StanzaDaoImpl};
+    use crate::dao::{Edificio, EdificioDAO, EdificioDAOImpl, Stanza, StanzaDAO, StanzaDAOImpl};
     use crate::database::{
         get_db_path, init_database, setup_database, Database, DatabaseEventPayload,
         NAME_DIR_DATABASE,
     };
     use crate::dto::{
-        ClimatizzazioneDto, EdificioDTO, IlluminazioneDto, InfissoDto, MaterialeInfissoDto,
-        StanzaDto, VetroInfissoDto,
+        ClimatizzazioneDTO, EdificioDTO, IlluminazioneDTO, InfissoDTO, MaterialeInfissoDTO,
+        StanzaDTO, VetroInfissoDTO,
     };
     use crate::service::{
         EdificioService, EdificioServiceImpl, ExportData, ExportDatiStanzaToExcel, InfissoService,
@@ -204,7 +204,7 @@ pub mod command_tauri {
                     retrieve_string_field_df(&df, "cod_stanza", i)?,
                     retrieve_string_field_df(&df, "destinazione_uso", i)?,
                 );
-                StanzaDaoImpl::insert(tx, stanza)?;
+                StanzaDAOImpl::insert(tx, stanza)?;
             }
 
             Ok(())
@@ -297,23 +297,23 @@ pub mod command_tauri {
     /**************************************************************************************************/
 
     #[tauri::command]
-    pub fn get_infissi(db: State<'_, Database>) -> Result<Vec<InfissoDto>, String> {
+    pub fn get_infissi(db: State<'_, Database>) -> Result<Vec<InfissoDTO>, String> {
         InfissoServiceImpl::get_all(db)
     }
 
     #[tauri::command]
     pub fn insert_infisso(
         db: State<'_, Database>,
-        infisso: InfissoDto,
-    ) -> Result<InfissoDto, String> {
+        infisso: InfissoDTO,
+    ) -> Result<InfissoDTO, String> {
         InfissoServiceImpl::insert(db, infisso)
     }
 
     #[tauri::command]
     pub fn update_infisso(
         db: State<'_, Database>,
-        infisso: InfissoDto,
-    ) -> Result<InfissoDto, String> {
+        infisso: InfissoDTO,
+    ) -> Result<InfissoDTO, String> {
         InfissoServiceImpl::update(db, infisso)
     }
 
@@ -322,30 +322,30 @@ pub mod command_tauri {
     /**************************************************************************************************/
 
     #[tauri::command]
-    pub fn get_stanze(db: State<'_, Database>) -> Result<Vec<StanzaDto>, String> {
+    pub fn get_stanze(db: State<'_, Database>) -> Result<Vec<StanzaDTO>, String> {
         StanzaServiceImpl::get_all(db)
     }
 
     #[tauri::command]
-    pub fn insert_stanza(db: State<'_, Database>, stanza: StanzaDto) -> Result<StanzaDto, String> {
+    pub fn insert_stanza(db: State<'_, Database>, stanza: StanzaDTO) -> Result<StanzaDTO, String> {
         StanzaServiceImpl::insert(db, stanza)
     }
 
     #[tauri::command]
-    pub fn update_stanza(db: State<'_, Database>, stanza: StanzaDto) -> Result<StanzaDto, String> {
+    pub fn update_stanza(db: State<'_, Database>, stanza: StanzaDTO) -> Result<StanzaDTO, String> {
         StanzaServiceImpl::update(db, stanza)
     }
 
     #[tauri::command]
-    pub fn get_infissi_stanza(db: State<'_, Database>, id: i64) -> Result<Vec<StanzaDto>, String> {
+    pub fn get_infissi_stanza(db: State<'_, Database>, id: i64) -> Result<Vec<StanzaDTO>, String> {
         StanzaServiceImpl::get_with_infissi(db, id)
     }
 
     #[tauri::command]
     pub fn insert_infissi_stanza(
         db: State<'_, Database>,
-        stanza: StanzaDto,
-    ) -> Result<StanzaDto, String> {
+        stanza: StanzaDTO,
+    ) -> Result<StanzaDTO, String> {
         StanzaServiceImpl::insert_with_infissi(db, stanza)
     }
 
@@ -361,22 +361,22 @@ pub mod command_tauri {
     #[tauri::command]
     pub fn get_materiali_infisso(
         db: State<'_, Database>,
-    ) -> Result<Vec<MaterialeInfissoDto>, String> {
+    ) -> Result<Vec<MaterialeInfissoDTO>, String> {
         TypeServiceImpl::get_materiale_infisso(db)
     }
 
     #[tauri::command]
-    pub fn get_vetro_infisso(db: State<'_, Database>) -> Result<Vec<VetroInfissoDto>, String> {
+    pub fn get_vetro_infisso(db: State<'_, Database>) -> Result<Vec<VetroInfissoDTO>, String> {
         TypeServiceImpl::get_vetro_infisso(db)
     }
 
     #[tauri::command]
-    pub fn get_illuminazione(db: State<'_, Database>) -> Result<Vec<IlluminazioneDto>, String> {
+    pub fn get_illuminazione(db: State<'_, Database>) -> Result<Vec<IlluminazioneDTO>, String> {
         TypeServiceImpl::get_illuminazione(db)
     }
 
     #[tauri::command]
-    pub fn get_climatizzazione(db: State<'_, Database>) -> Result<Vec<ClimatizzazioneDto>, String> {
+    pub fn get_climatizzazione(db: State<'_, Database>) -> Result<Vec<ClimatizzazioneDTO>, String> {
         TypeServiceImpl::get_climatizzazione(db)
     }
 

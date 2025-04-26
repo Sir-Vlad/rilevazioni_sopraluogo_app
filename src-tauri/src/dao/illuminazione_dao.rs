@@ -1,13 +1,13 @@
-use crate::dao::entity::Illuminazione;
+use crate::dao::entities::entity::Illuminazione;
 use rusqlite::Connection;
 
-pub trait IlluminazioneDao {
+pub trait IlluminazioneDAO {
     fn get_all(conn: &Connection) -> Result<Vec<Illuminazione>, String>;
 }
 
-pub struct IlluminazioneDaoImpl;
+pub struct IlluminazioneDAOImpl;
 
-impl IlluminazioneDao for IlluminazioneDaoImpl {
+impl IlluminazioneDAO for IlluminazioneDAOImpl {
     fn get_all(conn: &Connection) -> Result<Vec<Illuminazione>, String> {
         let mut stmt = conn
             .prepare("SELECT * FROM ILLUMINAZIONE")

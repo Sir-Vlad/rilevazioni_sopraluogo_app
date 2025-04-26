@@ -1,4 +1,4 @@
-use crate::dao::entity::Stanza;
+use crate::dao::entities::entity::Stanza;
 use crate::database::WhereBuilder;
 use crate::database::{convert_param, DatabaseConnection, QueryBuilder, SqlQueryBuilder};
 use itertools::Itertools;
@@ -6,7 +6,7 @@ use log::{error, info};
 use rusqlite::{params, Connection};
 use std::collections::HashMap;
 
-pub trait StanzaDao {
+pub trait StanzaDAO {
     fn get_all(conn: &Connection) -> Result<Vec<Stanza>, String>;
     fn insert<C: DatabaseConnection>(conn: &C, stanza: Stanza) -> Result<Stanza, String>;
     fn update<C: DatabaseConnection>(conn: &C, stanza: Stanza) -> Result<Stanza, String>;
@@ -19,9 +19,9 @@ pub trait StanzaDao {
     ) -> Result<(), String>;
 }
 
-pub struct StanzaDaoImpl;
+pub struct StanzaDAOImpl;
 
-impl StanzaDao for StanzaDaoImpl {
+impl StanzaDAO for StanzaDAOImpl {
     fn get_all(conn: &Connection) -> Result<Vec<Stanza>, String> {
         let query = match QueryBuilder::select().table("STANZA").build() {
             Ok((q, p)) => q,

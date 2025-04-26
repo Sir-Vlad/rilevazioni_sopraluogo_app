@@ -1,4 +1,4 @@
-use crate::dto::{EdificioDTO, InfissoDto, StanzaDto};
+use crate::dto::{EdificioDTO, InfissoDTO, StanzaDTO};
 
 pub struct Edificio {
     pub chiave: String,
@@ -50,8 +50,8 @@ pub struct Infisso {
     pub vetro: String,
 }
 
-impl From<&InfissoDto> for Infisso {
-    fn from(infisso: &InfissoDto) -> Self {
+impl From<&InfissoDTO> for Infisso {
+    fn from(infisso: &InfissoDTO) -> Self {
         Infisso {
             id: infisso.id.clone(),
             tipo: infisso.tipo.clone(),
@@ -102,8 +102,8 @@ impl Stanza {
     }
 }
 
-impl From<StanzaDto> for Stanza {
-    fn from(value: StanzaDto) -> Self {
+impl From<StanzaDTO> for Stanza {
+    fn from(value: StanzaDTO) -> Self {
         Stanza {
             id: Some(value.id),
             chiave: value.chiave.clone(),

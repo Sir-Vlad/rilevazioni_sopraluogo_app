@@ -1,17 +1,17 @@
-use crate::dao::entity::Infisso;
-use crate::dto::InfissoDto;
+use crate::dao::entities::entity::Infisso;
+use crate::dto::InfissoDTO;
 use log::{error, info};
 use rusqlite::Connection;
 
-pub trait InfissoDao {
+pub trait InfissoDAO {
     fn get_all(conn: &Connection) -> Result<Vec<Infisso>, String>;
-    fn insert(conn: &Connection, infisso: &InfissoDto) -> Result<Infisso, String>;
-    fn update(conn: &Connection, infisso: &InfissoDto) -> Result<Infisso, String>;
+    fn insert(conn: &Connection, infisso: &InfissoDTO) -> Result<Infisso, String>;
+    fn update(conn: &Connection, infisso: &InfissoDTO) -> Result<Infisso, String>;
 }
 
-pub struct InfissoDaoImpl;
+pub struct InfissoDAOImpl;
 
-impl InfissoDao for InfissoDaoImpl {
+impl InfissoDAO for InfissoDAOImpl {
     fn get_all(conn: &Connection) -> Result<Vec<Infisso>, String> {
         let mut stmt = conn
             .prepare("SELECT * FROM INFISSO")
@@ -38,7 +38,7 @@ impl InfissoDao for InfissoDaoImpl {
         }
     }
 
-    fn insert(conn: &Connection, infisso: &InfissoDto) -> Result<Infisso, String> {
+    fn insert(conn: &Connection, infisso: &InfissoDTO) -> Result<Infisso, String> {
         match conn
             .execute(
                 "INSERT INTO INFISSO(ID, TIPO, ALTEZZA, LARGHEZZA, MATERIALE, VETRO) 
@@ -66,7 +66,7 @@ impl InfissoDao for InfissoDaoImpl {
     }
 
     #[allow(dead_code, unused_variables)]
-    fn update(conn: &Connection, infisso: &InfissoDto) -> Result<Infisso, String> {
+    fn update(conn: &Connection, infisso: &InfissoDTO) -> Result<Infisso, String> {
         todo!()
     }
 }

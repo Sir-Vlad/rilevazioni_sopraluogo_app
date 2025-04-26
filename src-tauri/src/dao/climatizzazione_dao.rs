@@ -1,13 +1,13 @@
-use crate::dao::entity::Climatizzazione;
+use crate::dao::entities::entity::Climatizzazione;
 use rusqlite::Connection;
 
-pub trait ClimatizzazioneDao {
+pub trait ClimatizzazioneDAO {
     fn get_all(conn: &Connection) -> Result<Vec<Climatizzazione>, String>;
 }
 
-pub struct ClimatizzazioneDaoImpl;
+pub struct ClimatizzazioneDAOImpl;
 
-impl ClimatizzazioneDao for ClimatizzazioneDaoImpl {
+impl ClimatizzazioneDAO for ClimatizzazioneDAOImpl {
     fn get_all(conn: &Connection) -> Result<Vec<Climatizzazione>, String> {
         let mut stmt = conn
             .prepare("SELECT * FROM CLIMATIZZAZIONE")
@@ -73,7 +73,7 @@ mod tests {
     fn get_all() {
         let conn = setup_db();
         let excepted_data = insert_test_data(&conn);
-        let actual_data = ClimatizzazioneDaoImpl::get_all(&conn).unwrap();
+        let actual_data = ClimatizzazioneDAOImpl::get_all(&conn).unwrap();
 
         assert_eq!(actual_data.len(), excepted_data.len());
 
@@ -87,7 +87,7 @@ mod tests {
         let conn = setup_db();
 
         // Test
-        let risultati = ClimatizzazioneDaoImpl::get_all(&conn).unwrap();
+        let risultati = ClimatizzazioneDAOImpl::get_all(&conn).unwrap();
 
         // Verifica
         assert!(risultati.is_empty());
@@ -99,7 +99,7 @@ mod tests {
         let conn = Connection::open_in_memory().unwrap();
 
         // Il metodo dovrebbe restituire un errore
-        let risultato = ClimatizzazioneDaoImpl::get_all(&conn);
+        let risultato = ClimatizzazioneDAOImpl::get_all(&conn);
         assert!(risultato.is_err());
     }
 }
