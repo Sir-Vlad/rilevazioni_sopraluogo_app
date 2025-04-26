@@ -20,7 +20,7 @@ impl EdificioService for EdificioServiceImpl {
             Err("Database not initialized".to_string())
         }
     }
-    
+
     fn update(db: State<'_, Database>, edificio: EdificioDTO) -> Result<EdificioDTO, String> {
         let conn = db.get_conn();
         if let Some(conn) = conn.as_ref() {

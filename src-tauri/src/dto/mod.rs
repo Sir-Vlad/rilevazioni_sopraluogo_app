@@ -7,9 +7,9 @@ mod stanza_dto;
 mod vetro_infisso_dto;
 
 pub use climatizzazione_dto::*;
+pub use edificio_dto::*;
 pub use illuminazione_dto::*;
 pub use infisso_dto::*;
 pub use materiali_infisso_dto::*;
 pub use stanza_dto::*;
 pub use vetro_infisso_dto::*;
-pub use edificio_dto::*;

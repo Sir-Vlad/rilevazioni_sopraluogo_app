@@ -1,5 +1,6 @@
 use crate::dao::entity::Stanza;
-use crate::database::{convert_param, DatabaseConnection, QueryBuilder};
+use crate::database::WhereBuilder;
+use crate::database::{convert_param, DatabaseConnection, QueryBuilder, SqlQueryBuilder};
 use itertools::Itertools;
 use log::{error, info};
 use rusqlite::{params, Connection};
@@ -60,7 +61,7 @@ impl StanzaDao for StanzaDaoImpl {
     fn insert<C: DatabaseConnection>(conn: &C, stanza: Stanza) -> Result<Stanza, String> {
         let builder = QueryBuilder::insert()
             .table("STANZA")
-            .into_columns(vec![
+            .columns(vec![
                 "CHIAVE",
                 "PIANO",
                 "ID_SPAZIO",
@@ -213,7 +214,7 @@ impl StanzaDao for StanzaDaoImpl {
 
         let builder = QueryBuilder::insert()
             .table("STANZA_CON_INFISSI")
-            .into_columns(vec!["ID_STANZA", "ID_INFISSO", "NUM_INFISSI"])
+            .columns(vec!["ID_STANZA", "ID_INFISSO", "NUM_INFISSI"])
             .values(vec![0.into(), "A".into(), 0.into()]); // param fake
         let query = match builder.build() {
             Ok((q, _p)) => q,

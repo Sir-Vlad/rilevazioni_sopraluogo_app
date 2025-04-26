@@ -8,10 +8,10 @@ mod stanza_dao;
 mod vetro_infisso_dao;
 
 pub use climatizzazione_dao::*;
+pub use edificio_dao::*;
 pub use entity::*;
 pub use illuminazione_dao::*;
 pub use infisso_dao::*;
 pub use materiale_infisso_dao::*;
 pub use stanza_dao::*;
 pub use vetro_infisso_dao::*;
-pub use edificio_dao::*;
