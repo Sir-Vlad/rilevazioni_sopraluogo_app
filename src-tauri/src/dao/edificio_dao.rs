@@ -1,4 +1,4 @@
-use crate::dao::Edificio;
+use crate::dao::entity::Edificio;
 use crate::database::{
     convert_param, DatabaseConnection, QueryBuilder, SqlQueryBuilder, WhereBuilder,
 };

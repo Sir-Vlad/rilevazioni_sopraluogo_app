@@ -1,4 +1,4 @@
-use crate::dao::entities::entity::Climatizzazione;
+use crate::dao::entity::Climatizzazione;
 use crate::database::{QueryBuilder, SqlQueryBuilder};
 use rusqlite::Connection;
 

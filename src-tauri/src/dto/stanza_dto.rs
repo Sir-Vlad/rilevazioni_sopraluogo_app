@@ -1,4 +1,4 @@
-use crate::dao::Stanza;
+use crate::dao::entity::Stanza;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize, Clone)]

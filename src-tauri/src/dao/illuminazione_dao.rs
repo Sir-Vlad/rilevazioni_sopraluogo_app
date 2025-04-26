@@ -1,4 +1,4 @@
-use crate::dao::entities::entity::Illuminazione;
+use crate::dao::entity::Illuminazione;
 use crate::database::{QueryBuilder, SqlQueryBuilder};
 use rusqlite::Connection;
 

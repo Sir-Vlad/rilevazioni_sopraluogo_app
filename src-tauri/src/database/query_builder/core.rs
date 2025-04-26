@@ -1,4 +1,4 @@
-use crate::database::query_builder::{
+use crate::database::query_builder::builders::{
     DeleteQueryBuilder, InsertQueryBuilder, SelectQueryBuilder, UpdateQueryBuilder,
 };
 

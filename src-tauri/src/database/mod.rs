@@ -1,5 +1,6 @@
 mod database_connection;
 mod model;
+#[allow(dead_code)]
 mod query_builder;
 mod utils;
 

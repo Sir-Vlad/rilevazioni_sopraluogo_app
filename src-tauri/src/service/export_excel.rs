@@ -108,7 +108,7 @@ impl ExportDatiStanzaToExcel {
             .prepare("SELECT * FROM DATI_STANZE")
             .map_err(|e| e.to_string())?;
 
-        let dati_stanze: Result<Vec<DatiStanza>, rusqlite::Error> = stmt
+        let dati_stanze: Result<Vec<DatiStanza>, Error> = stmt
             .query_map([], |row| {
                 Ok(DatiStanza {
                     id: row.get(0)?,

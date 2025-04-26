@@ -1,16 +1,22 @@
 pub mod command_tauri {
-    use crate::dao::{Edificio, EdificioDAO, EdificioDAOImpl, Stanza, StanzaDAO, StanzaDAOImpl};
-    use crate::database::{
-        get_db_path, init_database, setup_database, Database, DatabaseEventPayload,
-        NAME_DIR_DATABASE,
-    };
-    use crate::dto::{
-        ClimatizzazioneDTO, EdificioDTO, IlluminazioneDTO, InfissoDTO, MaterialeInfissoDTO,
-        StanzaDTO, VetroInfissoDTO,
-    };
-    use crate::service::{
-        EdificioService, EdificioServiceImpl, ExportData, ExportDatiStanzaToExcel, InfissoService,
-        InfissoServiceImpl, StanzaService, StanzaServiceImpl, TypeService, TypeServiceImpl,
+    use crate::{
+        dao::{
+            entity::{Edificio, Stanza},
+            EdificioDAO, EdificioDAOImpl, StanzaDAO, StanzaDAOImpl,
+        },
+        database::{
+            get_db_path, init_database, setup_database, Database, DatabaseEventPayload,
+            NAME_DIR_DATABASE,
+        },
+        dto::{
+            ClimatizzazioneDTO, EdificioDTO, IlluminazioneDTO, InfissoDTO, MaterialeInfissoDTO,
+            StanzaDTO, VetroInfissoDTO,
+        },
+        service::{
+            EdificioService, EdificioServiceImpl, ExportData, ExportDatiStanzaToExcel,
+            InfissoService, InfissoServiceImpl, StanzaService, StanzaServiceImpl, TypeService,
+            TypeServiceImpl,
+        },
     };
     use calamine::{open_workbook, Reader, Xlsx};
     use dirs_next::document_dir;
@@ -24,7 +30,6 @@ pub mod command_tauri {
     use serde_json::Value;
     use std::{collections::HashMap, ffi::OsStr, fs};
     use tauri::{AppHandle, Emitter, State};
-
     /**************************************************************************************************/
     /******************************* COMMAND PER MISCELLANEOUS **********************************/
     /**************************************************************************************************/

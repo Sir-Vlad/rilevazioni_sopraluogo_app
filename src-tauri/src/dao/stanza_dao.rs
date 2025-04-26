@@ -1,4 +1,4 @@
-use crate::dao::entities::entity::Stanza;
+use crate::dao::entity::Stanza;
 use crate::database::WhereBuilder;
 use crate::database::{convert_param, DatabaseConnection, QueryBuilder, SqlQueryBuilder};
 use itertools::Itertools;

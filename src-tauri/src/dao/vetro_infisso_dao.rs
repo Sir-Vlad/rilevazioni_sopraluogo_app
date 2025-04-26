@@ -1,4 +1,4 @@
-use crate::dao::entities::entity::VetroInfisso;
+use crate::dao::entity::VetroInfisso;
 use crate::database::{QueryBuilder, SqlQueryBuilder};
 use rusqlite::Connection;
 

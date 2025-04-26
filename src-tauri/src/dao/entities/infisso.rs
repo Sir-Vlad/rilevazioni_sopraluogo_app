@@ -1,8 +1,6 @@
-use crate::dao::entity::Infisso;
-use serde::{Deserialize, Serialize};
+use crate::dto::InfissoDTO;
 
-#[derive(Debug, Serialize, Deserialize)]
-pub struct InfissoDTO {
+pub struct Infisso {
     pub id: String,
     pub tipo: String,
     pub altezza: u16,
@@ -10,10 +8,9 @@ pub struct InfissoDTO {
     pub materiale: String,
     pub vetro: String,
 }
-
-impl From<&Infisso> for InfissoDTO {
-    fn from(infisso: &Infisso) -> Self {
-        InfissoDTO {
+impl From<&InfissoDTO> for Infisso {
+    fn from(infisso: &InfissoDTO) -> Self {
+        Infisso {
             id: infisso.id.clone(),
             tipo: infisso.tipo.clone(),
             altezza: infisso.altezza,

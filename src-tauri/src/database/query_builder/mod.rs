@@ -1,4 +1,4 @@
-mod builders;
+pub(crate) mod builders;
 mod common;
 mod core;
 mod error;
@@ -13,8 +13,5 @@ pub use params::QueryParam;
 pub use common::SqlQueryBuilder;
 pub use clauses::WhereBuilder;
 
-pub(crate) use builders::{
-    DeleteQueryBuilder, InsertQueryBuilder, SelectQueryBuilder, UpdateQueryBuilder,
-};
 pub(crate) use common::LogicalOperator;
 pub(crate) use clauses::WhereClause;

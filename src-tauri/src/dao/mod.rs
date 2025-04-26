@@ -9,7 +9,7 @@ mod vetro_infisso_dao;
 
 pub use climatizzazione_dao::*;
 pub use edificio_dao::*;
-pub use entities::entity::*;
+pub use entities::*;
 pub use illuminazione_dao::*;
 pub use infisso_dao::*;
 pub use materiale_infisso_dao::*;

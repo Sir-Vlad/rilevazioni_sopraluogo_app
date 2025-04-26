@@ -1,4 +1,4 @@
-use crate::dao::entities::entity::Infisso;
+use crate::dao::entity::Infisso;
 use crate::database::{convert_param, QueryBuilder, SqlQueryBuilder};
 use crate::dto::InfissoDTO;
 use log::{error, info};

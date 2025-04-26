@@ -1,8 +1,6 @@
-use crate::dao::entity::Edificio;
-use serde::{Deserialize, Serialize};
+use crate::dto::EdificioDTO;
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
-pub struct EdificioDTO {
+pub struct Edificio {
     pub chiave: String,
     pub fascicolo: String,
     pub indirizzo: String,
@@ -13,15 +11,30 @@ pub struct EdificioDTO {
     pub cappotto: Option<bool>,
 }
 
-impl From<&Edificio> for EdificioDTO {
-    fn from(value: &Edificio) -> Self {
-        EdificioDTO {
+impl Edificio {
+    pub fn new(chiave: String, fascicolo: String, indirizzo: String) -> Self {
+        Edificio {
+            chiave,
+            fascicolo,
+            indirizzo,
+            anno_costruzione: None,
+            anno_riqualificazione: None,
+            note_riqualificazione: None,
+            isolamento_tetto: None,
+            cappotto: None,
+        }
+    }
+}
+
+impl From<EdificioDTO> for Edificio {
+    fn from(value: EdificioDTO) -> Self {
+        Edificio {
             chiave: value.chiave.to_string(),
             fascicolo: value.fascicolo.to_string(),
             indirizzo: value.indirizzo.to_string(),
             anno_costruzione: value.anno_costruzione.clone(),
             anno_riqualificazione: value.anno_riqualificazione.clone(),
-            note_riqualificazione: value.note_riqualificazione.clone(),
+            note_riqualificazione: None,
             isolamento_tetto: value.isolamento_tetto,
             cappotto: value.cappotto,
         }
