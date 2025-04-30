@@ -1,22 +1,23 @@
 use crate::dto::EdificioDTO;
 
+#[cfg_attr(test, derive(Debug, PartialEq))]
 pub struct Edificio {
-    pub chiave: String,
-    pub fascicolo: String,
-    pub indirizzo: String,
-    pub anno_costruzione: Option<String>,
-    pub anno_riqualificazione: Option<String>,
-    pub note_riqualificazione: Option<String>,
-    pub isolamento_tetto: Option<bool>,
-    pub cappotto: Option<bool>,
+    pub(crate) chiave: String,
+    pub(crate) fascicolo: String,
+    pub(crate) indirizzo: String,
+    pub(crate) anno_costruzione: Option<String>,
+    pub(crate) anno_riqualificazione: Option<String>,
+    pub(crate) note_riqualificazione: Option<String>,
+    pub(crate) isolamento_tetto: Option<bool>,
+    pub(crate) cappotto: Option<bool>,
 }
 
 impl Edificio {
-    pub fn new(chiave: String, fascicolo: String, indirizzo: String) -> Self {
+    pub fn new(chiave: &str, fascicolo: &str, indirizzo: &str) -> Self {
         Edificio {
-            chiave,
-            fascicolo,
-            indirizzo,
+            chiave: chiave.to_string(),
+            fascicolo: fascicolo.to_string(),
+            indirizzo: indirizzo.to_string(),
             anno_costruzione: None,
             anno_riqualificazione: None,
             note_riqualificazione: None,

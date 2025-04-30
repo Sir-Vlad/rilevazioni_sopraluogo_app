@@ -1,19 +1,13 @@
+use crate::dao::crud_operations::{GetAll, Insert, Update};
 use crate::dao::entity::Infisso;
-use crate::database::{convert_param, QueryBuilder, SqlQueryBuilder};
-use crate::dto::InfissoDTO;
+use crate::dao::utils::schema_operations::CreateTable;
+use crate::database::{convert_param, DatabaseConnection, QueryBuilder, SqlQueryBuilder};
 use log::{error, info};
-use rusqlite::Connection;
 
-pub trait InfissoDAO {
-    fn get_all(conn: &Connection) -> Result<Vec<Infisso>, String>;
-    fn insert(conn: &Connection, infisso: &InfissoDTO) -> Result<Infisso, String>;
-    fn update(conn: &Connection, infisso: &InfissoDTO) -> Result<Infisso, String>;
-}
+pub struct InfissoDAO;
 
-pub struct InfissoDAOImpl;
-
-impl InfissoDAO for InfissoDAOImpl {
-    fn get_all(conn: &Connection) -> Result<Vec<Infisso>, String> {
+impl GetAll<Infisso> for InfissoDAO {
+    fn get_all<C: DatabaseConnection>(conn: &C) -> Result<Vec<Infisso>, String> {
         let (query, _) = QueryBuilder::select()
             .table("INFISSO")
             .build()
@@ -43,8 +37,10 @@ impl InfissoDAO for InfissoDAOImpl {
             Err(e) => Err(e.to_string()),
         }
     }
+}
 
-    fn insert(conn: &Connection, infisso: &InfissoDTO) -> Result<Infisso, String> {
+impl Insert<Infisso> for InfissoDAO {
+    fn insert<C: DatabaseConnection>(conn: &C, infisso: Infisso) -> Result<Infisso, String> {
         let builder = QueryBuilder::insert()
             .table("INFISSO")
             .columns(vec![
@@ -74,7 +70,7 @@ impl InfissoDAO for InfissoDAOImpl {
         {
             Ok(_) => {
                 info!("Infisso inserito con successo");
-                Ok(Infisso::from(infisso))
+                Ok(infisso)
             }
             Err(e) => {
                 error!("Errore durante l'inserimento {{ infisso }}: {}", e);
@@ -82,9 +78,50 @@ impl InfissoDAO for InfissoDAOImpl {
             }
         }
     }
+}
 
-    #[allow(dead_code, unused_variables)]
-    fn update(conn: &Connection, infisso: &InfissoDTO) -> Result<Infisso, String> {
-        todo!()
+impl Update<Infisso> for InfissoDAO {
+    fn update<C: DatabaseConnection>(conn: &C, infisso: Infisso) -> Result<Infisso, String> {
+        let builder = QueryBuilder::update()
+            .table("INFISSO")
+            .set("ALTEZZA", infisso.altezza)
+            .set("LARGHEZZA", infisso.larghezza)
+            .set("MATERIALE", infisso.materiale.clone())
+            .set("VETRO", infisso.vetro.clone());
+        let (query, params) = builder.build().map_err(|e| e.to_string())?;
+
+        match conn.execute(
+            query.as_str(),
+            rusqlite::params_from_iter(convert_param(params)),
+        ) {
+            Ok(_) => {
+                info!("Infisso aggiornato con successo");
+                Ok(infisso)
+            }
+            Err(e) => {
+                error!("Errore durante l'aggiornamento {{ infisso }}: {}", e);
+                Err(e.to_string())
+            }
+        }
+    }
+}
+
+impl CreateTable for InfissoDAO {
+    fn create_table<C: DatabaseConnection>(conn: &C) -> Result<(), String> {
+        conn.execute(
+            "CREATE TABLE IF NOT EXISTS INFISSO
+            (
+                ID        TEXT PRIMARY KEY,
+                TIPO      TEXT    NOT NULL CHECK ( TIPO IN ('PORTA', 'FINESTRA') ) DEFAULT 'FINESTRA',
+                ALTEZZA   INTEGER NOT NULL CHECK ( ALTEZZA >= 0 ),
+                LARGHEZZA INTEGER NOT NULL CHECK ( LARGHEZZA >= 0 ),
+                MATERIALE TEXT    NOT NULL REFERENCES MATERIALE_INFISSO (MATERIALE),
+                VETRO     TEXT    NOT NULL REFERENCES VETRO_INFISSO (VETRO),
+                MQ        REAL GENERATED ALWAYS AS ((ALTEZZA * LARGHEZZA) / 10000.0) VIRTUAL,
+                UNIQUE (TIPO, ALTEZZA, LARGHEZZA, MATERIALE, VETRO)
+            ) STRICT;"
+            ,()).map_err(|e| e.to_string())?;
+        info!("Tabella INFISSO creata");
+        Ok(())
     }
 }

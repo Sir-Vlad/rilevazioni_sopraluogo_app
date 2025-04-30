@@ -31,7 +31,7 @@ impl Database {
         T: for<'de> serde::Deserialize<'de> + serde::Serialize,
         F: FnOnce(&rusqlite::Transaction) -> Result<T, String>,
     {
-        let mut conn_guard = self.conn.lock().unwrap();
+        let mut conn_guard = self.get_conn();
         if let Some(conn) = conn_guard.as_mut() {
             let tx = conn.transaction().map_err(|e| e.to_string())?;
             let result = op(&tx)?;

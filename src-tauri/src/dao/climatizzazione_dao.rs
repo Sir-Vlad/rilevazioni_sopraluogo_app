@@ -1,15 +1,13 @@
+use crate::dao::crud_operations::GetAll;
 use crate::dao::entity::Climatizzazione;
-use crate::database::{QueryBuilder, SqlQueryBuilder};
-use rusqlite::Connection;
+use crate::dao::schema_operations::CreateTable;
+use crate::database::{DatabaseConnection, QueryBuilder, SqlQueryBuilder};
+use log::info;
 
-pub trait ClimatizzazioneDAO {
-    fn get_all(conn: &Connection) -> Result<Vec<Climatizzazione>, String>;
-}
+pub struct ClimatizzazioneDAO;
 
-pub struct ClimatizzazioneDAOImpl;
-
-impl ClimatizzazioneDAO for ClimatizzazioneDAOImpl {
-    fn get_all(conn: &Connection) -> Result<Vec<Climatizzazione>, String> {
+impl GetAll<Climatizzazione> for ClimatizzazioneDAO {
+    fn get_all<C: DatabaseConnection>(conn: &C) -> Result<Vec<Climatizzazione>, String> {
         let (query, _) = QueryBuilder::select()
             .table("CLIMATIZZAZIONE")
             .build()
@@ -33,9 +31,27 @@ impl ClimatizzazioneDAO for ClimatizzazioneDAOImpl {
     }
 }
 
+impl CreateTable for ClimatizzazioneDAO {
+    fn create_table<C: DatabaseConnection>(conn: &C) -> Result<(), String> {
+        conn.execute(
+            "CREATE TABLE IF NOT EXISTS CLIMATIZZAZIONE
+        (
+            ID                    INTEGER PRIMARY KEY AUTOINCREMENT,
+            CLIMATIZZAZIONE       TEXT    NOT NULL UNIQUE COLLATE NOCASE,
+            EFFICIENZA_ENERGETICA INTEGER NOT NULL
+        ) STRICT;",
+            (),
+        )
+        .map_err(|e| e.to_string())?;
+        info!("Tabella CLIMATIZZAZIONE creata");
+        Ok(())
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+    use rusqlite::Connection;
 
     fn setup_db() -> Connection {
         let conn = Connection::open_in_memory().unwrap();
@@ -79,7 +95,7 @@ mod tests {
     fn get_all() {
         let conn = setup_db();
         let excepted_data = insert_test_data(&conn);
-        let actual_data = ClimatizzazioneDAOImpl::get_all(&conn).unwrap();
+        let actual_data = ClimatizzazioneDAO::get_all(&conn).unwrap();
 
         assert_eq!(actual_data.len(), excepted_data.len());
 
@@ -93,7 +109,7 @@ mod tests {
         let conn = setup_db();
 
         // Test
-        let risultati = ClimatizzazioneDAOImpl::get_all(&conn).unwrap();
+        let risultati = ClimatizzazioneDAO::get_all(&conn).unwrap();
 
         // Verifica
         assert!(risultati.is_empty());
@@ -105,7 +121,7 @@ mod tests {
         let conn = Connection::open_in_memory().unwrap();
 
         // Il metodo dovrebbe restituire un errore
-        let risultato = ClimatizzazioneDAOImpl::get_all(&conn);
+        let risultato = ClimatizzazioneDAO::get_all(&conn);
         assert!(risultato.is_err());
     }
 }

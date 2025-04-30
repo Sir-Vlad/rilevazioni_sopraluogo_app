@@ -2,10 +2,10 @@ pub mod command_tauri {
     use crate::{
         dao::{
             entity::{Edificio, Stanza},
-            EdificioDAO, EdificioDAOImpl, StanzaDAO, StanzaDAOImpl,
+            EdificioDAO, StanzaDAO, StanzaDAOImpl,
         },
         database::{
-            get_db_path, init_database, setup_database, Database, DatabaseEventPayload,
+            get_db_path, init_database, set_pragma, Database, DatabaseEventPayload,
             NAME_DIR_DATABASE,
         },
         dto::{
@@ -21,7 +21,7 @@ pub mod command_tauri {
     use calamine::{open_workbook, Reader, Xlsx};
     use dirs_next::document_dir;
     use itertools::izip;
-    use log::{error, info};
+    use log::info;
     use polars::{
         frame::{DataFrame, UniqueKeepStrategy},
         prelude::{col, ChunkExplode, IntoLazy, NamedFrom, Series},
@@ -30,12 +30,16 @@ pub mod command_tauri {
     use serde_json::Value;
     use std::{collections::HashMap, ffi::OsStr, fs};
     use tauri::{AppHandle, Emitter, State};
+    use crate::dao::crud_operations::Insert;
+
+    type ResultCommand<T> = Result<T, String>;
+
     /**************************************************************************************************/
     /******************************* COMMAND PER MISCELLANEOUS **********************************/
     /**************************************************************************************************/
 
     #[tauri::command]
-    pub fn get_all_name_database() -> Result<Vec<String>, String> {
+    pub fn get_all_name_database() -> ResultCommand<Vec<String>> {
         if let Some(mut path) = document_dir() {
             path.push(NAME_DIR_DATABASE);
             if !path.exists() {
@@ -64,27 +68,20 @@ pub mod command_tauri {
         app_handle: AppHandle,
         db: State<'_, Database>,
         db_name: String,
-    ) -> Result<String, String> {
+    ) -> ResultCommand<String> {
         let db_path = get_db_path(db_name)?;
-        let mut conn = db.get_conn();
-        let mut path_to_database = db.get_path_to_database();
-        if let Some(existing_conn) = conn.take() {
-            drop(existing_conn);
-        }
-        *conn = Some(Connection::open(&db_path).map_err(|c| c.to_string())?);
-        *path_to_database = Some(db_path.clone());
-
-        setup_database(conn.as_ref().unwrap())?;
-        match init_database(
-            app_handle.clone(),
-            conn.as_ref().ok_or("Database connection not initialized")?,
-        ) {
-            Ok(_) => info!("Database inizializzato"),
-            Err(e) => {
-                error!("Errore nell'inizializzazione del database: {}", e);
-                return Err(e.to_string());
+        {
+            let mut conn = db.get_conn();
+            let mut path_to_database = db.get_path_to_database();
+            if let Some(existing_conn) = conn.take() {
+                drop(existing_conn);
             }
-        };
+            *conn = Some(Connection::open(&db_path).map_err(|c| c.to_string())?);
+            *path_to_database = Some(db_path.clone());
+
+            set_pragma(conn.as_ref().unwrap())?;
+        } // unlock mutex
+        db.with_transaction(|tx| init_database(app_handle, tx))?;
         Ok(db_path)
     }
 
@@ -93,7 +90,7 @@ pub mod command_tauri {
         app_handle: AppHandle,
         db: State<'_, Database>,
         db_name: String,
-    ) -> Result<(), String> {
+    ) -> ResultCommand<()> {
         info!("Switching database to {}", db_name);
         let db_path = get_db_path(db_name)?;
         let mut conn = db.get_conn();
@@ -103,7 +100,7 @@ pub mod command_tauri {
         }
         *conn = Some(Connection::open(&db_path).map_err(|c| c.to_string())?);
         *path_to_database = Some(db_path.clone());
-        setup_database(conn.as_ref().unwrap())?;
+        set_pragma(conn.as_ref().unwrap())?;
 
         app_handle
             .emit(
@@ -120,7 +117,7 @@ pub mod command_tauri {
     }
 
     #[tauri::command]
-    pub fn close_database(db: State<'_, Database>) -> Result<(), String> {
+    pub fn close_database(db: State<'_, Database>) -> ResultCommand<()> {
         let mut conn = db.get_conn();
         if let Some(conn) = conn.take() {
             drop(conn);
@@ -143,7 +140,7 @@ pub mod command_tauri {
         app_handle: AppHandle,
         db: State<'_, Database>,
         path: String,
-    ) -> Result<String, String> {
+    ) -> ResultCommand<String> {
         let df = elaborate_file(path)?;
 
         let name_db = df
@@ -197,8 +194,8 @@ pub mod command_tauri {
 
             let fascicolo = retrieve_string_field_df(&df, "fascicolo", 0)?;
             for (chiave, indirizzo) in izip!(chiavi, indirizzi) {
-                let edificio = Edificio::new(chiave.to_string(), fascicolo.clone(), indirizzo);
-                EdificioDAOImpl::insert(tx, edificio)?;
+                let edificio = Edificio::new(chiave, fascicolo.as_str(), indirizzo.as_str());
+                EdificioDAO::insert(tx, edificio)?;
             }
 
             for i in 0..df.height() {
@@ -302,7 +299,7 @@ pub mod command_tauri {
     /**************************************************************************************************/
 
     #[tauri::command]
-    pub fn get_infissi(db: State<'_, Database>) -> Result<Vec<InfissoDTO>, String> {
+    pub fn get_infissi(db: State<'_, Database>) -> ResultCommand<Vec<InfissoDTO>> {
         InfissoServiceImpl::get_all(db)
     }
 
@@ -310,7 +307,7 @@ pub mod command_tauri {
     pub fn insert_infisso(
         db: State<'_, Database>,
         infisso: InfissoDTO,
-    ) -> Result<InfissoDTO, String> {
+    ) -> ResultCommand<InfissoDTO> {
         InfissoServiceImpl::insert(db, infisso)
     }
 
@@ -318,7 +315,7 @@ pub mod command_tauri {
     pub fn update_infisso(
         db: State<'_, Database>,
         infisso: InfissoDTO,
-    ) -> Result<InfissoDTO, String> {
+    ) -> ResultCommand<InfissoDTO> {
         InfissoServiceImpl::update(db, infisso)
     }
 
@@ -327,31 +324,18 @@ pub mod command_tauri {
     /**************************************************************************************************/
 
     #[tauri::command]
-    pub fn get_stanze(db: State<'_, Database>) -> Result<Vec<StanzaDTO>, String> {
+    pub fn get_stanze(db: State<'_, Database>) -> ResultCommand<Vec<StanzaDTO>> {
         StanzaServiceImpl::get_all(db)
     }
 
     #[tauri::command]
-    pub fn insert_stanza(db: State<'_, Database>, stanza: StanzaDTO) -> Result<StanzaDTO, String> {
+    pub fn insert_stanza(db: State<'_, Database>, stanza: StanzaDTO) -> ResultCommand<StanzaDTO> {
         StanzaServiceImpl::insert(db, stanza)
     }
 
     #[tauri::command]
-    pub fn update_stanza(db: State<'_, Database>, stanza: StanzaDTO) -> Result<StanzaDTO, String> {
+    pub fn update_stanza(db: State<'_, Database>, stanza: StanzaDTO) -> ResultCommand<StanzaDTO> {
         StanzaServiceImpl::update(db, stanza)
-    }
-
-    #[tauri::command]
-    pub fn get_infissi_stanza(db: State<'_, Database>, id: i64) -> Result<Vec<StanzaDTO>, String> {
-        StanzaServiceImpl::get_with_infissi(db, id)
-    }
-
-    #[tauri::command]
-    pub fn insert_infissi_stanza(
-        db: State<'_, Database>,
-        stanza: StanzaDTO,
-    ) -> Result<StanzaDTO, String> {
-        StanzaServiceImpl::insert_with_infissi(db, stanza)
     }
 
     /**************************************************************************************************/
@@ -359,29 +343,29 @@ pub mod command_tauri {
     /**************************************************************************************************/
 
     #[tauri::command]
-    pub fn get_all_tipi(db: State<'_, Database>) -> Result<HashMap<String, Vec<Value>>, String> {
+    pub fn get_all_tipi(db: State<'_, Database>) -> ResultCommand<HashMap<String, Vec<Value>>> {
         TypeServiceImpl::get_all(db)
     }
 
     #[tauri::command]
     pub fn get_materiali_infisso(
         db: State<'_, Database>,
-    ) -> Result<Vec<MaterialeInfissoDTO>, String> {
+    ) -> ResultCommand<Vec<MaterialeInfissoDTO>> {
         TypeServiceImpl::get_materiale_infisso(db)
     }
 
     #[tauri::command]
-    pub fn get_vetro_infisso(db: State<'_, Database>) -> Result<Vec<VetroInfissoDTO>, String> {
+    pub fn get_vetro_infisso(db: State<'_, Database>) -> ResultCommand<Vec<VetroInfissoDTO>> {
         TypeServiceImpl::get_vetro_infisso(db)
     }
 
     #[tauri::command]
-    pub fn get_illuminazione(db: State<'_, Database>) -> Result<Vec<IlluminazioneDTO>, String> {
+    pub fn get_illuminazione(db: State<'_, Database>) -> ResultCommand<Vec<IlluminazioneDTO>> {
         TypeServiceImpl::get_illuminazione(db)
     }
 
     #[tauri::command]
-    pub fn get_climatizzazione(db: State<'_, Database>) -> Result<Vec<ClimatizzazioneDTO>, String> {
+    pub fn get_climatizzazione(db: State<'_, Database>) -> ResultCommand<Vec<ClimatizzazioneDTO>> {
         TypeServiceImpl::get_climatizzazione(db)
     }
 
@@ -393,7 +377,7 @@ pub mod command_tauri {
     pub fn export_data_to_excel(
         db: State<'_, Database>,
         name_file: Option<String>,
-    ) -> Result<(), String> {
+    ) -> ResultCommand<()> {
         ExportDatiStanzaToExcel::export(db, name_file)
     }
 
@@ -402,7 +386,7 @@ pub mod command_tauri {
     /**************************************************************************************************/
 
     #[tauri::command]
-    pub fn get_edifici(db: State<'_, Database>) -> Result<Vec<EdificioDTO>, String> {
+    pub fn get_edifici(db: State<'_, Database>) -> ResultCommand<Vec<EdificioDTO>> {
         EdificioServiceImpl::get_all(db)
     }
 
@@ -410,7 +394,7 @@ pub mod command_tauri {
     pub fn update_edificio(
         db: State<'_, Database>,
         edificio: EdificioDTO,
-    ) -> Result<EdificioDTO, String> {
+    ) -> ResultCommand<EdificioDTO> {
         EdificioServiceImpl::update(db, edificio)
     }
 }

@@ -20,3 +20,9 @@ impl std::fmt::Display for QueryBuilderError {
 }
 
 impl std::error::Error for QueryBuilderError {}
+
+impl From<QueryBuilderError> for String {
+    fn from(value: QueryBuilderError) -> Self {
+        value.to_string()   
+    }
+}

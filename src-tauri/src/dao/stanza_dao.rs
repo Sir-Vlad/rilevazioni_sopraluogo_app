@@ -1,4 +1,6 @@
+use crate::dao::crud_operations::{GetAll, Insert, Update};
 use crate::dao::entity::Stanza;
+use crate::dao::utils::schema_operations::CreateTable;
 use crate::database::WhereBuilder;
 use crate::database::{convert_param, DatabaseConnection, QueryBuilder, SqlQueryBuilder};
 use itertools::Itertools;
@@ -7,10 +9,10 @@ use rusqlite::{params, Connection};
 use std::collections::HashMap;
 
 pub trait StanzaDAO {
-    fn get_all(conn: &Connection) -> Result<Vec<Stanza>, String>;
-    fn insert<C: DatabaseConnection>(conn: &C, stanza: Stanza) -> Result<Stanza, String>;
-    fn update<C: DatabaseConnection>(conn: &C, stanza: Stanza) -> Result<Stanza, String>;
-    fn get_infissi_by_id(conn: &Connection, id_stanza: i64) -> Result<Vec<String>, String>;
+    fn get_infissi_by_id<C: DatabaseConnection>(
+        conn: &C,
+        id_stanza: u64,
+    ) -> Result<Vec<String>, String>;
     fn get_infissi_by_all(conn: &Connection) -> Result<HashMap<String, Vec<String>>, String>;
     fn set_infissi_by_id<C: DatabaseConnection>(
         conn: &C,
@@ -21,13 +23,13 @@ pub trait StanzaDAO {
 
 pub struct StanzaDAOImpl;
 
-impl StanzaDAO for StanzaDAOImpl {
-    fn get_all(conn: &Connection) -> Result<Vec<Stanza>, String> {
+impl GetAll<Stanza> for StanzaDAOImpl {
+    fn get_all<C: DatabaseConnection>(conn: &C) -> Result<Vec<Stanza>, String> {
         let query = match QueryBuilder::select().table("STANZA").build() {
             Ok((q, _)) => q,
             Err(e) => return Err(e.to_string()),
         };
-        let mut stmt = conn.prepare(query.as_str()).ok().unwrap();
+        let mut stmt = conn.prepare(query.as_str()).map_err(|e| e.to_string())?;
         let result: Result<Vec<Stanza>, rusqlite::Error> = stmt
             .query_map([], |row| {
                 Ok(Stanza {
@@ -57,7 +59,9 @@ impl StanzaDAO for StanzaDAOImpl {
             Err(e) => Err(e.to_string()),
         }
     }
+}
 
+impl Insert<Stanza> for StanzaDAOImpl {
     fn insert<C: DatabaseConnection>(conn: &C, stanza: Stanza) -> Result<Stanza, String> {
         let builder = QueryBuilder::insert()
             .table("STANZA")
@@ -105,7 +109,9 @@ impl StanzaDAO for StanzaDAOImpl {
             }
         }
     }
+}
 
+impl Update<Stanza> for StanzaDAOImpl {
     fn update<C: DatabaseConnection>(conn: &C, stanza: Stanza) -> Result<Stanza, String> {
         let builder = QueryBuilder::update()
             .table("STANZA")
@@ -120,13 +126,10 @@ impl StanzaDAO for StanzaDAOImpl {
             Err(e) => return Err(e.to_string()),
         };
 
-        match conn
-            .execute(
-                query.as_str(),
-                rusqlite::params_from_iter(convert_param(param)),
-            )
-            .map_err(|e| e.to_string())
-        {
+        match conn.execute(
+            query.as_str(),
+            rusqlite::params_from_iter(convert_param(param)),
+        ) {
             Ok(_) => {
                 info!("Stanza aggiornata con successo");
                 Ok(stanza)
@@ -137,8 +140,10 @@ impl StanzaDAO for StanzaDAOImpl {
             }
         }
     }
+}
 
-    fn get_infissi_by_id(conn: &Connection, id: i64) -> Result<Vec<String>, String> {
+impl StanzaDAO for StanzaDAOImpl {
+    fn get_infissi_by_id<C: DatabaseConnection>(conn: &C, id: u64) -> Result<Vec<String>, String> {
         let builder = QueryBuilder::select()
             .table("STANZA_CON_INFISSI")
             .where_eq("ID_STANZA", id);
@@ -201,6 +206,12 @@ impl StanzaDAO for StanzaDAOImpl {
         id: u64,
         infissi: Vec<String>,
     ) -> Result<(), String> {
+        // fixme: se esiste già l'infisso bisogna solo incrementare il numero di infissi
+        let infissi_exists = StanzaDAOImpl::get_infissi_by_id(conn, id)?.is_empty();
+        if infissi_exists {
+            return Err(format!("Database stanza id {} not exist", id));
+        }
+
         let mut infissi = infissi;
         infissi.sort();
 
@@ -232,4 +243,55 @@ impl StanzaDAO for StanzaDAOImpl {
 
         Ok(())
     }
+}
+
+impl CreateTable for StanzaDAOImpl {
+    fn create_table<C: DatabaseConnection>(conn: &C) -> Result<(), String> {
+        conn.execute(
+            "CREATE TABLE IF NOT EXISTS STANZA
+            (
+                ID               INTEGER PRIMARY KEY AUTOINCREMENT,
+                CHIAVE           TEXT NOT NULL REFERENCES EDIFICIO (CHIAVE),
+                PIANO            TEXT NOT NULL,
+                ID_SPAZIO        TEXT NOT NULL,
+                STANZA           TEXT NOT NULL,
+                DESTINAZIONE_USO TEXT NOT NULL,
+                ALTEZZA          INTEGER CHECK ( ALTEZZA >= 0 )       DEFAULT 0,
+                SPESSORE_MURO    INTEGER CHECK ( SPESSORE_MURO >= 0 ) DEFAULT 0,
+                RISCALDAMENTO    TEXT                                 DEFAULT NULL REFERENCES CLIMATIZZAZIONE (CLIMATIZZAZIONE),
+                RAFFRESCAMENTO   TEXT                                 DEFAULT NULL REFERENCES CLIMATIZZAZIONE (CLIMATIZZAZIONE),
+                ILLUMINAZIONE    TEXT                                 DEFAULT NULL REFERENCES ILLUMINAZIONE (LAMPADINA),
+                UNIQUE (CHIAVE, ID_SPAZIO, STANZA, DESTINAZIONE_USO)
+            ) STRICT;",
+            ()).map_err(|e| e.to_string())?;
+        info!("Tabella STANZA creata");
+
+        conn.execute(
+            "CREATE TABLE IF NOT EXISTS STANZA_CON_INFISSI
+            (
+                ID_STANZA   INTEGER NOT NULL REFERENCES STANZA (ID),
+                ID_INFISSO  TEXT    NOT NULL REFERENCES INFISSO (ID),
+                NUM_INFISSI INTEGER NOT NULL DEFAULT 1 CHECK ( NUM_INFISSI > 0 ),
+                PRIMARY KEY (ID_INFISSO, ID_STANZA)
+            ) STRICT;",
+            (),
+        )
+        .map_err(|e| e.to_string())?;
+        info!("Tabella STANZA_CON_INFISSI creata");
+
+        Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn setup() -> Result<(), Box<dyn std::error::Error>> {
+        let conn = Connection::open_in_memory().unwrap();
+        Ok(())
+    }
+
+    #[test]
+    fn get_infissi_by_id() {}
 }

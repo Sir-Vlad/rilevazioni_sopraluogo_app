@@ -1,13 +1,24 @@
 mod climatizzazione_dao;
+mod commento_edificio_dao;
+mod commento_infisso_dao;
+mod commento_stanza_dao;
 mod edificio_dao;
 mod entities;
+mod fotovoltaico_dao;
 mod illuminazione_dao;
 mod infisso_dao;
 mod materiale_infisso_dao;
 mod stanza_dao;
+mod utenze_dao;
+mod utils;
 mod vetro_infisso_dao;
 
 pub use climatizzazione_dao::*;
+pub use commento_infisso_dao::*;
+pub use commento_stanza_dao::*;
+pub use commento_edificio_dao::*;
+pub use fotovoltaico_dao::*;
+pub use utenze_dao::*;
 pub use edificio_dao::*;
 pub use entities::*;
 pub use illuminazione_dao::*;
@@ -15,3 +26,5 @@ pub use infisso_dao::*;
 pub use materiale_infisso_dao::*;
 pub use stanza_dao::*;
 pub use vetro_infisso_dao::*;
+
+pub(crate) use utils::{create_tables, crud_operations, schema_operations};

@@ -1,12 +1,12 @@
 use crate::dao::{
-    ClimatizzazioneDAO, ClimatizzazioneDAOImpl, IlluminazioneDAO, IlluminazioneDAOImpl,
-    MaterialeInfissoDAO, MaterialeInfissoDAOImpl, VetroInfissoDAO, VetroInfissoDAOImpl,
+    ClimatizzazioneDAO, IlluminazioneDAO, MaterialeInfissoDAO, VetroInfissoDAO,
 };
 use crate::database::Database;
 use crate::dto::{ClimatizzazioneDTO, IlluminazioneDTO, MaterialeInfissoDTO, VetroInfissoDTO};
 use serde_json::Value;
 use std::collections::HashMap;
 use tauri::State;
+use crate::dao::crud_operations::GetAll;
 
 pub trait TypeService {
     fn get_all(db: State<'_, Database>) -> Result<HashMap<String, Vec<Value>>, String>;
@@ -25,7 +25,7 @@ impl TypeService for TypeServiceImpl {
         if let Some(conn) = conn.as_ref() {
             let mut result_map: HashMap<String, Vec<Value>> = HashMap::new();
 
-            let materiali = MaterialeInfissoDAOImpl::get_all(conn)?;
+            let materiali = MaterialeInfissoDAO::get_all(conn)?;
             let materiale_json: Vec<Value> = materiali
                 .iter()
                 .map(|x| MaterialeInfissoDTO {
@@ -37,7 +37,7 @@ impl TypeService for TypeServiceImpl {
 
             result_map.insert("materiale_infissi".to_string(), materiale_json);
 
-            let vetro = VetroInfissoDAOImpl::get_all(conn)?;
+            let vetro = VetroInfissoDAO::get_all(conn)?;
             let vetro_json: Vec<Value> = vetro
                 .iter()
                 .map(|x| VetroInfissoDTO {
@@ -49,7 +49,7 @@ impl TypeService for TypeServiceImpl {
 
             result_map.insert("vetro_infissi".to_string(), vetro_json);
 
-            let climatizzazione = ClimatizzazioneDAOImpl::get_all(conn)?;
+            let climatizzazione = ClimatizzazioneDAO::get_all(conn)?;
             let climatizzazione_json: Vec<Value> = climatizzazione
                 .iter()
                 .map(|x| ClimatizzazioneDTO {
@@ -61,7 +61,7 @@ impl TypeService for TypeServiceImpl {
 
             result_map.insert("climatizzazione".to_string(), climatizzazione_json);
 
-            let illuminazione = IlluminazioneDAOImpl::get_all(conn)?;
+            let illuminazione = IlluminazioneDAO::get_all(conn)?;
             let illuminazione_json: Vec<Value> = illuminazione
                 .iter()
                 .map(|x| IlluminazioneDTO {
@@ -80,7 +80,7 @@ impl TypeService for TypeServiceImpl {
 
     fn get_materiale_infisso(db: State<'_, Database>) -> Result<Vec<MaterialeInfissoDTO>, String> {
         let conn = db.get_conn();
-        let result = MaterialeInfissoDAOImpl::get_all(conn.as_ref().unwrap())?;
+        let result = MaterialeInfissoDAO::get_all(conn.as_ref().unwrap())?;
 
         Ok(result
             .iter()
@@ -93,7 +93,7 @@ impl TypeService for TypeServiceImpl {
 
     fn get_vetro_infisso(db: State<'_, Database>) -> Result<Vec<VetroInfissoDTO>, String> {
         let conn = db.get_conn();
-        let result = VetroInfissoDAOImpl::get_all(conn.as_ref().unwrap())?;
+        let result = VetroInfissoDAO::get_all(conn.as_ref().unwrap())?;
 
         Ok(result
             .iter()
@@ -106,7 +106,7 @@ impl TypeService for TypeServiceImpl {
 
     fn get_climatizzazione(db: State<'_, Database>) -> Result<Vec<ClimatizzazioneDTO>, String> {
         let conn = db.get_conn();
-        let result = ClimatizzazioneDAOImpl::get_all(conn.as_ref().unwrap())?;
+        let result = ClimatizzazioneDAO::get_all(conn.as_ref().unwrap())?;
 
         Ok(result
             .iter()
@@ -119,7 +119,7 @@ impl TypeService for TypeServiceImpl {
 
     fn get_illuminazione(db: State<'_, Database>) -> Result<Vec<IlluminazioneDTO>, String> {
         let conn = db.get_conn();
-        let result = IlluminazioneDAOImpl::get_all(conn.as_ref().unwrap())?;
+        let result = IlluminazioneDAO::get_all(conn.as_ref().unwrap())?;
 
         Ok(result
             .iter()

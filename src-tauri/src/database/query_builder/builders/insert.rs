@@ -1,6 +1,6 @@
 use crate::{
+    database::query_builder::SqlQueryBuilder,
     database::{QueryBuilderError, QueryParam},
-    database::query_builder::SqlQueryBuilder
 };
 
 #[derive(Debug)]
@@ -39,6 +39,10 @@ impl InsertQueryBuilder {
     pub fn batch_values(mut self, batch_values: Vec<Vec<QueryParam>>) -> Self {
         self.values.extend(batch_values);
         self
+    }
+
+    pub fn set(mut self, column: &str, values: Vec<QueryParam>) -> Self {
+        todo!()
     }
 
     pub fn returning(mut self, returning: &str) -> Self {

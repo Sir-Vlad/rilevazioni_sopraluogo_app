@@ -1,14 +1,13 @@
+use crate::dao::crud_operations::{GetAll, Insert, Update};
 use crate::dao::{StanzaDAO, StanzaDAOImpl};
 use crate::database::Database;
 use crate::dto::StanzaDTO;
 use tauri::State;
+
 pub trait StanzaService {
     fn get_all(db: State<'_, Database>) -> Result<Vec<StanzaDTO>, String>;
     fn insert(db: State<'_, Database>, stanza: StanzaDTO) -> Result<StanzaDTO, String>;
     fn update(db: State<'_, Database>, stanza: StanzaDTO) -> Result<StanzaDTO, String>;
-    fn get_with_infissi(db: State<'_, Database>, id: i64) -> Result<Vec<StanzaDTO>, String>;
-    fn insert_with_infissi(db: State<'_, Database>, stanza: StanzaDTO)
-        -> Result<StanzaDTO, String>;
 }
 
 pub struct StanzaServiceImpl;
@@ -47,28 +46,13 @@ impl StanzaService for StanzaServiceImpl {
     }
 
     fn update(db: State<'_, Database>, stanza: StanzaDTO) -> Result<StanzaDTO, String> {
-        let conn = db.get_conn();
-        // fixme: convertire in transazionale
-        if let Some(conn) = conn.as_ref() {
-            let result = StanzaDAOImpl::update(conn, stanza.clone().into())?;
+        let res = db.with_transaction(|tx| {
+            let result = StanzaDAOImpl::update(tx, stanza.clone().into())?;
             if let Some(infissi) = &stanza.infissi {
-                StanzaDAOImpl::set_infissi_by_id(conn, stanza.id, infissi.clone())?;
+                StanzaDAOImpl::set_infissi_by_id(tx, stanza.id, infissi.clone())?;
             }
             Ok(StanzaDTO::from(result))
-        } else {
-            Err("Database not initialized".to_string())
-        }
-    }
-
-    #[allow(dead_code, unused_variables)]
-    fn get_with_infissi(db: State<'_, Database>, id: i64) -> Result<Vec<StanzaDTO>, String> {
-        todo!()
-    }
-    #[allow(dead_code, unused_variables)]
-    fn insert_with_infissi(
-        db: State<'_, Database>,
-        stanza: StanzaDTO,
-    ) -> Result<StanzaDTO, String> {
-        todo!()
+        })?;
+        Ok(res)
     }
 }

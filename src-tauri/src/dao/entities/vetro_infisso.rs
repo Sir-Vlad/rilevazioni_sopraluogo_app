@@ -1,6 +1,7 @@
+#[cfg_attr(test, derive(Debug, PartialEq))]
 pub struct VetroInfisso {
     #[allow(dead_code)]
-    pub id: u64,
-    pub vetro: String,
-    pub efficienza_energetica: u8,
+    pub(crate) id: u64,
+    pub(crate) vetro: String,
+    pub(crate) efficienza_energetica: u8,
 }

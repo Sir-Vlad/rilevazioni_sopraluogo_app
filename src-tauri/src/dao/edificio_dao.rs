@@ -1,26 +1,15 @@
+use crate::dao::crud_operations::{GetAll, Insert, Update};
 use crate::dao::entity::Edificio;
+use crate::dao::utils::schema_operations::CreateTable;
 use crate::database::{
     convert_param, DatabaseConnection, QueryBuilder, SqlQueryBuilder, WhereBuilder,
 };
 use log::{error, info};
-use rusqlite::Connection;
 
-pub trait EdificioDAO {
-    fn get_all(connection: &Connection) -> Result<Vec<Edificio>, String>;
-    fn insert<C: DatabaseConnection>(
-        connection: &C,
-        edificio: Edificio,
-    ) -> Result<Edificio, String>;
-    fn update<C: DatabaseConnection>(
-        connection: &C,
-        edificio: Edificio,
-    ) -> Result<Edificio, String>;
-}
+pub struct EdificioDAO;
 
-pub struct EdificioDAOImpl;
-
-impl EdificioDAO for EdificioDAOImpl {
-    fn get_all(connection: &Connection) -> Result<Vec<Edificio>, String> {
+impl GetAll<Edificio> for EdificioDAO {
+    fn get_all<C: DatabaseConnection>(connection: &C) -> Result<Vec<Edificio>, String> {
         let (query, _) = QueryBuilder::select()
             .table("EDIFICIO")
             .build()
@@ -47,7 +36,9 @@ impl EdificioDAO for EdificioDAOImpl {
             .collect();
         result.map_err(|e| e.to_string())
     }
+}
 
+impl Insert<Edificio> for EdificioDAO {
     fn insert<C: DatabaseConnection>(
         connection: &C,
         edificio: Edificio,
@@ -79,7 +70,9 @@ impl EdificioDAO for EdificioDAOImpl {
             }
         }
     }
+}
 
+impl Update<Edificio> for EdificioDAO {
     fn update<C: DatabaseConnection>(
         connection: &C,
         edificio: Edificio,
@@ -113,5 +106,27 @@ impl EdificioDAO for EdificioDAOImpl {
                 Err(e)
             }
         }
+    }
+}
+
+impl CreateTable for EdificioDAO {
+    fn create_table<C: DatabaseConnection>(conn: &C) -> Result<(), String> {
+        conn.execute(
+            "CREATE TABLE IF NOT EXISTS EDIFICIO
+        (
+            CHIAVE                TEXT PRIMARY KEY,
+            FASCICOLO             TEXT NOT NULL,
+            INDIRIZZO             TEXT NOT NULL,
+            ANNO_COSTRUZIONE      TEXT    DEFAULT NULL,
+            ANNO_RIQUALIFICAZIONE TEXT    DEFAULT NULL,
+            NOTE_RIQUALIFICAZIONE TEXT    DEFAULT NULL,
+            ISOLAMENTO_TETTO      INTEGER DEFAULT FALSE,
+            CAPPOTTO              INTEGER DEFAULT FALSE
+        ) STRICT;",
+            (),
+        )
+        .map_err(|e| e.to_string())?;
+        info!("Tabella EDIFICIO creata");
+        Ok(())
     }
 }

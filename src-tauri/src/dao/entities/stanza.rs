@@ -1,18 +1,19 @@
 use crate::dto::StanzaDTO;
 
 #[derive(Clone)]
+#[cfg_attr(test, derive(Debug, PartialEq))]
 pub struct Stanza {
-    pub id: Option<u64>,
-    pub chiave: String,
-    pub piano: String,
-    pub id_spazio: String,
-    pub stanza: String,
-    pub destinazione_uso: String,
-    pub altezza: Option<u16>,
-    pub spessore_muro: Option<u8>,
-    pub riscaldamento: Option<String>,
-    pub raffrescamento: Option<String>,
-    pub illuminazione: Option<String>,
+    pub(crate) id: Option<u64>,
+    pub(crate) chiave: String,
+    pub(crate) piano: String,
+    pub(crate) id_spazio: String,
+    pub(crate) stanza: String,
+    pub(crate) destinazione_uso: String,
+    pub(crate) altezza: Option<u16>,
+    pub(crate) spessore_muro: Option<u8>,
+    pub(crate) riscaldamento: Option<String>,
+    pub(crate) raffrescamento: Option<String>,
+    pub(crate) illuminazione: Option<String>,
 }
 
 impl Stanza {

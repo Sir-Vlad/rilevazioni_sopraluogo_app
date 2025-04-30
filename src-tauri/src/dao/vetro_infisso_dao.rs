@@ -1,15 +1,13 @@
+use crate::dao::crud_operations::GetAll;
 use crate::dao::entity::VetroInfisso;
-use crate::database::{QueryBuilder, SqlQueryBuilder};
-use rusqlite::Connection;
+use crate::dao::utils::schema_operations::CreateTable;
+use crate::database::{DatabaseConnection, QueryBuilder, SqlQueryBuilder};
+use log::info;
 
-pub trait VetroInfissoDAO {
-    fn get_all(conn: &Connection) -> Result<Vec<VetroInfisso>, String>;
-}
+pub struct VetroInfissoDAO;
 
-pub struct VetroInfissoDAOImpl;
-
-impl VetroInfissoDAO for VetroInfissoDAOImpl {
-    fn get_all(conn: &Connection) -> Result<Vec<VetroInfisso>, String> {
+impl GetAll<VetroInfisso> for VetroInfissoDAO {
+    fn get_all<C: DatabaseConnection>(conn: &C) -> Result<Vec<VetroInfisso>, String> {
         let (query, _) = QueryBuilder::select()
             .table("VETRO_INFISSO")
             .build()
@@ -30,5 +28,22 @@ impl VetroInfissoDAO for VetroInfissoDAOImpl {
             .expect("Errore nella lettura dei dati di tipo materiale")
             .collect();
         result.map_err(|e| e.to_string())
+    }
+}
+
+impl CreateTable for VetroInfissoDAO {
+    fn create_table<C: DatabaseConnection>(conn: &C) -> Result<(), String> {
+        conn.execute(
+            "CREATE TABLE IF NOT EXISTS VETRO_INFISSO
+            (
+                ID                    INTEGER PRIMARY KEY AUTOINCREMENT,
+                VETRO                 TEXT    NOT NULL UNIQUE COLLATE NOCASE,
+                EFFICIENZA_ENERGETICA INTEGER NOT NULL
+            ) STRICT;",
+            (),
+        )
+        .map_err(|e| e.to_string())?;
+        info!("Tabella VETRO_INFISSO creata");
+        Ok(())
     }
 }

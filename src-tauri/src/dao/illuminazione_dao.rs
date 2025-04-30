@@ -1,15 +1,14 @@
+use crate::dao::crud_operations::GetAll;
 use crate::dao::entity::Illuminazione;
-use crate::database::{QueryBuilder, SqlQueryBuilder};
+use crate::dao::utils::schema_operations::CreateTable;
+use crate::database::{DatabaseConnection, QueryBuilder, SqlQueryBuilder};
+use log::info;
 use rusqlite::Connection;
 
-pub trait IlluminazioneDAO {
-    fn get_all(conn: &Connection) -> Result<Vec<Illuminazione>, String>;
-}
+pub struct IlluminazioneDAO;
 
-pub struct IlluminazioneDAOImpl;
-
-impl IlluminazioneDAO for IlluminazioneDAOImpl {
-    fn get_all(conn: &Connection) -> Result<Vec<Illuminazione>, String> {
+impl GetAll<Illuminazione> for IlluminazioneDAO {
+    fn get_all<C: DatabaseConnection>(conn: &C) -> Result<Vec<Illuminazione>, String> {
         let (query, _) = QueryBuilder::select()
             .table("ILLUMINAZIONE")
             .build()
@@ -30,5 +29,22 @@ impl IlluminazioneDAO for IlluminazioneDAOImpl {
             .expect("Errore nella lettura dei dati di tipo materiale")
             .collect();
         result.map_err(|e| e.to_string())
+    }
+}
+
+impl CreateTable for IlluminazioneDAO {
+    fn create_table<C: DatabaseConnection>(conn: &C) -> Result<(), String> {
+        conn.execute(
+            "CREATE TABLE IF NOT EXISTS ILLUMINAZIONE
+                    (
+                        ID                    INTEGER PRIMARY KEY AUTOINCREMENT,
+                        LAMPADINA             TEXT    NOT NULL UNIQUE COLLATE NOCASE,
+                        EFFICIENZA_ENERGETICA INTEGER NOT NULL
+                    ) STRICT;",
+            (),
+        )
+        .map_err(|e| e.to_string())?;
+        info!("Tabella ILLUMINAZIONE creata");
+        Ok(())
     }
 }

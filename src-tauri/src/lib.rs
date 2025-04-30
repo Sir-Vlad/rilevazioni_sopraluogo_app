@@ -42,8 +42,6 @@ pub fn run() {
             get_stanze,
             insert_stanza,
             update_stanza,
-            get_infissi_stanza,
-            insert_infissi_stanza,
             get_infissi,
             insert_infisso,
             update_infisso,
