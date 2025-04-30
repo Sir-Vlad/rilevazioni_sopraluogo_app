@@ -6,6 +6,23 @@ use log::info;
 
 pub struct ClimatizzazioneDAO;
 
+impl CreateTable for ClimatizzazioneDAO {
+    fn create_table<C: DatabaseConnection>(conn: &C) -> Result<(), String> {
+        conn.execute(
+            "CREATE TABLE IF NOT EXISTS CLIMATIZZAZIONE
+        (
+            ID                    INTEGER PRIMARY KEY AUTOINCREMENT,
+            CLIMATIZZAZIONE       TEXT    NOT NULL UNIQUE COLLATE NOCASE,
+            EFFICIENZA_ENERGETICA INTEGER NOT NULL
+        ) STRICT;",
+            (),
+        )
+        .map_err(|e| e.to_string())?;
+        info!("Tabella CLIMATIZZAZIONE creata");
+        Ok(())
+    }
+}
+
 impl GetAll<Climatizzazione> for ClimatizzazioneDAO {
     fn get_all<C: DatabaseConnection>(conn: &C) -> Result<Vec<Climatizzazione>, String> {
         let (query, _) = QueryBuilder::select()
@@ -28,23 +45,6 @@ impl GetAll<Climatizzazione> for ClimatizzazioneDAO {
             .expect("Errore nella lettura dei dati di tipo materiale")
             .collect();
         result.map_err(|e| e.to_string())
-    }
-}
-
-impl CreateTable for ClimatizzazioneDAO {
-    fn create_table<C: DatabaseConnection>(conn: &C) -> Result<(), String> {
-        conn.execute(
-            "CREATE TABLE IF NOT EXISTS CLIMATIZZAZIONE
-        (
-            ID                    INTEGER PRIMARY KEY AUTOINCREMENT,
-            CLIMATIZZAZIONE       TEXT    NOT NULL UNIQUE COLLATE NOCASE,
-            EFFICIENZA_ENERGETICA INTEGER NOT NULL
-        ) STRICT;",
-            (),
-        )
-        .map_err(|e| e.to_string())?;
-        info!("Tabella CLIMATIZZAZIONE creata");
-        Ok(())
     }
 }
 

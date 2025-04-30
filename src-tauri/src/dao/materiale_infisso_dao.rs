@@ -6,6 +6,23 @@ use log::info;
 
 pub struct MaterialeInfissoDAO;
 
+impl CreateTable for MaterialeInfissoDAO {
+    fn create_table<C: DatabaseConnection>(conn: &C) -> Result<(), String> {
+        conn.execute(
+            "CREATE TABLE IF NOT EXISTS MATERIALE_INFISSO
+            (
+                ID                    INTEGER PRIMARY KEY AUTOINCREMENT,
+                MATERIALE             TEXT    NOT NULL UNIQUE COLLATE NOCASE,
+                EFFICIENZA_ENERGETICA INTEGER NOT NULL
+            ) STRICT;",
+            (),
+        )
+        .map_err(|e| e.to_string())?;
+        info!("Tabella MATERIALI_INFISSO creata");
+        Ok(())
+    }
+}
+
 impl GetAll<MaterialeInfisso> for MaterialeInfissoDAO {
     fn get_all<C: DatabaseConnection>(conn: &C) -> Result<Vec<MaterialeInfisso>, String> {
         let (query, _) = QueryBuilder::select()
@@ -28,22 +45,5 @@ impl GetAll<MaterialeInfisso> for MaterialeInfissoDAO {
             .expect("Errore nella lettura dei dati di tipo materiale")
             .collect();
         result.map_err(|e| e.to_string())
-    }
-}
-
-impl CreateTable for MaterialeInfissoDAO {
-    fn create_table<C: DatabaseConnection>(conn: &C) -> Result<(), String> {
-        conn.execute(
-            "CREATE TABLE IF NOT EXISTS MATERIALE_INFISSO
-            (
-                ID                    INTEGER PRIMARY KEY AUTOINCREMENT,
-                MATERIALE             TEXT    NOT NULL UNIQUE COLLATE NOCASE,
-                EFFICIENZA_ENERGETICA INTEGER NOT NULL
-            ) STRICT;",
-            (),
-        )
-        .map_err(|e| e.to_string())?;
-        info!("Tabella MATERIALI_INFISSO creata");
-        Ok(())
     }
 }

@@ -6,6 +6,26 @@ use log::{error, info};
 
 pub struct InfissoDAO;
 
+impl CreateTable for InfissoDAO {
+    fn create_table<C: DatabaseConnection>(conn: &C) -> Result<(), String> {
+        conn.execute(
+            "CREATE TABLE IF NOT EXISTS INFISSO
+            (
+                ID        TEXT PRIMARY KEY,
+                TIPO      TEXT    NOT NULL CHECK ( TIPO IN ('PORTA', 'FINESTRA') ) DEFAULT 'FINESTRA',
+                ALTEZZA   INTEGER NOT NULL CHECK ( ALTEZZA >= 0 ),
+                LARGHEZZA INTEGER NOT NULL CHECK ( LARGHEZZA >= 0 ),
+                MATERIALE TEXT    NOT NULL REFERENCES MATERIALE_INFISSO (MATERIALE),
+                VETRO     TEXT    NOT NULL REFERENCES VETRO_INFISSO (VETRO),
+                MQ        REAL GENERATED ALWAYS AS ((ALTEZZA * LARGHEZZA) / 10000.0) VIRTUAL,
+                UNIQUE (TIPO, ALTEZZA, LARGHEZZA, MATERIALE, VETRO)
+            ) STRICT;"
+            ,()).map_err(|e| e.to_string())?;
+        info!("Tabella INFISSO creata");
+        Ok(())
+    }
+}
+
 impl GetAll<Infisso> for InfissoDAO {
     fn get_all<C: DatabaseConnection>(conn: &C) -> Result<Vec<Infisso>, String> {
         let (query, _) = QueryBuilder::select()
@@ -103,25 +123,5 @@ impl Update<Infisso> for InfissoDAO {
                 Err(e.to_string())
             }
         }
-    }
-}
-
-impl CreateTable for InfissoDAO {
-    fn create_table<C: DatabaseConnection>(conn: &C) -> Result<(), String> {
-        conn.execute(
-            "CREATE TABLE IF NOT EXISTS INFISSO
-            (
-                ID        TEXT PRIMARY KEY,
-                TIPO      TEXT    NOT NULL CHECK ( TIPO IN ('PORTA', 'FINESTRA') ) DEFAULT 'FINESTRA',
-                ALTEZZA   INTEGER NOT NULL CHECK ( ALTEZZA >= 0 ),
-                LARGHEZZA INTEGER NOT NULL CHECK ( LARGHEZZA >= 0 ),
-                MATERIALE TEXT    NOT NULL REFERENCES MATERIALE_INFISSO (MATERIALE),
-                VETRO     TEXT    NOT NULL REFERENCES VETRO_INFISSO (VETRO),
-                MQ        REAL GENERATED ALWAYS AS ((ALTEZZA * LARGHEZZA) / 10000.0) VIRTUAL,
-                UNIQUE (TIPO, ALTEZZA, LARGHEZZA, MATERIALE, VETRO)
-            ) STRICT;"
-            ,()).map_err(|e| e.to_string())?;
-        info!("Tabella INFISSO creata");
-        Ok(())
     }
 }

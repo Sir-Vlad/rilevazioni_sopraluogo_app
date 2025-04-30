@@ -8,6 +8,28 @@ use log::{error, info};
 
 pub struct EdificioDAO;
 
+impl CreateTable for EdificioDAO {
+    fn create_table<C: DatabaseConnection>(conn: &C) -> Result<(), String> {
+        conn.execute(
+            "CREATE TABLE IF NOT EXISTS EDIFICIO
+        (
+            CHIAVE                TEXT PRIMARY KEY,
+            FASCICOLO             TEXT NOT NULL,
+            INDIRIZZO             TEXT NOT NULL,
+            ANNO_COSTRUZIONE      TEXT    DEFAULT NULL,
+            ANNO_RIQUALIFICAZIONE TEXT    DEFAULT NULL,
+            NOTE_RIQUALIFICAZIONE TEXT    DEFAULT NULL,
+            ISOLAMENTO_TETTO      INTEGER DEFAULT FALSE,
+            CAPPOTTO              INTEGER DEFAULT FALSE
+        ) STRICT;",
+            (),
+        )
+        .map_err(|e| e.to_string())?;
+        info!("Tabella EDIFICIO creata");
+        Ok(())
+    }
+}
+
 impl GetAll<Edificio> for EdificioDAO {
     fn get_all<C: DatabaseConnection>(connection: &C) -> Result<Vec<Edificio>, String> {
         let (query, _) = QueryBuilder::select()
@@ -106,27 +128,5 @@ impl Update<Edificio> for EdificioDAO {
                 Err(e)
             }
         }
-    }
-}
-
-impl CreateTable for EdificioDAO {
-    fn create_table<C: DatabaseConnection>(conn: &C) -> Result<(), String> {
-        conn.execute(
-            "CREATE TABLE IF NOT EXISTS EDIFICIO
-        (
-            CHIAVE                TEXT PRIMARY KEY,
-            FASCICOLO             TEXT NOT NULL,
-            INDIRIZZO             TEXT NOT NULL,
-            ANNO_COSTRUZIONE      TEXT    DEFAULT NULL,
-            ANNO_RIQUALIFICAZIONE TEXT    DEFAULT NULL,
-            NOTE_RIQUALIFICAZIONE TEXT    DEFAULT NULL,
-            ISOLAMENTO_TETTO      INTEGER DEFAULT FALSE,
-            CAPPOTTO              INTEGER DEFAULT FALSE
-        ) STRICT;",
-            (),
-        )
-        .map_err(|e| e.to_string())?;
-        info!("Tabella EDIFICIO creata");
-        Ok(())
     }
 }

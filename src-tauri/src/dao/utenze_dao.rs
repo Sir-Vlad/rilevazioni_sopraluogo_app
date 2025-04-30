@@ -1,10 +1,31 @@
 use crate::dao::crud_operations::{GetAll, Insert, Update};
 use crate::dao::entity::Utenza;
 use crate::dao::utils::schema_operations::CreateTable;
-use crate::database::{convert_param, DatabaseConnection, QueryBuilder, SqlQueryBuilder, WhereBuilder};
+use crate::database::{
+    convert_param, DatabaseConnection, QueryBuilder, SqlQueryBuilder, WhereBuilder,
+};
 use log::info;
 
 pub struct UtenzeDAO;
+
+impl CreateTable for UtenzeDAO {
+    fn create_table<C: DatabaseConnection>(conn: &C) -> Result<(), String> {
+        conn.execute(
+            "CREATE TABLE IF NOT EXISTS UTENZE
+            (
+                ID                  INTEGER PRIMARY KEY AUTOINCREMENT,
+                ID_EDIFICIO         TEXT NOT NULL REFERENCES EDIFICIO (CHIAVE),
+                TIPO                TEXT NOT NULL CHECK ( TIPO IN ('acqua', 'calore', 'elettricità') ),
+                COD_CONTATORE       TEXT NOT NULL,
+                INDIRIZZO_CONTATORE TEXT
+            ) STRICT;",
+            (),
+        )
+            .map_err(|e| e.to_string())?;
+        info!("Table utenze creata");
+        Ok(())
+    }
+}
 
 impl GetAll<Utenza> for UtenzeDAO {
     fn get_all<C: DatabaseConnection>(conn: &C) -> Result<Vec<Utenza>, String> {
@@ -73,25 +94,6 @@ impl Update<Utenza> for UtenzeDAO {
             Ok(_) => Ok(item),
             Err(e) => Err(e),
         }
-    }
-}
-
-impl CreateTable for UtenzeDAO {
-    fn create_table<C: DatabaseConnection>(conn: &C) -> Result<(), String> {
-        conn.execute(
-            "CREATE TABLE IF NOT EXISTS UTENZE
-            (
-                ID                  INTEGER PRIMARY KEY AUTOINCREMENT,
-                ID_EDIFICIO         TEXT NOT NULL REFERENCES EDIFICIO (CHIAVE),
-                TIPO                TEXT NOT NULL CHECK ( TIPO IN ('acqua', 'calore', 'elettricità') ),
-                COD_CONTATORE       TEXT NOT NULL,
-                INDIRIZZO_CONTATORE TEXT
-            ) STRICT;",
-            (),
-        )
-        .map_err(|e| e.to_string())?;
-        info!("Table utenze creata");
-        Ok(())
     }
 }
 

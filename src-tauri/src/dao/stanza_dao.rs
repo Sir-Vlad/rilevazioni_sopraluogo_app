@@ -23,6 +23,44 @@ pub trait StanzaDAO {
 
 pub struct StanzaDAOImpl;
 
+impl CreateTable for StanzaDAOImpl {
+    fn create_table<C: DatabaseConnection>(conn: &C) -> Result<(), String> {
+        conn.execute(
+            "CREATE TABLE IF NOT EXISTS STANZA
+            (
+                ID               INTEGER PRIMARY KEY AUTOINCREMENT,
+                CHIAVE           TEXT NOT NULL REFERENCES EDIFICIO (CHIAVE),
+                PIANO            TEXT NOT NULL,
+                ID_SPAZIO        TEXT NOT NULL,
+                STANZA           TEXT NOT NULL,
+                DESTINAZIONE_USO TEXT NOT NULL,
+                ALTEZZA          INTEGER CHECK ( ALTEZZA >= 0 )       DEFAULT 0,
+                SPESSORE_MURO    INTEGER CHECK ( SPESSORE_MURO >= 0 ) DEFAULT 0,
+                RISCALDAMENTO    TEXT                                 DEFAULT NULL REFERENCES CLIMATIZZAZIONE (CLIMATIZZAZIONE),
+                RAFFRESCAMENTO   TEXT                                 DEFAULT NULL REFERENCES CLIMATIZZAZIONE (CLIMATIZZAZIONE),
+                ILLUMINAZIONE    TEXT                                 DEFAULT NULL REFERENCES ILLUMINAZIONE (LAMPADINA),
+                UNIQUE (CHIAVE, ID_SPAZIO, STANZA, DESTINAZIONE_USO)
+            ) STRICT;",
+            ()).map_err(|e| e.to_string())?;
+        info!("Tabella STANZA creata");
+
+        conn.execute(
+            "CREATE TABLE IF NOT EXISTS STANZA_CON_INFISSI
+            (
+                ID_STANZA   INTEGER NOT NULL REFERENCES STANZA (ID),
+                ID_INFISSO  TEXT    NOT NULL REFERENCES INFISSO (ID),
+                NUM_INFISSI INTEGER NOT NULL DEFAULT 1 CHECK ( NUM_INFISSI > 0 ),
+                PRIMARY KEY (ID_INFISSO, ID_STANZA)
+            ) STRICT;",
+            (),
+        )
+        .map_err(|e| e.to_string())?;
+        info!("Tabella STANZA_CON_INFISSI creata");
+
+        Ok(())
+    }
+}
+
 impl GetAll<Stanza> for StanzaDAOImpl {
     fn get_all<C: DatabaseConnection>(conn: &C) -> Result<Vec<Stanza>, String> {
         let query = match QueryBuilder::select().table("STANZA").build() {
@@ -240,44 +278,6 @@ impl StanzaDAO for StanzaDAOImpl {
                 }
             }
         }
-
-        Ok(())
-    }
-}
-
-impl CreateTable for StanzaDAOImpl {
-    fn create_table<C: DatabaseConnection>(conn: &C) -> Result<(), String> {
-        conn.execute(
-            "CREATE TABLE IF NOT EXISTS STANZA
-            (
-                ID               INTEGER PRIMARY KEY AUTOINCREMENT,
-                CHIAVE           TEXT NOT NULL REFERENCES EDIFICIO (CHIAVE),
-                PIANO            TEXT NOT NULL,
-                ID_SPAZIO        TEXT NOT NULL,
-                STANZA           TEXT NOT NULL,
-                DESTINAZIONE_USO TEXT NOT NULL,
-                ALTEZZA          INTEGER CHECK ( ALTEZZA >= 0 )       DEFAULT 0,
-                SPESSORE_MURO    INTEGER CHECK ( SPESSORE_MURO >= 0 ) DEFAULT 0,
-                RISCALDAMENTO    TEXT                                 DEFAULT NULL REFERENCES CLIMATIZZAZIONE (CLIMATIZZAZIONE),
-                RAFFRESCAMENTO   TEXT                                 DEFAULT NULL REFERENCES CLIMATIZZAZIONE (CLIMATIZZAZIONE),
-                ILLUMINAZIONE    TEXT                                 DEFAULT NULL REFERENCES ILLUMINAZIONE (LAMPADINA),
-                UNIQUE (CHIAVE, ID_SPAZIO, STANZA, DESTINAZIONE_USO)
-            ) STRICT;",
-            ()).map_err(|e| e.to_string())?;
-        info!("Tabella STANZA creata");
-
-        conn.execute(
-            "CREATE TABLE IF NOT EXISTS STANZA_CON_INFISSI
-            (
-                ID_STANZA   INTEGER NOT NULL REFERENCES STANZA (ID),
-                ID_INFISSO  TEXT    NOT NULL REFERENCES INFISSO (ID),
-                NUM_INFISSI INTEGER NOT NULL DEFAULT 1 CHECK ( NUM_INFISSI > 0 ),
-                PRIMARY KEY (ID_INFISSO, ID_STANZA)
-            ) STRICT;",
-            (),
-        )
-        .map_err(|e| e.to_string())?;
-        info!("Tabella STANZA_CON_INFISSI creata");
 
         Ok(())
     }

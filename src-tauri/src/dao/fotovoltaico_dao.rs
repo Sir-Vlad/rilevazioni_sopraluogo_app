@@ -8,6 +8,24 @@ use crate::{
 use log::info;
 use rusqlite::Error;
 
+impl CreateTable for FotovoltaicoDAO {
+    fn create_table<C: DatabaseConnection>(conn: &C) -> Result<(), String> {
+        conn.execute(
+            "CREATE TABLE IF NOT EXISTS FOTOVOLTAICO
+        (
+            ID           INTEGER PRIMARY KEY AUTOINCREMENT,
+            ID_EDIFICIO  TEXT REFERENCES EDIFICIO (CHIAVE),
+            POTENZA      REAL NOT NULL CHECK ( POTENZA >= 0 ),
+            PROPRIETARIO TEXT NOT NULL
+        ) STRICT;",
+            (),
+        )
+        .map_err(|e| e.to_string())?;
+        info!("Tabella FOTOVOLTAICO creata");
+        Ok(())
+    }
+}
+
 pub struct FotovoltaicoDAO;
 
 impl GetAll<Fotovoltaico> for FotovoltaicoDAO {
@@ -78,24 +96,6 @@ impl Update<Fotovoltaico> for FotovoltaicoDAO {
             Ok(_) => Ok(fotovoltaico),
             Err(e) => Err(e),
         }
-    }
-}
-
-impl CreateTable for FotovoltaicoDAO {
-    fn create_table<C: DatabaseConnection>(conn: &C) -> Result<(), String> {
-        conn.execute(
-            "CREATE TABLE IF NOT EXISTS FOTOVOLTAICO
-        (
-            ID           INTEGER PRIMARY KEY AUTOINCREMENT,
-            ID_EDIFICIO  TEXT REFERENCES EDIFICIO (CHIAVE),
-            POTENZA      REAL NOT NULL CHECK ( POTENZA >= 0 ),
-            PROPRIETARIO TEXT NOT NULL
-        ) STRICT;",
-            (),
-        )
-        .map_err(|e| e.to_string())?;
-        info!("Tabella FOTOVOLTAICO creata");
-        Ok(())
     }
 }
 

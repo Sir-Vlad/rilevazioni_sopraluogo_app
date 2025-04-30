@@ -5,6 +5,12 @@ use crate::database::DatabaseConnection;
 
 pub struct CommentoEdificioDAO;
 
+impl CreateTable for CommentoEdificioDAO {
+    fn create_table<C: DatabaseConnection>(conn: &C) -> Result<(), String> {
+        todo!()
+    }
+}
+
 impl GetAll<CommentoEdificio> for CommentoEdificioDAO {
     fn get_all<C: DatabaseConnection>(conn: &C) -> Result<Vec<CommentoEdificio>, String> {
         todo!()
@@ -12,13 +18,10 @@ impl GetAll<CommentoEdificio> for CommentoEdificioDAO {
 }
 
 impl Insert<CommentoEdificio> for CommentoEdificioDAO {
-    fn insert<C: DatabaseConnection>(conn: &C, commento: CommentoEdificio) -> Result<CommentoEdificio, String> {
-        todo!()
-    }
-}
-
-impl CreateTable for CommentoEdificioDAO {
-    fn create_table<C: DatabaseConnection>(conn: &C) -> Result<(), String> {
+    fn insert<C: DatabaseConnection>(
+        conn: &C,
+        commento: CommentoEdificio,
+    ) -> Result<CommentoEdificio, String> {
         todo!()
     }
 }

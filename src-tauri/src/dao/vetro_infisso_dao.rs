@@ -6,6 +6,23 @@ use log::info;
 
 pub struct VetroInfissoDAO;
 
+impl CreateTable for VetroInfissoDAO {
+    fn create_table<C: DatabaseConnection>(conn: &C) -> Result<(), String> {
+        conn.execute(
+            "CREATE TABLE IF NOT EXISTS VETRO_INFISSO
+            (
+                ID                    INTEGER PRIMARY KEY AUTOINCREMENT,
+                VETRO                 TEXT    NOT NULL UNIQUE COLLATE NOCASE,
+                EFFICIENZA_ENERGETICA INTEGER NOT NULL
+            ) STRICT;",
+            (),
+        )
+        .map_err(|e| e.to_string())?;
+        info!("Tabella VETRO_INFISSO creata");
+        Ok(())
+    }
+}
+
 impl GetAll<VetroInfisso> for VetroInfissoDAO {
     fn get_all<C: DatabaseConnection>(conn: &C) -> Result<Vec<VetroInfisso>, String> {
         let (query, _) = QueryBuilder::select()
@@ -28,22 +45,5 @@ impl GetAll<VetroInfisso> for VetroInfissoDAO {
             .expect("Errore nella lettura dei dati di tipo materiale")
             .collect();
         result.map_err(|e| e.to_string())
-    }
-}
-
-impl CreateTable for VetroInfissoDAO {
-    fn create_table<C: DatabaseConnection>(conn: &C) -> Result<(), String> {
-        conn.execute(
-            "CREATE TABLE IF NOT EXISTS VETRO_INFISSO
-            (
-                ID                    INTEGER PRIMARY KEY AUTOINCREMENT,
-                VETRO                 TEXT    NOT NULL UNIQUE COLLATE NOCASE,
-                EFFICIENZA_ENERGETICA INTEGER NOT NULL
-            ) STRICT;",
-            (),
-        )
-        .map_err(|e| e.to_string())?;
-        info!("Tabella VETRO_INFISSO creata");
-        Ok(())
     }
 }
