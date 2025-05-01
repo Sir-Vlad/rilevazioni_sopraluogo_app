@@ -1,26 +1,37 @@
 use crate::dao::crud_operations::{GetAll, Insert, Update};
 use crate::dao::entity::Infisso;
 use crate::dao::utils::schema_operations::CreateTable;
+use crate::dao::utils::DAO;
 use crate::database::{convert_param, DatabaseConnection, QueryBuilder, SqlQueryBuilder};
 use log::{error, info};
 
 pub struct InfissoDAO;
 
+impl DAO for InfissoDAO {
+    fn table_name() -> &'static str {
+        "INFISSO"
+    }
+}
+
 impl CreateTable for InfissoDAO {
     fn create_table<C: DatabaseConnection>(conn: &C) -> Result<(), String> {
         conn.execute(
-            "CREATE TABLE IF NOT EXISTS INFISSO
-            (
-                ID        TEXT PRIMARY KEY,
-                TIPO      TEXT    NOT NULL CHECK ( TIPO IN ('PORTA', 'FINESTRA') ) DEFAULT 'FINESTRA',
-                ALTEZZA   INTEGER NOT NULL CHECK ( ALTEZZA >= 0 ),
-                LARGHEZZA INTEGER NOT NULL CHECK ( LARGHEZZA >= 0 ),
-                MATERIALE TEXT    NOT NULL REFERENCES MATERIALE_INFISSO (MATERIALE),
-                VETRO     TEXT    NOT NULL REFERENCES VETRO_INFISSO (VETRO),
-                MQ        REAL GENERATED ALWAYS AS ((ALTEZZA * LARGHEZZA) / 10000.0) VIRTUAL,
-                UNIQUE (TIPO, ALTEZZA, LARGHEZZA, MATERIALE, VETRO)
-            ) STRICT;"
-            ,()).map_err(|e| e.to_string())?;
+            format!(
+                "CREATE TABLE IF NOT EXISTS {}
+                (
+                    ID        TEXT PRIMARY KEY,
+                    TIPO      TEXT    NOT NULL CHECK ( TIPO IN ('PORTA', 'FINESTRA') ) DEFAULT 'FINESTRA',
+                    ALTEZZA   INTEGER NOT NULL CHECK ( ALTEZZA >= 0 ),
+                    LARGHEZZA INTEGER NOT NULL CHECK ( LARGHEZZA >= 0 ),
+                    MATERIALE TEXT    NOT NULL REFERENCES MATERIALE_INFISSO (MATERIALE),
+                    VETRO     TEXT    NOT NULL REFERENCES VETRO_INFISSO (VETRO),
+                    MQ        REAL GENERATED ALWAYS AS ((ALTEZZA * LARGHEZZA) / 10000.0) VIRTUAL,
+                    UNIQUE (TIPO, ALTEZZA, LARGHEZZA, MATERIALE, VETRO)
+                ) STRICT;", 
+                Self::table_name()
+            ).as_str(),
+            ()
+        ).map_err(|e| e.to_string())?;
         info!("Tabella INFISSO creata");
         Ok(())
     }
@@ -29,7 +40,7 @@ impl CreateTable for InfissoDAO {
 impl GetAll<Infisso> for InfissoDAO {
     fn get_all<C: DatabaseConnection>(conn: &C) -> Result<Vec<Infisso>, String> {
         let (query, _) = QueryBuilder::select()
-            .table("INFISSO")
+            .table(Self::table_name())
             .build()
             .map_err(|e| e.to_string())?;
 
@@ -62,7 +73,7 @@ impl GetAll<Infisso> for InfissoDAO {
 impl Insert<Infisso> for InfissoDAO {
     fn insert<C: DatabaseConnection>(conn: &C, infisso: Infisso) -> Result<Infisso, String> {
         let builder = QueryBuilder::insert()
-            .table("INFISSO")
+            .table(Self::table_name())
             .columns(vec![
                 "ID",
                 "TIPO",
@@ -103,7 +114,7 @@ impl Insert<Infisso> for InfissoDAO {
 impl Update<Infisso> for InfissoDAO {
     fn update<C: DatabaseConnection>(conn: &C, infisso: Infisso) -> Result<Infisso, String> {
         let builder = QueryBuilder::update()
-            .table("INFISSO")
+            .table(Self::table_name())
             .set("ALTEZZA", infisso.altezza)
             .set("LARGHEZZA", infisso.larghezza)
             .set("MATERIALE", infisso.materiale.clone())

@@ -1,6 +1,7 @@
 use crate::dao::crud_operations::{GetAll, Insert, Update};
 use crate::dao::entity::Edificio;
 use crate::dao::utils::schema_operations::CreateTable;
+use crate::dao::utils::DAO;
 use crate::database::{
     convert_param, DatabaseConnection, QueryBuilder, SqlQueryBuilder, WhereBuilder,
 };
@@ -8,20 +9,30 @@ use log::{error, info};
 
 pub struct EdificioDAO;
 
+impl DAO for EdificioDAO {
+    fn table_name() -> &'static str {
+        "EDIFICIO"
+    }
+}
+
 impl CreateTable for EdificioDAO {
     fn create_table<C: DatabaseConnection>(conn: &C) -> Result<(), String> {
         conn.execute(
-            "CREATE TABLE IF NOT EXISTS EDIFICIO
-        (
-            CHIAVE                TEXT PRIMARY KEY,
-            FASCICOLO             TEXT NOT NULL,
-            INDIRIZZO             TEXT NOT NULL,
-            ANNO_COSTRUZIONE      TEXT    DEFAULT NULL,
-            ANNO_RIQUALIFICAZIONE TEXT    DEFAULT NULL,
-            NOTE_RIQUALIFICAZIONE TEXT    DEFAULT NULL,
-            ISOLAMENTO_TETTO      INTEGER DEFAULT FALSE,
-            CAPPOTTO              INTEGER DEFAULT FALSE
-        ) STRICT;",
+            format!(
+                "CREATE TABLE IF NOT EXISTS {}
+                (
+                    CHIAVE                TEXT PRIMARY KEY,
+                    FASCICOLO             TEXT NOT NULL,
+                    INDIRIZZO             TEXT NOT NULL,
+                    ANNO_COSTRUZIONE      TEXT    DEFAULT NULL,
+                    ANNO_RIQUALIFICAZIONE TEXT    DEFAULT NULL,
+                    NOTE_RIQUALIFICAZIONE TEXT    DEFAULT NULL,
+                    ISOLAMENTO_TETTO      INTEGER DEFAULT FALSE,
+                    CAPPOTTO              INTEGER DEFAULT FALSE
+                ) STRICT;",
+                Self::table_name()
+            )
+            .as_str(),
             (),
         )
         .map_err(|e| e.to_string())?;
@@ -33,7 +44,7 @@ impl CreateTable for EdificioDAO {
 impl GetAll<Edificio> for EdificioDAO {
     fn get_all<C: DatabaseConnection>(connection: &C) -> Result<Vec<Edificio>, String> {
         let (query, _) = QueryBuilder::select()
-            .table("EDIFICIO")
+            .table(Self::table_name())
             .build()
             .map_err(|e| e.to_string())?;
 
@@ -66,7 +77,7 @@ impl Insert<Edificio> for EdificioDAO {
         edificio: Edificio,
     ) -> Result<Edificio, String> {
         let builder = QueryBuilder::insert()
-            .table("EDIFICIO")
+            .table(Self::table_name())
             .columns(vec!["CHIAVE", "FASCICOLO", "INDIRIZZO"])
             .values(vec![
                 edificio.chiave.clone().into(),
@@ -100,7 +111,7 @@ impl Update<Edificio> for EdificioDAO {
         edificio: Edificio,
     ) -> Result<Edificio, String> {
         let builder = QueryBuilder::update()
-            .table("EDIFICIO")
+            .table(Self::table_name())
             .set("ANNO_COSTRUZIONE", edificio.anno_costruzione.clone())
             .set(
                 "ANNO_RIQUALIFICAZIONE",

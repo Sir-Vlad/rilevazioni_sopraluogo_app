@@ -1,20 +1,31 @@
 use crate::dao::crud_operations::GetAll;
 use crate::dao::entity::MaterialeInfisso;
 use crate::dao::utils::schema_operations::CreateTable;
+use crate::dao::utils::DAO;
 use crate::database::{DatabaseConnection, QueryBuilder, SqlQueryBuilder};
 use log::info;
 
 pub struct MaterialeInfissoDAO;
 
+impl DAO for MaterialeInfissoDAO {
+    fn table_name() -> &'static str {
+        "MATERIALE_INFISSO"
+    }
+}
+
 impl CreateTable for MaterialeInfissoDAO {
     fn create_table<C: DatabaseConnection>(conn: &C) -> Result<(), String> {
         conn.execute(
-            "CREATE TABLE IF NOT EXISTS MATERIALE_INFISSO
-            (
-                ID                    INTEGER PRIMARY KEY AUTOINCREMENT,
-                MATERIALE             TEXT    NOT NULL UNIQUE COLLATE NOCASE,
-                EFFICIENZA_ENERGETICA INTEGER NOT NULL
-            ) STRICT;",
+            format!(
+                "CREATE TABLE IF NOT EXISTS {}
+                (
+                    ID                    INTEGER PRIMARY KEY AUTOINCREMENT,
+                    MATERIALE             TEXT    NOT NULL UNIQUE COLLATE NOCASE,
+                    EFFICIENZA_ENERGETICA INTEGER NOT NULL
+                ) STRICT;",
+                Self::table_name()
+            )
+            .as_str(),
             (),
         )
         .map_err(|e| e.to_string())?;

@@ -1,20 +1,31 @@
 use crate::dao::crud_operations::GetAll;
 use crate::dao::entity::Illuminazione;
 use crate::dao::utils::schema_operations::CreateTable;
+use crate::dao::utils::DAO;
 use crate::database::{DatabaseConnection, QueryBuilder, SqlQueryBuilder};
 use log::info;
 
 pub struct IlluminazioneDAO;
 
+impl DAO for IlluminazioneDAO {
+    fn table_name() -> &'static str {
+        "ILLUMINAZIONE"
+    }
+}
+
 impl CreateTable for IlluminazioneDAO {
     fn create_table<C: DatabaseConnection>(conn: &C) -> Result<(), String> {
         conn.execute(
-            "CREATE TABLE IF NOT EXISTS ILLUMINAZIONE
+            format!(
+                "CREATE TABLE IF NOT EXISTS {}
                     (
                         ID                    INTEGER PRIMARY KEY AUTOINCREMENT,
                         LAMPADINA             TEXT    NOT NULL UNIQUE COLLATE NOCASE,
                         EFFICIENZA_ENERGETICA INTEGER NOT NULL
                     ) STRICT;",
+                Self::table_name()
+            )
+            .as_str(),
             (),
         )
         .map_err(|e| e.to_string())?;
@@ -26,7 +37,7 @@ impl CreateTable for IlluminazioneDAO {
 impl GetAll<Illuminazione> for IlluminazioneDAO {
     fn get_all<C: DatabaseConnection>(conn: &C) -> Result<Vec<Illuminazione>, String> {
         let (query, _) = QueryBuilder::select()
-            .table("ILLUMINAZIONE")
+            .table(Self::table_name())
             .build()
             .map_err(|e| e.to_string())?;
 

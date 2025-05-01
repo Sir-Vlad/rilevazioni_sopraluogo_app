@@ -1,20 +1,31 @@
 use crate::dao::crud_operations::GetAll;
 use crate::dao::entity::Climatizzazione;
 use crate::dao::schema_operations::CreateTable;
+use crate::dao::utils::DAO;
 use crate::database::{DatabaseConnection, QueryBuilder, SqlQueryBuilder};
 use log::info;
 
 pub struct ClimatizzazioneDAO;
 
+impl DAO for ClimatizzazioneDAO {
+    fn table_name() -> &'static str {
+        "CLIMATIZZAZIONE"
+    }
+}
+
 impl CreateTable for ClimatizzazioneDAO {
     fn create_table<C: DatabaseConnection>(conn: &C) -> Result<(), String> {
         conn.execute(
-            "CREATE TABLE IF NOT EXISTS CLIMATIZZAZIONE
-        (
-            ID                    INTEGER PRIMARY KEY AUTOINCREMENT,
-            CLIMATIZZAZIONE       TEXT    NOT NULL UNIQUE COLLATE NOCASE,
-            EFFICIENZA_ENERGETICA INTEGER NOT NULL
-        ) STRICT;",
+            format!(
+                "CREATE TABLE IF NOT EXISTS {}
+                (
+                    ID                    INTEGER PRIMARY KEY AUTOINCREMENT,
+                    CLIMATIZZAZIONE       TEXT    NOT NULL UNIQUE COLLATE NOCASE,
+                    EFFICIENZA_ENERGETICA INTEGER NOT NULL
+                ) STRICT;",
+                Self::table_name()
+            )
+            .as_str(),
             (),
         )
         .map_err(|e| e.to_string())?;
@@ -26,7 +37,7 @@ impl CreateTable for ClimatizzazioneDAO {
 impl GetAll<Climatizzazione> for ClimatizzazioneDAO {
     fn get_all<C: DatabaseConnection>(conn: &C) -> Result<Vec<Climatizzazione>, String> {
         let (query, _) = QueryBuilder::select()
-            .table("CLIMATIZZAZIONE")
+            .table(Self::table_name())
             .build()
             .map_err(|e| e.to_string())?;
 

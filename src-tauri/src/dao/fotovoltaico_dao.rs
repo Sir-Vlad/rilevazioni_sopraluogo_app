@@ -1,3 +1,4 @@
+use crate::dao::utils::DAO;
 use crate::database::WhereBuilder;
 use crate::{
     dao::crud_operations::{GetAll, Insert, Update},
@@ -8,16 +9,28 @@ use crate::{
 use log::info;
 use rusqlite::Error;
 
+pub struct FotovoltaicoDAO;
+
+impl DAO for FotovoltaicoDAO {
+    fn table_name() -> &'static str {
+        "FOTOVOLTAICO"
+    }
+}
+
 impl CreateTable for FotovoltaicoDAO {
     fn create_table<C: DatabaseConnection>(conn: &C) -> Result<(), String> {
         conn.execute(
-            "CREATE TABLE IF NOT EXISTS FOTOVOLTAICO
-        (
-            ID           INTEGER PRIMARY KEY AUTOINCREMENT,
-            ID_EDIFICIO  TEXT REFERENCES EDIFICIO (CHIAVE),
-            POTENZA      REAL NOT NULL CHECK ( POTENZA >= 0 ),
-            PROPRIETARIO TEXT NOT NULL
-        ) STRICT;",
+            format!(
+                "CREATE TABLE IF NOT EXISTS {}
+                (
+                    ID           INTEGER PRIMARY KEY AUTOINCREMENT,
+                    ID_EDIFICIO  TEXT REFERENCES EDIFICIO (CHIAVE),
+                    POTENZA      REAL NOT NULL CHECK ( POTENZA >= 0 ),
+                    PROPRIETARIO TEXT NOT NULL
+                ) STRICT;",
+                Self::table_name()
+            )
+            .as_str(),
             (),
         )
         .map_err(|e| e.to_string())?;
@@ -26,12 +39,10 @@ impl CreateTable for FotovoltaicoDAO {
     }
 }
 
-pub struct FotovoltaicoDAO;
-
 impl GetAll<Fotovoltaico> for FotovoltaicoDAO {
     fn get_all<C: DatabaseConnection>(conn: &C) -> Result<Vec<Fotovoltaico>, String> {
         let (query, _) = QueryBuilder::select()
-            .table("FOTOVOLTAICO")
+            .table(Self::table_name())
             .build()
             .map_err(|e| e.to_string())?;
         let mut stmt = conn.prepare(query.as_str()).map_err(|e| e.to_string())?;
@@ -56,7 +67,7 @@ impl Insert<Fotovoltaico> for FotovoltaicoDAO {
         fotovoltaico: Fotovoltaico,
     ) -> Result<Fotovoltaico, String> {
         let builder = QueryBuilder::insert()
-            .table("FOTOVOLTAICO")
+            .table(Self::table_name())
             .columns(vec!["ID_EDIFICIO", "POTENZA", "PROPRIETARIO"])
             .values(vec![
                 fotovoltaico.id_edificio.clone().into(),
@@ -81,7 +92,7 @@ impl Update<Fotovoltaico> for FotovoltaicoDAO {
         fotovoltaico: Fotovoltaico,
     ) -> Result<Fotovoltaico, String> {
         let builder = QueryBuilder::update()
-            .table("FOTOVOLTAICO")
+            .table(Self::table_name())
             .set("POTENZA", fotovoltaico.potenza)
             .set("PROPRIETARIO", fotovoltaico.proprietario.clone())
             .where_eq("ID", fotovoltaico.id);

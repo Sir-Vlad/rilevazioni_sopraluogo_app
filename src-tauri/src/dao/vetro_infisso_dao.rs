@@ -1,20 +1,31 @@
 use crate::dao::crud_operations::GetAll;
 use crate::dao::entity::VetroInfisso;
 use crate::dao::utils::schema_operations::CreateTable;
+use crate::dao::utils::DAO;
 use crate::database::{DatabaseConnection, QueryBuilder, SqlQueryBuilder};
 use log::info;
 
 pub struct VetroInfissoDAO;
 
+impl DAO for VetroInfissoDAO {
+    fn table_name() -> &'static str {
+        "VETRO_INFISSO"
+    }
+}
+
 impl CreateTable for VetroInfissoDAO {
     fn create_table<C: DatabaseConnection>(conn: &C) -> Result<(), String> {
         conn.execute(
-            "CREATE TABLE IF NOT EXISTS VETRO_INFISSO
-            (
-                ID                    INTEGER PRIMARY KEY AUTOINCREMENT,
-                VETRO                 TEXT    NOT NULL UNIQUE COLLATE NOCASE,
-                EFFICIENZA_ENERGETICA INTEGER NOT NULL
-            ) STRICT;",
+            format!(
+                "CREATE TABLE IF NOT EXISTS {}
+                (
+                    ID                    INTEGER PRIMARY KEY AUTOINCREMENT,
+                    VETRO                 TEXT    NOT NULL UNIQUE COLLATE NOCASE,
+                    EFFICIENZA_ENERGETICA INTEGER NOT NULL
+                ) STRICT;",
+                Self::table_name()
+            )
+            .as_str(),
             (),
         )
         .map_err(|e| e.to_string())?;
@@ -26,7 +37,7 @@ impl CreateTable for VetroInfissoDAO {
 impl GetAll<VetroInfisso> for VetroInfissoDAO {
     fn get_all<C: DatabaseConnection>(conn: &C) -> Result<Vec<VetroInfisso>, String> {
         let (query, _) = QueryBuilder::select()
-            .table("VETRO_INFISSO")
+            .table(Self::table_name())
             .build()
             .map_err(|e| e.to_string())?;
 

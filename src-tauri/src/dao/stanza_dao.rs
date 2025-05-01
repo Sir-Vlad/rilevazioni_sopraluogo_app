@@ -1,6 +1,7 @@
 use crate::dao::crud_operations::{GetAll, Insert, Update};
 use crate::dao::entity::Stanza;
 use crate::dao::utils::schema_operations::CreateTable;
+use crate::dao::utils::DAO;
 use crate::database::WhereBuilder;
 use crate::database::{convert_param, DatabaseConnection, QueryBuilder, SqlQueryBuilder};
 use itertools::Itertools;
@@ -8,7 +9,7 @@ use log::{error, info};
 use rusqlite::{params, Connection};
 use std::collections::HashMap;
 
-pub trait StanzaDAO {
+pub trait StanzaDAO: DAO {
     fn get_infissi_by_id<C: DatabaseConnection>(
         conn: &C,
         id_stanza: u64,
@@ -23,10 +24,16 @@ pub trait StanzaDAO {
 
 pub struct StanzaDAOImpl;
 
+impl DAO for StanzaDAOImpl {
+    fn table_name() -> &'static str {
+        "STANZA"
+    }
+}
+
 impl CreateTable for StanzaDAOImpl {
     fn create_table<C: DatabaseConnection>(conn: &C) -> Result<(), String> {
         conn.execute(
-            "CREATE TABLE IF NOT EXISTS STANZA
+            format!("CREATE TABLE IF NOT EXISTS {}
             (
                 ID               INTEGER PRIMARY KEY AUTOINCREMENT,
                 CHIAVE           TEXT NOT NULL REFERENCES EDIFICIO (CHIAVE),
@@ -40,7 +47,7 @@ impl CreateTable for StanzaDAOImpl {
                 RAFFRESCAMENTO   TEXT                                 DEFAULT NULL REFERENCES CLIMATIZZAZIONE (CLIMATIZZAZIONE),
                 ILLUMINAZIONE    TEXT                                 DEFAULT NULL REFERENCES ILLUMINAZIONE (LAMPADINA),
                 UNIQUE (CHIAVE, ID_SPAZIO, STANZA, DESTINAZIONE_USO)
-            ) STRICT;",
+            ) STRICT;", Self::table_name()).as_str(),
             ()).map_err(|e| e.to_string())?;
         info!("Tabella STANZA creata");
 
@@ -63,7 +70,7 @@ impl CreateTable for StanzaDAOImpl {
 
 impl GetAll<Stanza> for StanzaDAOImpl {
     fn get_all<C: DatabaseConnection>(conn: &C) -> Result<Vec<Stanza>, String> {
-        let query = match QueryBuilder::select().table("STANZA").build() {
+        let query = match QueryBuilder::select().table(Self::table_name()).build() {
             Ok((q, _)) => q,
             Err(e) => return Err(e.to_string()),
         };
@@ -102,7 +109,7 @@ impl GetAll<Stanza> for StanzaDAOImpl {
 impl Insert<Stanza> for StanzaDAOImpl {
     fn insert<C: DatabaseConnection>(conn: &C, stanza: Stanza) -> Result<Stanza, String> {
         let builder = QueryBuilder::insert()
-            .table("STANZA")
+            .table(Self::table_name())
             .columns(vec![
                 "CHIAVE",
                 "PIANO",
@@ -152,7 +159,7 @@ impl Insert<Stanza> for StanzaDAOImpl {
 impl Update<Stanza> for StanzaDAOImpl {
     fn update<C: DatabaseConnection>(conn: &C, stanza: Stanza) -> Result<Stanza, String> {
         let builder = QueryBuilder::update()
-            .table("STANZA")
+            .table(Self::table_name())
             .set_if("ALTEZZA", stanza.altezza)
             .set_if("SPESSORE_MURO", stanza.spessore_muro)
             .set_if("RISCALDAMENTO", stanza.riscaldamento.clone())
