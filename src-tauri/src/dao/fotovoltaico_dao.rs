@@ -1,5 +1,6 @@
 use crate::dao::utils::DAO;
 use crate::database::WhereBuilder;
+use crate::utils::AppError;
 use crate::{
     dao::crud_operations::{GetAll, Insert, Update},
     dao::entity::Fotovoltaico,
@@ -18,7 +19,7 @@ impl DAO for FotovoltaicoDAO {
 }
 
 impl CreateTable for FotovoltaicoDAO {
-    fn create_table<C: DatabaseConnection>(conn: &C) -> Result<(), String> {
+    fn create_table<C: DatabaseConnection>(conn: &C) -> Result<(), AppError> {
         conn.execute(
             format!(
                 "CREATE TABLE IF NOT EXISTS {}
@@ -32,20 +33,16 @@ impl CreateTable for FotovoltaicoDAO {
             )
             .as_str(),
             (),
-        )
-        .map_err(|e| e.to_string())?;
+        )?;
         info!("Tabella FOTOVOLTAICO creata");
         Ok(())
     }
 }
 
 impl GetAll<Fotovoltaico> for FotovoltaicoDAO {
-    fn get_all<C: DatabaseConnection>(conn: &C) -> Result<Vec<Fotovoltaico>, String> {
-        let (query, _) = QueryBuilder::select()
-            .table(Self::table_name())
-            .build()
-            .map_err(|e| e.to_string())?;
-        let mut stmt = conn.prepare(query.as_str()).map_err(|e| e.to_string())?;
+    fn get_all<C: DatabaseConnection>(conn: &C) -> Result<Vec<Fotovoltaico>, AppError> {
+        let (query, _) = QueryBuilder::select().table(Self::table_name()).build()?;
+        let mut stmt = conn.prepare(query.as_str())?;
         let results: Result<Vec<Fotovoltaico>, Error> = stmt
             .query_map([], |row| {
                 Ok(Fotovoltaico {
@@ -54,58 +51,54 @@ impl GetAll<Fotovoltaico> for FotovoltaicoDAO {
                     potenza: row.get("POTENZA")?,
                     proprietario: row.get("PROPRIETARIO")?,
                 })
-            })
-            .map_err(|e| e.to_string())?
+            })?
             .collect();
-        results.map_err(|e| e.to_string())
+        results.map_err(|e| AppError::from(e))
     }
 }
 
 impl Insert<Fotovoltaico> for FotovoltaicoDAO {
     fn insert<C: DatabaseConnection>(
         conn: &C,
-        fotovoltaico: Fotovoltaico,
-    ) -> Result<Fotovoltaico, String> {
+        item: Fotovoltaico,
+    ) -> Result<Fotovoltaico, AppError> {
         let builder = QueryBuilder::insert()
             .table(Self::table_name())
             .columns(vec!["ID_EDIFICIO", "POTENZA", "PROPRIETARIO"])
             .values(vec![
-                fotovoltaico.id_edificio.clone().into(),
-                fotovoltaico.potenza.into(),
-                fotovoltaico.proprietario.clone().into(),
+                item.id_edificio.clone().into(),
+                item.potenza.into(),
+                item.proprietario.clone().into(),
             ])
             .returning("ID");
-        let (query, params) = builder.build().map_err(|e| e.to_string())?;
-        let mut stmt = conn.prepare(query.as_str()).map_err(|e| e.to_string())?;
+        let (query, params) = builder.build()?;
+        let mut stmt = conn.prepare(query.as_str())?;
         let mut results = stmt
             .query_map(rusqlite::params_from_iter(convert_param(params)), |row| {
                 row.get::<_, u64>(0)
-            })
-            .map_err(|e| e.to_string())?;
-        let id = results.next().unwrap().unwrap();
-        Ok(Fotovoltaico { id, ..fotovoltaico })
+            })?;
+        let id = results.next().unwrap()?;
+        Ok(Fotovoltaico { id, ..item })
     }
 }
 impl Update<Fotovoltaico> for FotovoltaicoDAO {
     fn update<C: DatabaseConnection>(
         conn: &C,
-        fotovoltaico: Fotovoltaico,
-    ) -> Result<Fotovoltaico, String> {
+        item: Fotovoltaico,
+    ) -> Result<Fotovoltaico, AppError> {
         let builder = QueryBuilder::update()
             .table(Self::table_name())
-            .set("POTENZA", fotovoltaico.potenza)
-            .set("PROPRIETARIO", fotovoltaico.proprietario.clone())
-            .where_eq("ID", fotovoltaico.id);
-        let (query, params) = builder.build().map_err(|e| e.to_string())?;
-        let mut stmt = conn.prepare(query.as_str()).map_err(|e| e.to_string())?;
-        let results = stmt
-            .query_map(rusqlite::params_from_iter(convert_param(params)), |row| {
-                row.get::<_, u64>(0)
-            })
-            .map_err(|e| e.to_string());
+            .set("POTENZA", item.potenza)
+            .set("PROPRIETARIO", item.proprietario.clone())
+            .where_eq("ID", item.id);
+        let (query, params) = builder.build()?;
+        let mut stmt = conn.prepare(query.as_str())?;
+        let results = stmt.query_map(rusqlite::params_from_iter(convert_param(params)), |row| {
+            row.get::<_, u64>(0)
+        });
         match results {
-            Ok(_) => Ok(fotovoltaico),
-            Err(e) => Err(e),
+            Ok(_) => Ok(item),
+            Err(e) => Err(AppError::from(e)),
         }
     }
 }

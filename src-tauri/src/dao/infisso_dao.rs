@@ -3,6 +3,7 @@ use crate::dao::entity::Infisso;
 use crate::dao::utils::schema_operations::CreateTable;
 use crate::dao::utils::DAO;
 use crate::database::{convert_param, DatabaseConnection, QueryBuilder, SqlQueryBuilder};
+use crate::utils::AppError;
 use log::{error, info};
 
 pub struct InfissoDAO;
@@ -14,7 +15,7 @@ impl DAO for InfissoDAO {
 }
 
 impl CreateTable for InfissoDAO {
-    fn create_table<C: DatabaseConnection>(conn: &C) -> Result<(), String> {
+    fn create_table<C: DatabaseConnection>(conn: &C) -> Result<(), AppError> {
         conn.execute(
             format!(
                 "CREATE TABLE IF NOT EXISTS {}
@@ -31,18 +32,17 @@ impl CreateTable for InfissoDAO {
                 Self::table_name()
             ).as_str(),
             ()
-        ).map_err(|e| e.to_string())?;
+        )?;
         info!("Tabella INFISSO creata");
         Ok(())
     }
 }
 
 impl GetAll<Infisso> for InfissoDAO {
-    fn get_all<C: DatabaseConnection>(conn: &C) -> Result<Vec<Infisso>, String> {
+    fn get_all<C: DatabaseConnection>(conn: &C) -> Result<Vec<Infisso>, AppError> {
         let (query, _) = QueryBuilder::select()
             .table(Self::table_name())
-            .build()
-            .map_err(|e| e.to_string())?;
+            .build()?;
 
         let mut stmt = conn
             .prepare(query.as_str())
@@ -59,19 +59,18 @@ impl GetAll<Infisso> for InfissoDAO {
                     materiale: row.get::<_, String>("MATERIALE")?,
                     vetro: row.get::<_, String>("VETRO")?,
                 })
-            })
-            .expect("Errore nella lettura dei dati dal database")
+            })?
             .collect();
 
         match infissi {
             Ok(infissi) => Ok(infissi),
-            Err(e) => Err(e.to_string()),
+            Err(e) => Err(AppError::from(e)),
         }
     }
 }
 
 impl Insert<Infisso> for InfissoDAO {
-    fn insert<C: DatabaseConnection>(conn: &C, infisso: Infisso) -> Result<Infisso, String> {
+    fn insert<C: DatabaseConnection>(conn: &C, item: Infisso) -> Result<Infisso, AppError> {
         let builder = QueryBuilder::insert()
             .table(Self::table_name())
             .columns(vec![
@@ -83,43 +82,42 @@ impl Insert<Infisso> for InfissoDAO {
                 "VETRO",
             ])
             .values(vec![
-                infisso.id.clone().into(),
-                infisso.tipo.clone().into(),
-                infisso.altezza.into(),
-                infisso.larghezza.into(),
-                infisso.materiale.clone().into(),
-                infisso.vetro.clone().into(),
+                item.id.clone().into(),
+                item.tipo.clone().into(),
+                item.altezza.into(),
+                item.larghezza.into(),
+                item.materiale.clone().into(),
+                item.vetro.clone().into(),
             ]);
-        let (query, params) = builder.build().map_err(|e| e.to_string())?;
+        let (query, params) = builder.build()?;
 
         match conn
             .execute(
                 query.as_str(),
                 rusqlite::params_from_iter(convert_param(params)),
             )
-            .map_err(|e| e.to_string())
         {
             Ok(_) => {
                 info!("Infisso inserito con successo");
-                Ok(infisso)
+                Ok(item)
             }
             Err(e) => {
                 error!("Errore durante l'inserimento {{ infisso }}: {}", e);
-                Err(e.to_string())
+                Err(AppError::from(e))
             }
         }
     }
 }
 
 impl Update<Infisso> for InfissoDAO {
-    fn update<C: DatabaseConnection>(conn: &C, infisso: Infisso) -> Result<Infisso, String> {
+    fn update<C: DatabaseConnection>(conn: &C, item: Infisso) -> Result<Infisso, AppError> {
         let builder = QueryBuilder::update()
             .table(Self::table_name())
-            .set("ALTEZZA", infisso.altezza)
-            .set("LARGHEZZA", infisso.larghezza)
-            .set("MATERIALE", infisso.materiale.clone())
-            .set("VETRO", infisso.vetro.clone());
-        let (query, params) = builder.build().map_err(|e| e.to_string())?;
+            .set("ALTEZZA", item.altezza)
+            .set("LARGHEZZA", item.larghezza)
+            .set("MATERIALE", item.materiale.clone())
+            .set("VETRO", item.vetro.clone());
+        let (query, params) = builder.build()?;
 
         match conn.execute(
             query.as_str(),
@@ -127,11 +125,11 @@ impl Update<Infisso> for InfissoDAO {
         ) {
             Ok(_) => {
                 info!("Infisso aggiornato con successo");
-                Ok(infisso)
+                Ok(item)
             }
             Err(e) => {
                 error!("Errore durante l'aggiornamento {{ infisso }}: {}", e);
-                Err(e.to_string())
+                Err(AppError::from(e))
             }
         }
     }

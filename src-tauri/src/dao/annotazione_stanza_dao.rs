@@ -4,6 +4,7 @@ use crate::dao::utils::schema_operations::CreateTable;
 use crate::dao::utils::DAO;
 use crate::database::{DatabaseConnection, QueryBuilder, SqlQueryBuilder};
 use rusqlite::{params, Error};
+use crate::utils::AppError;
 
 pub struct AnnotazioneStanzaDAO;
 
@@ -14,7 +15,7 @@ impl DAO for AnnotazioneStanzaDAO {
 }
 
 impl CreateTable for AnnotazioneStanzaDAO {
-    fn create_table<C: DatabaseConnection>(conn: &C) -> Result<(), String> {
+    fn create_table<C: DatabaseConnection>(conn: &C) -> Result<(), AppError> {
         conn.execute(
             format!(
                 "CREATE TABLE IF NOT EXISTS {}
@@ -34,7 +35,7 @@ impl CreateTable for AnnotazioneStanzaDAO {
 }
 
 impl GetAll<AnnotazioneStanza> for AnnotazioneStanzaDAO {
-    fn get_all<C: DatabaseConnection>(conn: &C) -> Result<Vec<AnnotazioneStanza>, String> {
+    fn get_all<C: DatabaseConnection>(conn: &C) -> Result<Vec<AnnotazioneStanza>, AppError> {
         let (query, _) = QueryBuilder::select().table(Self::table_name()).build()?;
         let mut stmt = conn.prepare(query.as_str())?;
         let result: Result<Vec<AnnotazioneStanza>, Error> = stmt
@@ -45,18 +46,17 @@ impl GetAll<AnnotazioneStanza> for AnnotazioneStanzaDAO {
                     content: row.get("CONTENT")?,
                     data: row.get("DATA")?,
                 })
-            })
-            .map_err(|e| e.to_string())?
+            })?
             .collect();
-        result.map_err(|e| e.to_string())
+        result.map_err(|e| AppError::DatabaseError(e))
     }
 }
 
 impl Insert<AnnotazioneStanza> for AnnotazioneStanzaDAO {
     fn insert<C: DatabaseConnection>(
         conn: &C,
-        commento: AnnotazioneStanza,
-    ) -> Result<AnnotazioneStanza, String> {
+        item: AnnotazioneStanza,
+    ) -> Result<AnnotazioneStanza, AppError> {
         todo!()
     }
 }

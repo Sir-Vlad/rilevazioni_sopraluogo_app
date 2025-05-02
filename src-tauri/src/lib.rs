@@ -3,6 +3,7 @@ mod dao;
 mod database;
 mod dto;
 mod service;
+mod utils;
 
 use crate::command::command_tauri::*;
 use crate::database::*;

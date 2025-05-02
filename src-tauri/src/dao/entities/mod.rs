@@ -8,6 +8,7 @@ mod illuminazione;
 mod infisso;
 mod materiale_infisso;
 mod stanza;
+mod stanze_con_infissi;
 mod utenza;
 mod vetro_infisso;
 
@@ -22,6 +23,7 @@ pub mod entity {
     pub use super::infisso::Infisso;
     pub use super::materiale_infisso::MaterialeInfisso;
     pub use super::stanza::Stanza;
+    pub use super::stanze_con_infissi::StanzaConInfissi;
     pub use super::utenza::{TipoUtenza, Utenza};
     pub use super::vetro_infisso::VetroInfisso;
 }

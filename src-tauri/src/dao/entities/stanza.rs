@@ -18,19 +18,19 @@ pub struct Stanza {
 
 impl Stanza {
     pub fn new(
-        chiave: String,
-        piano: String,
-        id_spazio: String,
-        stanza: String,
-        destinazione_uso: String,
+        chiave: &str,
+        piano: &str,
+        id_spazio: &str,
+        stanza: &str,
+        destinazione_uso: &str,
     ) -> Self {
         Stanza {
             id: None,
-            chiave,
-            piano,
-            id_spazio,
-            stanza,
-            destinazione_uso,
+            chiave: chiave.to_string(),
+            piano: piano.to_string(),
+            id_spazio: id_spazio.to_string(),
+            stanza: stanza.to_string(),
+            destinazione_uso: destinazione_uso.to_string(),
             altezza: None,
             spessore_muro: None,
             riscaldamento: None,

@@ -1,8 +1,10 @@
-use crate::dao::crud_operations::GetAll;
-use crate::dao::entity::VetroInfisso;
+use crate::dao::crud_operations::{GetAll, Insert};
+use crate::dao::entity::{Climatizzazione, VetroInfisso};
 use crate::dao::utils::schema_operations::CreateTable;
 use crate::dao::utils::DAO;
-use crate::database::{DatabaseConnection, QueryBuilder, SqlQueryBuilder};
+use crate::dao::ClimatizzazioneDAO;
+use crate::database::{convert_param, DatabaseConnection, QueryBuilder, SqlQueryBuilder};
+use crate::utils::AppError;
 use log::info;
 
 pub struct VetroInfissoDAO;
@@ -14,7 +16,7 @@ impl DAO for VetroInfissoDAO {
 }
 
 impl CreateTable for VetroInfissoDAO {
-    fn create_table<C: DatabaseConnection>(conn: &C) -> Result<(), String> {
+    fn create_table<C: DatabaseConnection>(conn: &C) -> Result<(), AppError> {
         conn.execute(
             format!(
                 "CREATE TABLE IF NOT EXISTS {}
@@ -27,23 +29,17 @@ impl CreateTable for VetroInfissoDAO {
             )
             .as_str(),
             (),
-        )
-        .map_err(|e| e.to_string())?;
+        )?;
         info!("Tabella VETRO_INFISSO creata");
         Ok(())
     }
 }
 
 impl GetAll<VetroInfisso> for VetroInfissoDAO {
-    fn get_all<C: DatabaseConnection>(conn: &C) -> Result<Vec<VetroInfisso>, String> {
-        let (query, _) = QueryBuilder::select()
-            .table(Self::table_name())
-            .build()
-            .map_err(|e| e.to_string())?;
+    fn get_all<C: DatabaseConnection>(conn: &C) -> Result<Vec<VetroInfisso>, AppError> {
+        let (query, _) = QueryBuilder::select().table(Self::table_name()).build()?;
 
-        let mut stmt = conn
-            .prepare(query.as_str())
-            .map_err(|e| format!("Errore nella creazione della query: {}", e))?;
+        let mut stmt = conn.prepare(query.as_str())?;
 
         let result: Result<Vec<VetroInfisso>, rusqlite::Error> = stmt
             .query_map([], |row| {
@@ -52,9 +48,35 @@ impl GetAll<VetroInfisso> for VetroInfissoDAO {
                     vetro: row.get::<_, String>("VETRO")?,
                     efficienza_energetica: row.get::<_, u8>("EFFICIENZA_ENERGETICA")?,
                 })
-            })
-            .expect("Errore nella lettura dei dati di tipo materiale")
+            })?
             .collect();
-        result.map_err(|e| e.to_string())
+        result.map_err(AppError::from)
+    }
+}
+
+impl Insert<VetroInfisso> for VetroInfissoDAO {
+    fn insert<C: DatabaseConnection>(
+        conn: &C,
+        item: VetroInfisso,
+    ) -> Result<VetroInfisso, AppError> {
+        let builder = QueryBuilder::insert()
+            .table(Self::table_name())
+            .columns(vec!["VETRO", "EFFICIENZA_ENERGETICA"])
+            .values(vec![
+                item.vetro.clone().into(),
+                item.efficienza_energetica.into(),
+            ])
+            .returning("ID");
+        let (query, param) = builder.build()?;
+        let mut stmt = conn.prepare(query.as_str())?;
+        let mut res = stmt.query_map(rusqlite::params_from_iter(convert_param(param)), |row| {
+            row.get::<_, u64>(0)
+        })?;
+        let id = res.next().unwrap()?;
+        Ok(VetroInfisso {
+            id,
+            vetro: item.vetro,
+            efficienza_energetica: item.efficienza_energetica,
+        })
     }
 }

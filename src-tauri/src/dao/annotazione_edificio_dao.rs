@@ -3,6 +3,7 @@ use crate::dao::entity::AnnotazioneEdificio;
 use crate::dao::utils::schema_operations::CreateTable;
 use crate::dao::utils::DAO;
 use crate::database::DatabaseConnection;
+use crate::utils::AppError;
 
 pub struct AnnotazioneEdificioDAO;
 
@@ -13,13 +14,13 @@ impl DAO for AnnotazioneEdificioDAO {
 }
 
 impl CreateTable for AnnotazioneEdificioDAO {
-    fn create_table<C: DatabaseConnection>(conn: &C) -> Result<(), String> {
+    fn create_table<C: DatabaseConnection>(conn: &C) -> Result<(), AppError> {
         todo!()
     }
 }
 
 impl GetAll<AnnotazioneEdificio> for AnnotazioneEdificioDAO {
-    fn get_all<C: DatabaseConnection>(conn: &C) -> Result<Vec<AnnotazioneEdificio>, String> {
+    fn get_all<C: DatabaseConnection>(conn: &C) -> Result<Vec<AnnotazioneEdificio>, AppError> {
         todo!()
     }
 }
@@ -27,8 +28,8 @@ impl GetAll<AnnotazioneEdificio> for AnnotazioneEdificioDAO {
 impl Insert<AnnotazioneEdificio> for AnnotazioneEdificioDAO {
     fn insert<C: DatabaseConnection>(
         conn: &C,
-        commento: AnnotazioneEdificio,
-    ) -> Result<AnnotazioneEdificio, String> {
+        item: AnnotazioneEdificio,
+    ) -> Result<AnnotazioneEdificio, AppError> {
         todo!()
     }
 }

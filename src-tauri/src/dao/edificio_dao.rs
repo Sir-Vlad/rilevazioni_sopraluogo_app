@@ -5,6 +5,7 @@ use crate::dao::utils::DAO;
 use crate::database::{
     convert_param, DatabaseConnection, QueryBuilder, SqlQueryBuilder, WhereBuilder,
 };
+use crate::utils::AppError;
 use log::{error, info};
 
 pub struct EdificioDAO;
@@ -16,7 +17,7 @@ impl DAO for EdificioDAO {
 }
 
 impl CreateTable for EdificioDAO {
-    fn create_table<C: DatabaseConnection>(conn: &C) -> Result<(), String> {
+    fn create_table<C: DatabaseConnection>(conn: &C) -> Result<(), AppError> {
         conn.execute(
             format!(
                 "CREATE TABLE IF NOT EXISTS {}
@@ -34,23 +35,17 @@ impl CreateTable for EdificioDAO {
             )
             .as_str(),
             (),
-        )
-        .map_err(|e| e.to_string())?;
+        )?;
         info!("Tabella EDIFICIO creata");
         Ok(())
     }
 }
 
 impl GetAll<Edificio> for EdificioDAO {
-    fn get_all<C: DatabaseConnection>(connection: &C) -> Result<Vec<Edificio>, String> {
-        let (query, _) = QueryBuilder::select()
-            .table(Self::table_name())
-            .build()
-            .map_err(|e| e.to_string())?;
+    fn get_all<C: DatabaseConnection>(conn: &C) -> Result<Vec<Edificio>, AppError> {
+        let (query, _) = QueryBuilder::select().table(Self::table_name()).build()?;
 
-        let mut stmt = connection
-            .prepare(query.as_str())
-            .map_err(|e| format!("Errore nella creazione della query: {}", e))?;
+        let mut stmt = conn.prepare(query.as_str())?;
 
         let result: Result<Vec<Edificio>, rusqlite::Error> = stmt
             .query_map([], |row| {
@@ -64,38 +59,31 @@ impl GetAll<Edificio> for EdificioDAO {
                     isolamento_tetto: row.get::<_, Option<bool>>("ISOLAMENTO_TETTO")?,
                     cappotto: row.get::<_, Option<bool>>("CAPPOTTO")?,
                 })
-            })
-            .expect("Errore nella lettura dei dati di tipo materiale")
+            })?
             .collect();
-        result.map_err(|e| e.to_string())
+        result.map_err(AppError::from)
     }
 }
 
 impl Insert<Edificio> for EdificioDAO {
-    fn insert<C: DatabaseConnection>(
-        connection: &C,
-        edificio: Edificio,
-    ) -> Result<Edificio, String> {
+    fn insert<C: DatabaseConnection>(conn: &C, item: Edificio) -> Result<Edificio, AppError> {
         let builder = QueryBuilder::insert()
             .table(Self::table_name())
             .columns(vec!["CHIAVE", "FASCICOLO", "INDIRIZZO"])
             .values(vec![
-                edificio.chiave.clone().into(),
-                edificio.fascicolo.clone().into(),
-                edificio.indirizzo.clone().into(),
+                item.chiave.clone().into(),
+                item.fascicolo.clone().into(),
+                item.indirizzo.clone().into(),
             ]);
-        let (query, params) = builder.build().map_err(|e| e.to_string())?;
+        let (query, params) = builder.build()?;
 
-        match connection
-            .execute(
-                query.as_str(),
-                rusqlite::params_from_iter(convert_param(params)),
-            )
-            .map_err(|e| e.to_string())
-        {
+        match conn.execute(
+            query.as_str(),
+            rusqlite::params_from_iter(convert_param(params)),
+        ) {
             Ok(_) => {
                 info!("Edificio inserito con successo");
-                Ok(edificio)
+                Ok(item)
             }
             Err(e) => {
                 error!("Errore durante l'inserimento {{ edificio }}: {}", e);
@@ -106,33 +94,24 @@ impl Insert<Edificio> for EdificioDAO {
 }
 
 impl Update<Edificio> for EdificioDAO {
-    fn update<C: DatabaseConnection>(
-        connection: &C,
-        edificio: Edificio,
-    ) -> Result<Edificio, String> {
+    fn update<C: DatabaseConnection>(conn: &C, item: Edificio) -> Result<Edificio, AppError> {
         let builder = QueryBuilder::update()
             .table(Self::table_name())
-            .set("ANNO_COSTRUZIONE", edificio.anno_costruzione.clone())
-            .set(
-                "ANNO_RIQUALIFICAZIONE",
-                edificio.anno_riqualificazione.clone(),
-            )
-            .set("ISOLAMENTO_TETTO", edificio.isolamento_tetto)
-            .set("CAPPOTTO", edificio.cappotto)
-            .where_eq("CHIAVE", edificio.chiave.clone());
+            .set("ANNO_COSTRUZIONE", item.anno_costruzione.clone())
+            .set("ANNO_RIQUALIFICAZIONE", item.anno_riqualificazione.clone())
+            .set("ISOLAMENTO_TETTO", item.isolamento_tetto)
+            .set("CAPPOTTO", item.cappotto)
+            .where_eq("CHIAVE", item.chiave.clone());
 
-        let (query, param) = builder.build().map_err(|e| e.to_string())?;
+        let (query, param) = builder.build()?;
 
-        match connection
-            .execute(
-                query.as_str(),
-                rusqlite::params_from_iter(convert_param(param)),
-            )
-            .map_err(|e| e.to_string())
-        {
+        match conn.execute(
+            query.as_str(),
+            rusqlite::params_from_iter(convert_param(param)),
+        ) {
             Ok(_) => {
                 info!("Edificio aggiornato con successo");
-                Ok(edificio)
+                Ok(item)
             }
             Err(e) => {
                 error!("Errore durante l'aggiornamento {{ edificio }}: {}", e);

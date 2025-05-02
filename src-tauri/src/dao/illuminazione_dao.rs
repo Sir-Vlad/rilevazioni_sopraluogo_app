@@ -1,9 +1,11 @@
-use crate::dao::crud_operations::GetAll;
-use crate::dao::entity::Illuminazione;
+use crate::dao::crud_operations::{GetAll, Insert};
+use crate::dao::entity::{Climatizzazione, Illuminazione};
 use crate::dao::utils::schema_operations::CreateTable;
 use crate::dao::utils::DAO;
-use crate::database::{DatabaseConnection, QueryBuilder, SqlQueryBuilder};
+use crate::database::{convert_param, DatabaseConnection, QueryBuilder, SqlQueryBuilder};
+use crate::utils::AppError;
 use log::info;
+use crate::dao::ClimatizzazioneDAO;
 
 pub struct IlluminazioneDAO;
 
@@ -14,7 +16,7 @@ impl DAO for IlluminazioneDAO {
 }
 
 impl CreateTable for IlluminazioneDAO {
-    fn create_table<C: DatabaseConnection>(conn: &C) -> Result<(), String> {
+    fn create_table<C: DatabaseConnection>(conn: &C) -> Result<(), AppError> {
         conn.execute(
             format!(
                 "CREATE TABLE IF NOT EXISTS {}
@@ -27,23 +29,17 @@ impl CreateTable for IlluminazioneDAO {
             )
             .as_str(),
             (),
-        )
-        .map_err(|e| e.to_string())?;
+        )?;
         info!("Tabella ILLUMINAZIONE creata");
         Ok(())
     }
 }
 
 impl GetAll<Illuminazione> for IlluminazioneDAO {
-    fn get_all<C: DatabaseConnection>(conn: &C) -> Result<Vec<Illuminazione>, String> {
-        let (query, _) = QueryBuilder::select()
-            .table(Self::table_name())
-            .build()
-            .map_err(|e| e.to_string())?;
+    fn get_all<C: DatabaseConnection>(conn: &C) -> Result<Vec<Illuminazione>, AppError> {
+        let (query, _) = QueryBuilder::select().table(Self::table_name()).build()?;
 
-        let mut stmt = conn
-            .prepare(query.as_str())
-            .map_err(|e| format!("Errore nella creazione della query: {}", e))?;
+        let mut stmt = conn.prepare(query.as_str())?;
 
         let result: Result<Vec<Illuminazione>, rusqlite::Error> = stmt
             .query_map([], |row| {
@@ -55,6 +51,33 @@ impl GetAll<Illuminazione> for IlluminazioneDAO {
             })
             .expect("Errore nella lettura dei dati di tipo materiale")
             .collect();
-        result.map_err(|e| e.to_string())
+        result.map_err(|e| AppError::from(e))
+    }
+}
+
+impl Insert<Illuminazione> for IlluminazioneDAO {
+    fn insert<C: DatabaseConnection>(
+        conn: &C,
+        item: Illuminazione,
+    ) -> Result<Illuminazione, AppError> {
+        let builder = QueryBuilder::insert()
+            .table(Self::table_name())
+            .columns(vec!["LAMPADINA", "EFFICIENZA_ENERGETICA"])
+            .values(vec![
+                item.lampadina.clone().into(),
+                item.efficienza_energetica.into(),
+            ])
+            .returning("ID");
+        let (query, param) = builder.build()?;
+        let mut stmt = conn.prepare(query.as_str())?;
+        let mut res = stmt.query_map(rusqlite::params_from_iter(convert_param(param)), |row| {
+            row.get::<_, u64>(0)
+        })?;
+        let id = res.next().unwrap()?;
+        Ok(Illuminazione {
+            id,
+            lampadina: item.lampadina,
+            efficienza_energetica: item.efficienza_energetica,
+        })
     }
 }

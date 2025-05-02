@@ -5,6 +5,7 @@ use crate::dao::utils::DAO;
 use crate::database::{
     convert_param, DatabaseConnection, QueryBuilder, SqlQueryBuilder, WhereBuilder,
 };
+use crate::utils::AppError;
 use log::info;
 
 pub struct UtenzeDAO;
@@ -16,7 +17,7 @@ impl DAO for UtenzeDAO {
 }
 
 impl CreateTable for UtenzeDAO {
-    fn create_table<C: DatabaseConnection>(conn: &C) -> Result<(), String> {
+    fn create_table<C: DatabaseConnection>(conn: &C) -> Result<(), AppError> {
         conn.execute(
             format!("CREATE TABLE IF NOT EXISTS {}
             (
@@ -27,16 +28,16 @@ impl CreateTable for UtenzeDAO {
                 INDIRIZZO_CONTATORE TEXT
             ) STRICT;", Self::table_name()).as_str(),
             (),
-        ).map_err(|e| e.to_string())?;
+        )?;
         info!("Table utenze creata");
         Ok(())
     }
 }
 
 impl GetAll<Utenza> for UtenzeDAO {
-    fn get_all<C: DatabaseConnection>(conn: &C) -> Result<Vec<Utenza>, String> {
+    fn get_all<C: DatabaseConnection>(conn: &C) -> Result<Vec<Utenza>, AppError> {
         let (query, _) = QueryBuilder::select().table("UTENZE").build()?;
-        let mut stmt = conn.prepare(query.as_str()).map_err(|e| e.to_string())?;
+        let mut stmt = conn.prepare(query.as_str())?;
         let result: Result<Vec<Utenza>, rusqlite::Error> = stmt
             .query_map([], |row| {
                 Ok(Utenza {
@@ -46,15 +47,14 @@ impl GetAll<Utenza> for UtenzeDAO {
                     cod_contatore: row.get("COD_CONTATORE")?,
                     indirizzo_contatore: row.get("INDIRIZZO_CONTATORE")?,
                 })
-            })
-            .map_err(|e| e.to_string())?
+            })?
             .collect();
-        result.map_err(|e| e.to_string())
+        result.map_err(AppError::from)
     }
 }
 
 impl Insert<Utenza> for UtenzeDAO {
-    fn insert<C: DatabaseConnection>(conn: &C, item: Utenza) -> Result<Utenza, String> {
+    fn insert<C: DatabaseConnection>(conn: &C, item: Utenza) -> Result<Utenza, AppError> {
         let builder = QueryBuilder::insert()
             .table("UTENZE")
             .columns(vec![
@@ -71,35 +71,29 @@ impl Insert<Utenza> for UtenzeDAO {
             ])
             .returning("ID");
         let (query, param) = builder.build()?;
-        let mut stmt = conn.prepare(query.as_str()).map_err(|e| e.to_string())?;
+        let mut stmt = conn.prepare(query.as_str())?;
         let mut result = stmt
             .query_map(rusqlite::params_from_iter(convert_param(param)), |row| {
                 row.get::<_, u64>(0)
-            })
-            .map_err(|e| e.to_string())?;
-        let id = result.next().unwrap().unwrap();
+            })?;
+        let id = result.next().unwrap()?;
         Ok(Utenza { id, ..item })
     }
 }
 
 impl Update<Utenza> for UtenzeDAO {
-    fn update<C: DatabaseConnection>(conn: &C, item: Utenza) -> Result<Utenza, String> {
+    fn update<C: DatabaseConnection>(conn: &C, item: Utenza) -> Result<Utenza, AppError> {
         let builder = QueryBuilder::update()
             .table("UTENZE")
             .set("COD_CONTATORE", item.cod_contatore.clone())
             .set_if("INDIRIZZO_CONTATORE", item.indirizzo_contatore.clone())
             .where_eq("ID", item.id);
         let (query, params) = builder.build()?;
-        let res = conn
-            .execute(
-                query.as_str(),
-                rusqlite::params_from_iter(convert_param(params)),
-            )
-            .map_err(|e| e.to_string());
-        match res {
-            Ok(_) => Ok(item),
-            Err(e) => Err(e),
-        }
+        conn.execute(
+            query.as_str(),
+            rusqlite::params_from_iter(convert_param(params)),
+        )?;
+        Ok(item)
     }
 }
 

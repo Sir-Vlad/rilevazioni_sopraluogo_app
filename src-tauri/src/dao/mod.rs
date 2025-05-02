@@ -9,6 +9,7 @@ mod illuminazione_dao;
 mod infisso_dao;
 mod materiale_infisso_dao;
 mod stanza_dao;
+mod stanze_con_infissi_dao;
 mod utenze_dao;
 mod utils;
 mod vetro_infisso_dao;
@@ -24,6 +25,7 @@ pub use illuminazione_dao::*;
 pub use infisso_dao::*;
 pub use materiale_infisso_dao::*;
 pub use stanza_dao::*;
+pub use stanze_con_infissi_dao::*;
 pub use utenze_dao::*;
 pub use vetro_infisso_dao::*;
 

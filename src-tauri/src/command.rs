@@ -1,8 +1,9 @@
 pub mod command_tauri {
+    use crate::dao::crud_operations::Insert;
     use crate::{
         dao::{
             entity::{Edificio, Stanza},
-            EdificioDAO, StanzaDAO, StanzaDAOImpl,
+            EdificioDAO, StanzaDAO,
         },
         database::{
             get_db_path, init_database, set_pragma, Database, DatabaseEventPayload,
@@ -30,7 +31,6 @@ pub mod command_tauri {
     use serde_json::Value;
     use std::{collections::HashMap, ffi::OsStr, fs};
     use tauri::{AppHandle, Emitter, State};
-    use crate::dao::crud_operations::Insert;
 
     type ResultCommand<T> = Result<T, String>;
 
@@ -200,13 +200,13 @@ pub mod command_tauri {
 
             for i in 0..df.height() {
                 let stanza = Stanza::new(
-                    retrieve_string_field_df(&df, "chiave", i)?,
-                    retrieve_string_field_df(&df, "piano", i)?,
-                    retrieve_string_field_df(&df, "id_spazio", i)?,
-                    retrieve_string_field_df(&df, "cod_stanza", i)?,
-                    retrieve_string_field_df(&df, "destinazione_uso", i)?,
+                    retrieve_string_field_df(&df, "chiave", i)?.as_str(),
+                    retrieve_string_field_df(&df, "piano", i)?.as_str(),
+                    retrieve_string_field_df(&df, "id_spazio", i)?.as_str(),
+                    retrieve_string_field_df(&df, "cod_stanza", i)?.as_str(),
+                    retrieve_string_field_df(&df, "destinazione_uso", i)?.as_str(),
                 );
-                StanzaDAOImpl::insert(tx, stanza)?;
+                StanzaDAO::insert(tx, stanza)?;
             }
 
             Ok(())
