@@ -1,5 +1,5 @@
 use crate::dao::crud_operations::{Get, GetAll, Insert, Update};
-use crate::dao::entity::{Infisso, StanzaConInfissi};
+use crate::dao::entity::StanzaConInfissi;
 use crate::dao::schema_operations::CreateTable;
 use crate::dao::utils::DAO;
 use crate::database::{
@@ -9,8 +9,6 @@ use crate::utils::AppError;
 use log::info;
 use rusqlite::{params, Error};
 use std::collections::{HashMap, HashSet};
-use std::fmt::format;
-use std::hash::Hash;
 
 pub struct StanzaConInfissiDao;
 

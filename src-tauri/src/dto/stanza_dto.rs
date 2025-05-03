@@ -1,4 +1,5 @@
 use crate::dao::entity::Stanza;
+use crate::dto::DTO;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -16,6 +17,8 @@ pub struct StanzaDTO {
     pub illuminazione: Option<String>,
     pub infissi: Option<Vec<String>>,
 }
+
+impl DTO for StanzaDTO {}
 
 impl StanzaDTO {
     fn from_stanza_common(stanza: &Stanza) -> Self {

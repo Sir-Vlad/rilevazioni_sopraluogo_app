@@ -57,14 +57,10 @@ pub fn init_database(app_handle: AppHandle, tx: &Transaction) -> Result<(), Stri
     Ok(())
 }
 
-pub fn set_pragma(connection: &Connection) -> Result<(), String> {
-    connection
-        .pragma_update(None, "foreign_keys", "ON")
-        .map_err(|e| format!("Errore durante l'impostazione delle pragma: {}", e))?;
+pub fn set_pragma(connection: &Connection) -> Result<(), rusqlite::Error> {
+    connection.pragma_update(None, "foreign_keys", "ON")?;
     info!("Foreign keys enabled");
-    connection
-        .pragma_update(None, "journal_mode", "WAL")
-        .map_err(|e| format!("Errore durante l'impostazione del pragma: {}", e))?;
+    connection.pragma_update(None, "journal_mode", "WAL")?;
     info!("Journal mode enabled");
     Ok(())
 }

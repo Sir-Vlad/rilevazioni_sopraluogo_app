@@ -5,10 +5,7 @@ use crate::dao::utils::DAO;
 use crate::database::WhereBuilder;
 use crate::database::{convert_param, DatabaseConnection, QueryBuilder, SqlQueryBuilder};
 use crate::utils::AppError;
-use itertools::Itertools;
 use log::{error, info};
-use rusqlite::{params, Connection};
-use std::collections::HashMap;
 
 pub struct StanzaDAO;
 
@@ -141,7 +138,7 @@ impl Update<Stanza> for StanzaDAO {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use rusqlite::Connection;
 
     fn setup() -> Result<(), Box<dyn std::error::Error>> {
         let conn = Connection::open_in_memory().unwrap();

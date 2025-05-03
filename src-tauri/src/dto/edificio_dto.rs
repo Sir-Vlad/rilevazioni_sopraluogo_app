@@ -1,4 +1,5 @@
 use crate::dao::entity::Edificio;
+use crate::dto::DTO;
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -12,6 +13,8 @@ pub struct EdificioDTO {
     pub isolamento_tetto: Option<bool>,
     pub cappotto: Option<bool>,
 }
+
+impl DTO for EdificioDTO {}
 
 impl From<&Edificio> for EdificioDTO {
     fn from(value: &Edificio) -> Self {

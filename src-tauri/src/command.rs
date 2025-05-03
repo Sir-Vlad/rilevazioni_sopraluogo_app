@@ -1,5 +1,7 @@
 pub mod command_tauri {
     use crate::dao::crud_operations::Insert;
+    use crate::service::{CreateService, RetrieveManyService, UpdateService};
+    use crate::utils::AppError;
     use crate::{
         dao::{
             entity::{Edificio, Stanza},
@@ -14,15 +16,15 @@ pub mod command_tauri {
             StanzaDTO, VetroInfissoDTO,
         },
         service::{
-            EdificioService, EdificioServiceImpl, ExportData, ExportDatiStanzaToExcel,
-            InfissoService, InfissoServiceImpl, StanzaService, StanzaServiceImpl, TypeService,
-            TypeServiceImpl,
+            EdificioService, ExportData, ExportDatiStanzaToExcel, InfissoService, StanzaService,
+            TypeService, TypeServiceImpl,
         },
     };
     use calamine::{open_workbook, Reader, Xlsx};
     use dirs_next::document_dir;
     use itertools::izip;
     use log::info;
+    use polars::prelude::PolarsError;
     use polars::{
         frame::{DataFrame, UniqueKeepStrategy},
         prelude::{col, ChunkExplode, IntoLazy, NamedFrom, Series},
@@ -47,7 +49,7 @@ pub mod command_tauri {
             }
             // recupero tutti i nomi dei file all'interno della cartella
             let entries = fs::read_dir(path)
-                .map_err(|e| e.to_string())?
+                .map_err(|e| AppError::GenericError(e.to_string()))?
                 .filter_map(Result::ok)
                 .filter(|entry| {
                     entry.path().is_file() && entry.path().extension() == Some(OsStr::new("db"))
@@ -69,19 +71,19 @@ pub mod command_tauri {
         db: State<'_, Database>,
         db_name: String,
     ) -> ResultCommand<String> {
-        let db_path = get_db_path(db_name)?;
+        let db_path = get_db_path(db_name).map_err(AppError::GenericError)?;
         {
             let mut conn = db.get_conn();
             let mut path_to_database = db.get_path_to_database();
             if let Some(existing_conn) = conn.take() {
                 drop(existing_conn);
             }
-            *conn = Some(Connection::open(&db_path).map_err(|c| c.to_string())?);
+            *conn = Some(Connection::open(&db_path).map_err(|e| e.to_string())?);
             *path_to_database = Some(db_path.clone());
 
-            set_pragma(conn.as_ref().unwrap())?;
+            set_pragma(conn.as_ref().unwrap()).map_err(|e| e.to_string())?;
         } // unlock mutex
-        db.with_transaction(|tx| init_database(app_handle, tx))?;
+        db.with_transaction(|tx| init_database(app_handle, tx).map_err(AppError::GenericError))?;
         Ok(db_path)
     }
 
@@ -92,15 +94,15 @@ pub mod command_tauri {
         db_name: String,
     ) -> ResultCommand<()> {
         info!("Switching database to {}", db_name);
-        let db_path = get_db_path(db_name)?;
+        let db_path = get_db_path(db_name).map_err(AppError::GenericError)?;
         let mut conn = db.get_conn();
         let mut path_to_database = db.get_path_to_database();
         if let Some(existing_conn) = conn.take() {
             drop(existing_conn);
         }
-        *conn = Some(Connection::open(&db_path).map_err(|c| c.to_string())?);
+        *conn = Some(Connection::open(&db_path).map_err(|e| e.to_string())?);
         *path_to_database = Some(db_path.clone());
-        set_pragma(conn.as_ref().unwrap())?;
+        set_pragma(conn.as_ref().unwrap()).map_err(|e| e.to_string())?;
 
         app_handle
             .emit(
@@ -145,9 +147,9 @@ pub mod command_tauri {
 
         let name_db = df
             .column("fascicolo")
-            .unwrap()
+            .map_err(|e| e.to_string())?
             .get(0)
-            .unwrap()
+            .map_err(|e| e.to_string())?
             .to_string()
             .replace("\"", "");
         let path_db = set_database(app_handle.clone(), db.clone(), name_db)?;
@@ -157,27 +159,20 @@ pub mod command_tauri {
             let grouped_addresses = df_cloned
                 .group_by(["chiave"])
                 .agg([col("nome_via").unique().explode()])
-                .collect()
-                .map_err(|e| e.to_string())?;
+                .collect()?;
             let chiavi: Vec<&str> = grouped_addresses
-                .column("chiave")
-                .map_err(|err| err.to_string())?
-                .str()
-                .map_err(|err| err.to_string())?
+                .column("chiave")?
+                .str()?
                 .into_iter()
                 .flatten()
                 .collect();
-            let col_nome_via = grouped_addresses
-                .column("nome_via")
-                .map_err(|err| err.to_string())?;
+            let col_nome_via = grouped_addresses.column("nome_via")?;
             let indirizzi: Vec<String> = if col_nome_via.len() > 1 {
                 col_nome_via
                     .as_series()
                     .unwrap()
-                    .explode()
-                    .map_err(|err| err.to_string())?
-                    .explode()
-                    .map_err(|err| err.to_string())?
+                    .explode()?
+                    .explode()?
                     .iter()
                     .map(|el| el.get_str().unwrap().to_string())
                     .collect()
@@ -230,25 +225,18 @@ pub mod command_tauri {
         df: &DataFrame,
         field: &str,
         index: usize,
-    ) -> Result<String, String> {
-        Ok(df
-            .column(field)
-            .map_err(|e| format!("Errore nella lettura della colonna {field}: {}", e))?
-            .str()
-            .map_err(|e| format!("Errore nella lettura della colonna {field}: {}", e))?
-            .get(index)
-            .unwrap()
-            .to_string())
+    ) -> Result<String, PolarsError> {
+        Ok(df.column(field)?.str()?.get(index).unwrap().to_string())
     }
 
-    fn elaborate_file(path: String) -> Result<DataFrame, String> {
-        let mut workbook: Xlsx<_> = open_workbook(path).expect("Cannot open file");
+    fn elaborate_file(path: String) -> Result<DataFrame, AppError> {
+        let mut workbook: Xlsx<_> = open_workbook(path).expect("File non trovato");
         // recupero il nome del primo sheet
         let name_first_sheet = workbook.sheet_names()[0].clone();
         // recupero lo sheet
         let sheet = match workbook.worksheet_range(name_first_sheet.as_str()) {
             Ok(sheet) => sheet,
-            Err(e) => return Err(e.to_string()),
+            Err(e) => return Err(AppError::NotFound(e.to_string())),
         };
         // estrapolo la riga di headers
         let headers: Vec<String> = sheet
@@ -276,21 +264,17 @@ pub mod command_tauri {
         // creazione del dataframe
         let df = DataFrame::new(columns).ok().unwrap();
         // seleziono dal df solo le colonne che mi interessano
-        let cleaned_df = df
-            .select([
-                "fascicolo",
-                "chiave",
-                "nome_via",
-                "piano",
-                "id_spazio",
-                "cod_stanza",
-                "destinazione_uso",
-            ])
-            .unwrap();
+        let cleaned_df = df.select([
+            "fascicolo",
+            "chiave",
+            "nome_via",
+            "piano",
+            "id_spazio",
+            "cod_stanza",
+            "destinazione_uso",
+        ])?;
         // elimino tutti i campi duplicati all'interno del df
-        let unique_df = cleaned_df
-            .unique_stable(None, UniqueKeepStrategy::First, None)
-            .unwrap();
+        let unique_df = cleaned_df.unique_stable(None, UniqueKeepStrategy::First, None)?;
         Ok(unique_df)
     }
 
@@ -300,7 +284,7 @@ pub mod command_tauri {
 
     #[tauri::command]
     pub fn get_infissi(db: State<'_, Database>) -> ResultCommand<Vec<InfissoDTO>> {
-        InfissoServiceImpl::get_all(db)
+        InfissoService::retrieve_many(db).map_err(|e| e.to_string())
     }
 
     #[tauri::command]
@@ -308,7 +292,7 @@ pub mod command_tauri {
         db: State<'_, Database>,
         infisso: InfissoDTO,
     ) -> ResultCommand<InfissoDTO> {
-        InfissoServiceImpl::insert(db, infisso)
+        InfissoService::create(db, infisso).map_err(|e| e.to_string())
     }
 
     #[tauri::command]
@@ -316,7 +300,7 @@ pub mod command_tauri {
         db: State<'_, Database>,
         infisso: InfissoDTO,
     ) -> ResultCommand<InfissoDTO> {
-        InfissoServiceImpl::update(db, infisso)
+        InfissoService::update(db, infisso).map_err(|e| e.to_string())
     }
 
     /**************************************************************************************************/
@@ -325,17 +309,17 @@ pub mod command_tauri {
 
     #[tauri::command]
     pub fn get_stanze(db: State<'_, Database>) -> ResultCommand<Vec<StanzaDTO>> {
-        StanzaServiceImpl::get_all(db)
+        StanzaService::retrieve_many(db).map_err(|e| e.to_string())
     }
 
     #[tauri::command]
     pub fn insert_stanza(db: State<'_, Database>, stanza: StanzaDTO) -> ResultCommand<StanzaDTO> {
-        StanzaServiceImpl::insert(db, stanza)
+        StanzaService::create(db, stanza).map_err(|e| e.to_string())
     }
 
     #[tauri::command]
     pub fn update_stanza(db: State<'_, Database>, stanza: StanzaDTO) -> ResultCommand<StanzaDTO> {
-        StanzaServiceImpl::update(db, stanza)
+        StanzaService::update(db, stanza).map_err(|e| e.to_string())
     }
 
     /**************************************************************************************************/
@@ -344,29 +328,7 @@ pub mod command_tauri {
 
     #[tauri::command]
     pub fn get_all_tipi(db: State<'_, Database>) -> ResultCommand<HashMap<String, Vec<Value>>> {
-        TypeServiceImpl::get_all(db)
-    }
-
-    #[tauri::command]
-    pub fn get_materiali_infisso(
-        db: State<'_, Database>,
-    ) -> ResultCommand<Vec<MaterialeInfissoDTO>> {
-        TypeServiceImpl::get_materiale_infisso(db)
-    }
-
-    #[tauri::command]
-    pub fn get_vetro_infisso(db: State<'_, Database>) -> ResultCommand<Vec<VetroInfissoDTO>> {
-        TypeServiceImpl::get_vetro_infisso(db)
-    }
-
-    #[tauri::command]
-    pub fn get_illuminazione(db: State<'_, Database>) -> ResultCommand<Vec<IlluminazioneDTO>> {
-        TypeServiceImpl::get_illuminazione(db)
-    }
-
-    #[tauri::command]
-    pub fn get_climatizzazione(db: State<'_, Database>) -> ResultCommand<Vec<ClimatizzazioneDTO>> {
-        TypeServiceImpl::get_climatizzazione(db)
+        TypeServiceImpl::retrieve_all(db).map_err(|e| e.to_string())
     }
 
     /**************************************************************************************************/
@@ -378,7 +340,7 @@ pub mod command_tauri {
         db: State<'_, Database>,
         name_file: Option<String>,
     ) -> ResultCommand<()> {
-        ExportDatiStanzaToExcel::export(db, name_file)
+        ExportDatiStanzaToExcel::export(db, name_file).map_err(|e| e.to_string())
     }
 
     /**************************************************************************************************/
@@ -387,7 +349,7 @@ pub mod command_tauri {
 
     #[tauri::command]
     pub fn get_edifici(db: State<'_, Database>) -> ResultCommand<Vec<EdificioDTO>> {
-        EdificioServiceImpl::get_all(db)
+        EdificioService::retrieve_many(db).map_err(|e| e.to_string())
     }
 
     #[tauri::command]
@@ -395,6 +357,6 @@ pub mod command_tauri {
         db: State<'_, Database>,
         edificio: EdificioDTO,
     ) -> ResultCommand<EdificioDTO> {
-        EdificioServiceImpl::update(db, edificio)
+        EdificioService::update(db, edificio).map_err(|e| e.to_string())
     }
 }

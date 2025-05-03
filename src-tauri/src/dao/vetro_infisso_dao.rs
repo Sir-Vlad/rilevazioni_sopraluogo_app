@@ -1,8 +1,7 @@
 use crate::dao::crud_operations::{GetAll, Insert};
-use crate::dao::entity::{Climatizzazione, VetroInfisso};
+use crate::dao::entity::VetroInfisso;
 use crate::dao::utils::schema_operations::CreateTable;
 use crate::dao::utils::DAO;
-use crate::dao::ClimatizzazioneDAO;
 use crate::database::{convert_param, DatabaseConnection, QueryBuilder, SqlQueryBuilder};
 use crate::utils::AppError;
 use log::info;
