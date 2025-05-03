@@ -56,3 +56,18 @@ export interface Climatizzazione {
     climatizzazione: string;
     efficienza_energetica: number;
 }
+
+export interface IUtenza {
+    id: number;
+    id_edificio: string;
+    tipo: string;
+    cod_contatore: string;
+    indirizzo_contatore?: string
+}
+
+export interface IFotovoltaico {
+    id: number;
+    id_edificio: string;
+    potenza: number,
+    proprietario: string,
+}

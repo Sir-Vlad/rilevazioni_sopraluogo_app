@@ -1,6 +1,7 @@
 pub mod command_tauri {
     use crate::dao::crud_operations::Insert;
-    use crate::service::{CreateService, RetrieveManyService, UpdateService};
+    use crate::dto::UtenzaDTO;
+    use crate::service::{CreateService, RetrieveManyService, UpdateService, UtenzeService};
     use crate::utils::AppError;
     use crate::{
         dao::{
@@ -344,7 +345,7 @@ pub mod command_tauri {
     }
 
     /**************************************************************************************************/
-    /***************************** COMMAND PER INIZIALIZZARE IL SISTEMA *******************************/
+    /************************************ COMMAND PER EDIFICIO ****************************************/
     /**************************************************************************************************/
 
     #[tauri::command]
@@ -358,5 +359,36 @@ pub mod command_tauri {
         edificio: EdificioDTO,
     ) -> ResultCommand<EdificioDTO> {
         EdificioService::update(db, edificio).map_err(|e| e.to_string())
+    }
+
+    /**************************************************************************************************/
+    /************************************ COMMAND PER UTENZE ****************************************/
+    /**************************************************************************************************/
+
+    #[tauri::command]
+    pub fn get_utenze(db: State<'_, Database>) -> ResultCommand<Vec<UtenzaDTO>> {
+        UtenzeService::retrieve_many(db).map_err(|e| e.to_string())
+    }
+
+    #[tauri::command]
+    pub fn insert_utenza(db: State<'_, Database>, utenza: UtenzaDTO) -> ResultCommand<UtenzaDTO> {
+        UtenzeService::create(db, utenza).map_err(|e| e.to_string())
+    }
+
+    /**************************************************************************************************/
+    /************************************ COMMAND PER UTENZE ****************************************/
+    /**************************************************************************************************/
+
+    #[tauri::command]
+    pub fn get_fotovoltaico(db: State<'_, Database>) -> ResultCommand<Vec<UtenzaDTO>> {
+        UtenzeService::retrieve_many(db).map_err(|e| e.to_string())
+    }
+
+    #[tauri::command]
+    pub fn insert_fotovoltaico(
+        db: State<'_, Database>,
+        fotovoltaico: UtenzaDTO,
+    ) -> ResultCommand<UtenzaDTO> {
+        UtenzeService::create(db, fotovoltaico).map_err(|e| e.to_string())
     }
 }

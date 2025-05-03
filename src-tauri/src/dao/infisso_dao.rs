@@ -40,15 +40,9 @@ impl CreateTable for InfissoDAO {
 
 impl GetAll<Infisso> for InfissoDAO {
     fn get_all<C: DatabaseConnection>(conn: &C) -> Result<Vec<Infisso>, AppError> {
-        let (query, _) = QueryBuilder::select()
-            .table(Self::table_name())
-            .build()?;
+        let (query, _) = QueryBuilder::select().table(Self::table_name()).build()?;
 
-        let mut stmt = conn
-            .prepare(query.as_str())
-            .map_err(|e| e.to_string())
-            .ok()
-            .unwrap();
+        let mut stmt = conn.prepare(query.as_str())?;
         let infissi: Result<Vec<Infisso>, rusqlite::Error> = stmt
             .query_map([], |row| {
                 Ok(Infisso {
@@ -91,12 +85,10 @@ impl Insert<Infisso> for InfissoDAO {
             ]);
         let (query, params) = builder.build()?;
 
-        match conn
-            .execute(
-                query.as_str(),
-                rusqlite::params_from_iter(convert_param(params)),
-            )
-        {
+        match conn.execute(
+            query.as_str(),
+            rusqlite::params_from_iter(convert_param(params)),
+        ) {
             Ok(_) => {
                 info!("Infisso inserito con successo");
                 Ok(item)

@@ -1,3 +1,5 @@
+use crate::dto::FotovoltaicoDTO;
+
 #[derive(Clone)]
 #[cfg_attr(test, derive(Debug, PartialEq))]
 pub struct Fotovoltaico {
@@ -14,6 +16,17 @@ impl Fotovoltaico {
             id_edificio: id_edificio.to_string(),
             potenza,
             proprietario: proprietario.to_string(),
+        }
+    }
+}
+
+impl From<FotovoltaicoDTO> for Fotovoltaico {
+    fn from(value: FotovoltaicoDTO) -> Self {
+        Self{
+            id: value.id.unwrap_or(0),
+            id_edificio: value.id_edificio,
+            potenza: value.potenza,
+            proprietario: value.proprietario,
         }
     }
 }

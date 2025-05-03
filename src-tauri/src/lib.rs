@@ -30,21 +30,33 @@ pub fn run() {
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
+            // miscellaneous
+            export_data_to_excel,
             init_to_excel,
+            // database
             set_database,
             switch_database,
             close_database,
             get_all_name_database,
+            // tipi
             get_all_tipi,
+            // stanza
             get_stanze,
             insert_stanza,
             update_stanza,
+            // infisso
             get_infissi,
             insert_infisso,
             update_infisso,
-            export_data_to_excel,
+            // edificio
             get_edifici,
-            update_edificio
+            update_edificio,
+            // utenze
+            get_utenze,
+            insert_utenza,
+            // fotovoltaico
+            get_fotovoltaico,
+            insert_fotovoltaico
         ])
         .on_window_event(handle_window_events)
         .run(tauri::generate_context!())

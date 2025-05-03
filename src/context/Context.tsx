@@ -1,5 +1,5 @@
-import { createContext }                from "react";
-import { IEdificio, IInfisso, IStanza } from "../models/models.tsx";
+import { createContext }                                        from "react";
+import { IEdificio, IFotovoltaico, IInfisso, IStanza, IUtenza } from "../models/models.tsx";
 
 export interface DatabaseContextType {
     databasePath: string;
@@ -46,3 +46,19 @@ export interface EdificioContextType {
 }
 
 export const EdificioContext = createContext<EdificioContextType | null>(null);
+
+export interface UtenzeContextType {
+    data: IUtenza[];
+    error: string | null;
+    isLoading: boolean;
+}
+
+export const UtenzeContext = createContext<UtenzeContextType | null>(null);
+
+export interface FotovoltaicoContextType {
+    data: IFotovoltaico[];
+    error: string | null;
+    isLoading: boolean;
+}
+
+export const FotovoltaicoContext = createContext<FotovoltaicoContextType | null>(null);

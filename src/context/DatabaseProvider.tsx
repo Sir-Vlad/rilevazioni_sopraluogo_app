@@ -47,11 +47,9 @@ const DatabaseProvider = ({children}: { children: React.ReactNode }) => {
         try {
             setIsLoading(true);
             setError(null);
-
             await invoke("switch_database", {dbName});
         } catch (e) {
             setError("Errore durante il cambio di database: " + e);
-            setIsLoading(false);
         } finally {
             setIsLoading(false);
         }

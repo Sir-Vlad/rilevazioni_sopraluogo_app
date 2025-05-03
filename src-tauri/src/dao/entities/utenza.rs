@@ -1,4 +1,6 @@
+use crate::dto::UtenzaDTO;
 use std::fmt::Display;
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone)]
 #[cfg_attr(test, derive(PartialEq))]
@@ -23,6 +25,18 @@ impl Utenza {
             tipo: tipo.into(),
             cod_contatore: cod_contatore.to_string(),
             indirizzo_contatore: Some(indirizzo_contatore.to_string()),
+        }
+    }
+}
+
+impl From<UtenzaDTO> for Utenza {
+    fn from(value: UtenzaDTO) -> Self {
+        Self {
+            id: value.id.unwrap_or(0),
+            id_edificio: value.id_edificio,
+            tipo: value.tipo,
+            cod_contatore: value.cod_contatore,
+            indirizzo_contatore: value.indirizzo_contatore,
         }
     }
 }
@@ -58,7 +72,26 @@ impl Display for TipoUtenza {
             Self::Elettrica => "elettricità",
             Self::Termica => "calore",
         }
-            .to_string();
+        .to_string();
         write!(f, "{}", str)
+    }
+}
+
+impl Serialize for TipoUtenza {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        serializer.serialize_str(&self.to_string())
+    }
+}
+
+impl<'de> Deserialize<'de> for TipoUtenza {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        let s = String::deserialize(deserializer)?;
+        Ok(Self::from(s))
     }
 }
