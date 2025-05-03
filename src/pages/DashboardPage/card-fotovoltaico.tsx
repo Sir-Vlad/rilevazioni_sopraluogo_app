@@ -1,23 +1,11 @@
 import { Card, CardContent, CardHeader }                                 from "@/components/ui/card.tsx";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table.tsx";
 import TitleCard                                                         from "@/components/title-card.tsx";
-
-const datafake = [
-    {
-        id          : 1,
-        potenza     : 85,
-        proprietario: "Mario"
-    },
-    {
-        id          : 2,
-        potenza     : 85,
-        proprietario: "Ugo"
-    }
-];
-
+import { useFotovoltaico }                                               from "@/context/UseProvider.tsx";
 
 const CardFotovoltaico = () => {
-    // todo: implementare il retrieve nel backend
+    const fotovoltaicoContext = useFotovoltaico();
+
     return <Card>
         <CardHeader>
             <TitleCard title="Fotovoltaico" />
@@ -33,8 +21,8 @@ const CardFotovoltaico = () => {
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        { datafake.length > 0 ?
-                            (datafake.map(value => {
+                        { fotovoltaicoContext.data.length > 0 ?
+                            (fotovoltaicoContext.data.map(value => {
                                 return <TableRow key={ value.id }>
                                     <TableCell className="text-center">{ value.id }</TableCell>
                                     <TableCell className="text-center">{ value.potenza } KW</TableCell>

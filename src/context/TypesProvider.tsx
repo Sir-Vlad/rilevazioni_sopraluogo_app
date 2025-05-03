@@ -4,6 +4,7 @@ import { invoke }                                                         from "
 import { TypeContextType, TypesContext }                                  from "./Context.tsx";
 import { Climatizzazione, Illuminazione, MaterialeInfisso, VetroInfisso } from "../models/models.tsx";
 import { useDatabase }                                                    from "@/context/UseProvider.tsx";
+import { useErrorContext }                                                from "@/context/ErrorProvider.tsx";
 
 interface TypePayload {
     "materiale_infissi": MaterialeInfisso[],
@@ -22,8 +23,8 @@ const TypesProvider = ({children}: { children: React.ReactNode }) => {
     const [ vetroInfissiType, setVetroInfissiType ] = useState<string[]>([]);
     const [ climatizzazioneType, setClimatizzazioneType ] = useState<string[]>([]);
     const [ illuminazioneType, setIlluminazioneType ] = useState<string[]>([]);
-    const [ error, setError ] = useState<string | null>(null);
     const [ isLoading, setIsLoading ] = useState(true);
+    const errorContext = useErrorContext();
 
     useEffect(() => {
         providerRef.current = registerProvider("tipi");
@@ -32,18 +33,20 @@ const TypesProvider = ({children}: { children: React.ReactNode }) => {
     const loadTypes = useCallback(async () => {
         try {
             setIsLoading(true);
-            setError(null);
             const data: TypePayload = await invoke("get_all_tipi");
             setMaterialiInfissiType(data["materiale_infissi"].map(value => value.materiale));
             setVetroInfissiType(data["vetro_infissi"].map(value => value.vetro));
             setClimatizzazioneType(data["climatizzazione"].map(value => value.climatizzazione));
             setIlluminazioneType(data["illuminazione"].map(value => value.lampadina));
         } catch (e) {
-            setError("Errore durante il caricamento degli infissi: " + e);
+            if (typeof e === "string") {
+                errorContext.addError(e);
+                console.error(e);
+            }
         } finally {
             setIsLoading(false);
         }
-    }, []);
+    }, [errorContext]);
 
     useEffect(() => {
         if (needReload) {
@@ -63,10 +66,9 @@ const TypesProvider = ({children}: { children: React.ReactNode }) => {
             vetroInfissiType,
             climatizzazioneType,
             illuminazioneType,
-            isLoading,
-            error
+            isLoading
         } as TypeContextType;
-    }, [ materialiInfissiType, vetroInfissiType, climatizzazioneType, illuminazioneType, isLoading, error ]);
+    }, [ materialiInfissiType, vetroInfissiType, climatizzazioneType, illuminazioneType, isLoading ]);
 
     return <TypesContext.Provider value={ obj }>
         { children }

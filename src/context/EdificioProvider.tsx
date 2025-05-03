@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { IEdificio }                                         from "@/models/models.tsx";
 import { useDatabase }                                       from "@/context/UseProvider.tsx";
 import { invoke }                                            from "@tauri-apps/api/core";
+import { useErrorContext }                                   from "@/context/ErrorProvider.tsx";
 
 
 const EdificioProvider = ({children}: { children: React.ReactNode }) => {
@@ -13,9 +14,9 @@ const EdificioProvider = ({children}: { children: React.ReactNode }) => {
               registerProvider
           } = useDatabase();
     const providerRef = useRef<{ notifyReloadComplete: () => void; } | null>(null);
-    const [ error, setError ] = useState<string | null>(null);
     const [ isLoading, setIsLoading ] = useState(true);
     const [ selectedEdificio, setSelectedEdificio ] = useState<string | undefined>(undefined);
+    const errorContext = useErrorContext();
 
     useEffect(() => {
         providerRef.current = registerProvider("edificio");
@@ -24,17 +25,18 @@ const EdificioProvider = ({children}: { children: React.ReactNode }) => {
     const loadEdifici = useCallback(async () => {
         try {
             setIsLoading(true);
-            setError(null);
             const edifici: IEdificio[] = await invoke("get_edifici");
             setEdifici(edifici);
             setSelectedEdificio([ ...edifici.map(value => value.chiave) ][0]);
         } catch (e) {
-            setError("Errore durante il caricamento degli edifici: " + e);
-            console.error(e);
+            if (typeof e === "string") {
+                errorContext.addError(e);
+                console.error(e);
+            }
         } finally {
             setIsLoading(false);
         }
-    }, []);
+    }, [errorContext]);
 
     // Ricarica i dati quando il database cambia
     useEffect(() => {
@@ -56,10 +58,9 @@ const EdificioProvider = ({children}: { children: React.ReactNode }) => {
             data               : edifici,
             selectedEdificio   : selectedEdificio,
             setSelectedEdificio: setSelectedEdificio,
-            error              : error,
             isLoading          : isLoading
         } as EdificioContextType;
-    }, [ edifici, error, isLoading, selectedEdificio ]);
+    }, [ edifici, isLoading, selectedEdificio ]);
 
     return <EdificioContext.Provider value={ obj }>
         { children }

@@ -9,9 +9,17 @@ import { ThemeProvider }                 from "./theme/theme-provider";
 import { Toaster }                       from "@/components/ui/sonner.tsx";
 import { useEffect }                     from "react";
 import { invoke }                        from "@tauri-apps/api/core";
+import { useErrorContext }               from "@/context/ErrorProvider.tsx";
+import { toast }                         from "sonner";
 
 
 function App() {
+    const errorContext = useErrorContext();
+
+    useEffect(() => {
+        errorContext.errors.forEach(value => toast.error(value.message))
+    }, [ errorContext.errors ]);
+
     useEffect(() => {
         const handleBeforeUnload = async () => {
             try {
