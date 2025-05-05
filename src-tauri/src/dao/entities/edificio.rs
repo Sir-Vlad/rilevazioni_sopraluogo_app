@@ -1,4 +1,6 @@
 use crate::dto::EdificioDTO;
+use crate::utils::ToList;
+use std::any::Any;
 
 #[cfg_attr(test, derive(Debug, PartialEq))]
 pub struct Edificio {
@@ -25,6 +27,19 @@ impl Edificio {
             cappotto: None,
         }
     }
+
+    pub fn get_fields() -> Vec<String> {
+        vec![
+            "chiave".to_string(),
+            "fascicolo".to_string(),
+            "indirizzo".to_string(),
+            "anno_costruzione".to_string(),
+            "anno_riqualificazione".to_string(),
+            "note_riqualificazione".to_string(),
+            "isolamento_tetto".to_string(),
+            "cappotto".to_string(),
+        ]
+    }
 }
 
 impl From<EdificioDTO> for Edificio {
@@ -39,5 +54,20 @@ impl From<EdificioDTO> for Edificio {
             isolamento_tetto: value.isolamento_tetto,
             cappotto: value.cappotto,
         }
+    }
+}
+
+impl ToList for Edificio {
+    fn to_list(&self) -> Vec<Box<dyn Any>> {
+        vec![
+            Box::new(self.chiave.clone()),
+            Box::new(self.fascicolo.clone()),
+            Box::new(self.indirizzo.clone()),
+            Box::new(self.anno_costruzione.clone()),
+            Box::new(self.anno_riqualificazione.clone()),
+            Box::new(self.note_riqualificazione.clone()),
+            Box::new(self.isolamento_tetto),
+            Box::new(self.cappotto),
+        ]
     }
 }

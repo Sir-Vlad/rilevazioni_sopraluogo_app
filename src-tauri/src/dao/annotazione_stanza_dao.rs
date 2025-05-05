@@ -3,8 +3,8 @@ use crate::dao::entity::AnnotazioneStanza;
 use crate::dao::utils::schema_operations::CreateTable;
 use crate::dao::utils::DAO;
 use crate::database::{DatabaseConnection, QueryBuilder, SqlQueryBuilder};
-use rusqlite::{params, Error};
 use crate::utils::AppError;
+use rusqlite::{params, Error};
 
 pub struct AnnotazioneStanzaDAO;
 
@@ -19,12 +19,12 @@ impl CreateTable for AnnotazioneStanzaDAO {
         conn.execute(
             format!(
                 "CREATE TABLE IF NOT EXISTS {}
-            (
-                ID        INTEGER PRIMARY KEY AUTOINCREMENT,
-                ID_STANZA INTEGER  NOT NULL REFERENCES STANZA (ID),
-                CONTENT   TEXT     NOT NULL CHECK ( LENGTH(CONTENT > 0) ),
-                DATA      DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
-            ) STRICT;",
+                (
+                    ID        INTEGER PRIMARY KEY AUTOINCREMENT,
+                    ID_STANZA INTEGER  NOT NULL REFERENCES STANZA (ID),
+                    CONTENT   TEXT     NOT NULL CHECK ( LENGTH(CONTENT > 0) ),
+                    DATA      TEXT     NOT NULL DEFAULT CURRENT_TIMESTAMP
+                ) STRICT;",
                 Self::table_name()
             )
             .as_str(),

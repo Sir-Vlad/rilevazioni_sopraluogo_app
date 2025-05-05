@@ -1,7 +1,7 @@
-use crate::dao::create_tables;
+use crate::dao::{create_tables, create_views};
 use crate::database::{DatabaseConnection, QueryParam};
 use dirs_next::document_dir;
-use log::{info, warn};
+use log::{error, info, warn};
 use rusqlite::{params, Connection, Transaction};
 use serde::Deserialize;
 use std::collections::HashMap;
@@ -36,7 +36,14 @@ pub fn get_db_path(db_name: String) -> Result<String, String> {
 }
 
 pub fn init_database(app_handle: AppHandle, tx: &Transaction) -> Result<(), String> {
-    create_tables(tx)?;
+    create_tables(tx).map_err(|e| {
+        error!("{}", e);
+        e.to_string()
+    })?;
+    create_views(tx).map_err(|e| {
+        error!("{}", e);
+        e.to_string()
+    })?;
 
     let type_data = retrieve_type_to_file(app_handle, "type.json")?;
     for (table_name, data) in type_data {

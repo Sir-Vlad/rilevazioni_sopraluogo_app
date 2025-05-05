@@ -1,9 +1,13 @@
-use crate::dao::schema_operations::CreateTable;
+use crate::dao::schema_operations::{CreateTable, CreateView};
 use crate::dao::{
     AnnotazioneEdificioDAO, AnnotazioneInfissoDAO, AnnotazioneStanzaDAO, ClimatizzazioneDAO,
     EdificioDAO, FotovoltaicoDAO, IlluminazioneDAO, InfissoDAO, MaterialeInfissoDAO,
     StanzaConInfissiDao, StanzaDAO, UtenzeDAO, VetroInfissoDAO,
 };
+use crate::dao::dati_stanze_view_dao::DatiStanzeViewDAO;
+use crate::dao::mat_min_eff_stanza_view_dao::MatMinEffStanzaViewDao;
+use crate::dao::mq_infissi_view_dao::MqInfissiViewDAO;
+use crate::dao::vet_min_eff_stanza_view_dao::VetMinEffStanzaViewDao;
 use crate::database::DatabaseConnection;
 use crate::utils::AppError;
 
@@ -18,6 +22,10 @@ pub mod schema_operations {
 
     pub trait CreateTable: DAO {
         fn create_table<C: DatabaseConnection>(conn: &C) -> Result<(), AppError>;
+    }
+
+    pub trait CreateView: DAO {
+        fn create_view<C: DatabaseConnection>(conn: &C) -> Result<(), AppError>;
     }
 }
 
@@ -69,5 +77,13 @@ pub fn create_types_tables<C: DatabaseConnection>(conn: &C) -> Result<(), AppErr
     VetroInfissoDAO::create_table(conn)?;
     IlluminazioneDAO::create_table(conn)?;
     ClimatizzazioneDAO::create_table(conn)?;
+    Ok(())
+}
+
+pub fn create_views<C: DatabaseConnection>(conn: &C) -> Result<(), AppError> {
+    MqInfissiViewDAO::create_view(conn)?;
+    VetMinEffStanzaViewDao::create_view(conn)?;
+    MatMinEffStanzaViewDao::create_view(conn)?;
+    DatiStanzeViewDAO::create_view(conn)?;
     Ok(())
 }

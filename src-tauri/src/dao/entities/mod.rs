@@ -11,6 +11,7 @@ mod stanza;
 mod stanze_con_infissi;
 mod utenza;
 mod vetro_infisso;
+mod dati_stanza;
 
 pub mod entity {
     pub use super::annotazione_edificio::AnnotazioneEdificio;
@@ -26,4 +27,5 @@ pub mod entity {
     pub use super::stanze_con_infissi::StanzaConInfissi;
     pub use super::utenza::{TipoUtenza, Utenza};
     pub use super::vetro_infisso::VetroInfisso;
+    pub use super::dati_stanza::DatiStanza;
 }

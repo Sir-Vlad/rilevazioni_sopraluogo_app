@@ -15,7 +15,21 @@ impl DAO for AnnotazioneInfissoDAO {
 
 impl CreateTable for AnnotazioneInfissoDAO {
     fn create_table<C: DatabaseConnection>(conn: &C) -> Result<(), AppError> {
-        todo!()
+        conn.execute(
+            format!(
+                "CREATE TABLE IF NOT EXISTS {}
+                (
+                    ID         INTEGER PRIMARY KEY AUTOINCREMENT,
+                    ID_INFISSO TEXT NOT NULL REFERENCES INFISSO (ID),
+                    CONTENT    TEXT NOT NULL CHECK ( length(CONTENT) > 0 ),
+                    DATA       TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+                ) STRICT;",
+                Self::table_name()
+            )
+            .as_str(),
+            (),
+        )?;
+        Ok(())
     }
 }
 

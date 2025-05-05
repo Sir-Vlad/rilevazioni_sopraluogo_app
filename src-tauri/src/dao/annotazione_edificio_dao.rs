@@ -15,7 +15,21 @@ impl DAO for AnnotazioneEdificioDAO {
 
 impl CreateTable for AnnotazioneEdificioDAO {
     fn create_table<C: DatabaseConnection>(conn: &C) -> Result<(), AppError> {
-        todo!()
+        conn.execute(
+            format!(
+                "CREATE TABLE IF NOT EXISTS {}
+                (
+                    ID          INTEGER PRIMARY KEY AUTOINCREMENT,
+                    ID_EDIFICIO TEXT REFERENCES EDIFICIO (CHIAVE),
+                    CONTENT     TEXT NOT NULL CHECK ( length(CONTENT) > 0 ),
+                    DATA        TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+                ) STRICT;",
+                Self::table_name()
+            )
+            .as_str(),
+            (),
+        )?;
+        Ok(())
     }
 }
 
