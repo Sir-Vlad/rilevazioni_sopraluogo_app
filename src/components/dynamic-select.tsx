@@ -13,7 +13,8 @@ import {
 import {
     EllipsisIcon,
     MinusIcon,
-    PlusIcon
+    PlusIcon,
+    Trash
 }                                                                        from "lucide-react";
 import {
     useInfissi
@@ -112,6 +113,13 @@ export default function DynamicSelect({
                         } }>
                     <MinusIcon />
                 </Button>
+                <Button variant="outline" size="icon" type="button"
+                        disabled={ values === undefined || values.length === 0 }
+                        onClick={ () => {
+                            onChange([]);
+                        } }>
+                    <Trash />
+                </Button>
                 <AddInfissiDialog values={ values } onChange={ onChange } infissiData={ infissiData } />
             </div>
         </div>
@@ -168,48 +176,39 @@ function AddInfissiDialog({
                             <FormField
                                 control={ form.control }
                                 name="quantity"
-                                render={
-                                    ({field}) =>
-                                        <FormItem>
-                                            <FormLabel>Numero di infissi</FormLabel>
-                                            <Input
-                                                id="number-of-infissi"
-                                                placeholder="Inserisci il numero di infissi da aggiungere"
-                                                value={ field.value }
-                                                onChange={ (e) =>
-                                                    handleInputNumericChange(e, field.onChange)
-                                                }
-                                            />
-                                            <FormMessage />
-                                        </FormItem>
-                                }
+                                render={ ({field}) => <FormItem>
+                                    <FormLabel>Numero di infissi</FormLabel>
+                                    <Input
+                                        id="number-of-infissi"
+                                        placeholder="Inserisci il numero di infissi da aggiungere"
+                                        value={ field.value }
+                                        onChange={ (e) => handleInputNumericChange(e, field.onChange) }
+                                    />
+                                    <FormMessage />
+                                </FormItem> }
                             />
                             <FormField
                                 control={ form.control }
                                 name={ "type" }
-                                render={
-                                    ({field}) =>
-                                        <FormItem>
-                                            <FormLabel>Tipologia di infisso</FormLabel>
-                                            <Select
-                                                value={ field.value }
-                                                onValueChange={ field.onChange }
-                                            >
-                                                <FormControl>
-                                                    <SelectTrigger className="w-full">
-                                                        <SelectValue placeholder="Seleziona la tipologia" />
-                                                    </SelectTrigger>
-                                                </FormControl>
-                                                <SelectContent className="max-h-65">
-                                                    { infissiData.map(infisso => (
-                                                        <SelectItem value={ infisso } key={ infisso }>
-                                                            { infisso }
-                                                        </SelectItem>)) }
-                                                </SelectContent>
-                                            </Select>
-                                            <FormMessage />
-                                        </FormItem>
-                                } />
+                                render={ ({field}) => <FormItem>
+                                    <FormLabel>Tipologia di infisso</FormLabel>
+                                    <Select
+                                        value={ field.value }
+                                        onValueChange={ field.onChange }
+                                    >
+                                        <FormControl>
+                                            <SelectTrigger className="w-full">
+                                                <SelectValue placeholder="Seleziona la tipologia" />
+                                            </SelectTrigger>
+                                        </FormControl>
+                                        <SelectContent className="max-h-65">
+                                            { infissiData.map(infisso => (<SelectItem value={ infisso } key={ infisso }>
+                                                { infisso }
+                                            </SelectItem>)) }
+                                        </SelectContent>
+                                    </Select>
+                                    <FormMessage />
+                                </FormItem> } />
                         </div>
                     </div>
                     <div className="flex justify-end pt-4">

@@ -115,7 +115,7 @@ export function NavMain() {
                             </SidebarMenuAction>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent side="right" align="start">
-                            <DropdownMenuItem onClick={ () => void handleExcelExport() }>
+                            <DropdownMenuItem onClick={ () => void handleExcelExport() } disabled={ selectedDatabase !== nameDatabase }>
                                 <span>Esporta in excel</span>
                             </DropdownMenuItem>
                         </DropdownMenuContent>

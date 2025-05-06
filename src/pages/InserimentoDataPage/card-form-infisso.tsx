@@ -1,19 +1,19 @@
-import { Card, CardContent, CardHeader }                                  from "@/components/ui/card";
-import { z }                                                              from "zod";
-import { useForm }                                                        from "react-hook-form";
-import { zodResolver }                                                    from "@hookform/resolvers/zod";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form.tsx";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue }  from "@/components/ui/select.tsx";
-import { Input }                                                          from "@/components/ui/input.tsx";
-import { ChangeEvent, Fragment }                                          from "react";
-import { Button }                                                         from "@/components/ui/button.tsx";
-import { PlusIcon }                                                       from "lucide-react";
-import { useDatabase, useInfissi, useTypes }                              from "@/context/UseProvider.tsx";
-import CommentsButton                                                     from "@/components/comment-button.tsx";
-import { toast }                                                          from "sonner";
-import { IInfisso }                                                       from "@/models/models.tsx";
-import HelpBadge                                                          from "@/components/help-badge.tsx";
-import TitleCard                                                          from "@/components/title-card.tsx";
+import { Card, CardContent, CardHeader }                     from "@/components/ui/card";
+import { z }                                                 from "zod";
+import { useForm }                                           from "react-hook-form";
+import { zodResolver }                                       from "@hookform/resolvers/zod";
+import { Form, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form.tsx";
+import { Input }                                             from "@/components/ui/input.tsx";
+import { ChangeEvent }                                       from "react";
+import { Button }                                            from "@/components/ui/button.tsx";
+import { PlusIcon, Trash }                                   from "lucide-react";
+import { useDatabase, useInfissi, useTypes }                 from "@/context/UseProvider.tsx";
+import CommentsButton                                        from "@/components/comment-button.tsx";
+import { toast }                                             from "sonner";
+import { IInfisso }                                          from "@/models/models.tsx";
+import HelpBadge                                             from "@/components/help-badge.tsx";
+import TitleCard                                             from "@/components/title-card.tsx";
+import ClearableSelect                                       from "@/components/clearable-select.tsx";
 
 const nextAlphabeticalID = (prevID: string | null) => {
     if (!prevID || prevID === "") return "A";
@@ -111,25 +111,29 @@ const CardFormInfisso = () => {
         try {
             await infissi.insertInfisso(newInfisso);
             toast.success("Infisso inserito con successo");
-            form.reset({
-                tipo     : infissiType[0],
-                altezza  : 0,
-                larghezza: 0,
-                materiale: "",
-                vetro    : ""
-            }, {
-                keepErrors     : false,
-                keepDirty      : false,
-                keepIsSubmitted: false,
-                keepTouched    : false,
-                keepIsValid    : false,
-                keepSubmitCount: false
-
-            });
+            clearForm();
         } catch (e) {
             toast.error("Errore durante l'inserimento del nuovo infisso");
             console.error(e);
         }
+    }
+
+    function clearForm() {
+        form.reset({
+            tipo     : infissiType[0],
+            altezza  : 0,
+            larghezza: 0,
+            materiale: "",
+            vetro    : ""
+        }, {
+            keepErrors     : false,
+            keepDirty      : false,
+            keepIsSubmitted: false,
+            keepTouched    : false,
+            keepIsValid    : false,
+            keepSubmitCount: false
+
+        });
     }
 
 
@@ -141,6 +145,11 @@ const CardFormInfisso = () => {
                 <div className="flex gap-5 items-center">
                     <TitleCard title="Inserisci Infisso" />
                     <CommentsButton />
+                    <div className="flex flex-1 justify-end">
+                        <Button type="button" className="dark:text-white" variant="secondary" onClick={ clearForm }>
+                            <Trash/> Pulisci Form
+                        </Button>
+                    </div>
                 </div>
             </CardHeader>
             <CardContent>
@@ -154,22 +163,15 @@ const CardFormInfisso = () => {
                                                render={ ({field}) => (<div className="col-span-6">
                                                    <FormItem>
                                                        <FormLabel>Tipo</FormLabel>
-                                                       <Select onValueChange={ field.onChange }
-                                                               value={ field.value }>
-                                                           <FormControl>
-                                                               <SelectTrigger className="w-full">
-                                                                   <SelectValue
-                                                                       placeholder="Seleziona un tipo di infisso" />
-                                                               </SelectTrigger>
-                                                           </FormControl>
-                                                           <SelectContent>
-                                                               { infissiType.map((value, index) => (
-                                                                   <Fragment key={ index + 1 }>
-                                                                       <SelectItem
-                                                                           value={ value }>{ value }</SelectItem>
-                                                                   </Fragment>)) }
-                                                           </SelectContent>
-                                                       </Select>
+                                                       <ClearableSelect onChange={ field.onChange }
+                                                                        value={ field.value }
+                                                                        options={ infissiType }
+                                                                        onClear={ () => {
+                                                                            form.reset({
+                                                                                "tipo": infissiType[0]
+                                                                            });
+                                                                        } }
+                                                       />
                                                    </FormItem>
                                                </div>) } />
                                 </div>
@@ -219,20 +221,13 @@ const CardFormInfisso = () => {
                                         render={ ({field}) => (<div className="col-span-6">
                                             <FormItem>
                                                 <FormLabel>Materiale</FormLabel>
-                                                <Select onValueChange={ field.onChange }
-                                                        defaultValue={ field.value } value={ field.value }>
-                                                    <FormControl>
-                                                        <SelectTrigger className="w-full">
-                                                            <SelectValue placeholder="Seleziona un tipo di materiale" />
-                                                        </SelectTrigger>
-                                                    </FormControl>
-                                                    <SelectContent>
-                                                        { materialiInfissiType.map((value, index) => (
-                                                            <Fragment key={ index + 1 }>
-                                                                <SelectItem value={ value }>{ value }</SelectItem>
-                                                            </Fragment>)) }
-                                                    </SelectContent>
-                                                </Select>
+                                                <ClearableSelect onChange={ field.onChange }
+                                                                 options={ materialiInfissiType } value={ field.value }
+                                                                 onClear={ () => {
+                                                                     form.reset({
+                                                                         "materiale": ""
+                                                                     });
+                                                                 } } />
                                                 <FormMessage />
                                             </FormItem>
                                         </div>) }
@@ -243,20 +238,13 @@ const CardFormInfisso = () => {
                                         render={ ({field}) => (<div className="col-span-6">
                                             <FormItem>
                                                 <FormLabel>Vetro</FormLabel>
-                                                <Select onValueChange={ field.onChange }
-                                                        defaultValue={ field.value } value={ field.value }>
-                                                    <FormControl>
-                                                        <SelectTrigger className="w-full">
-                                                            <SelectValue placeholder="Seleziona un tipo di vetro" />
-                                                        </SelectTrigger>
-                                                    </FormControl>
-                                                    <SelectContent>
-                                                        { vetroInfissiType.map((value, index) => (
-                                                            <Fragment key={ index + 1 }>
-                                                                <SelectItem value={ value }>{ value }</SelectItem>
-                                                            </Fragment>)) }
-                                                    </SelectContent>
-                                                </Select>
+                                                <ClearableSelect onChange={ field.onChange }
+                                                                 options={ vetroInfissiType } value={ field.value }
+                                                                 onClear={ () => {
+                                                                     form.reset({
+                                                                         "vetro": ""
+                                                                     });
+                                                                 } } />
                                                 <FormMessage />
                                             </FormItem>
                                         </div>) }
@@ -264,7 +252,7 @@ const CardFormInfisso = () => {
                                 </div>
                             </div>
                         </div>
-                        <div className="flex justify-end pt-4">
+                        <div className="flex items-center justify-end pt-4">
                             <Button type="submit" className="text-white">
                                 <PlusIcon /> <span>Aggiungi Infisso</span>
                             </Button>
