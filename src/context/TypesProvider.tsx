@@ -1,16 +1,19 @@
-import * as React                                                         from "react";
-import { useCallback, useEffect, useMemo, useRef, useState }              from "react";
-import { invoke }                                                         from "@tauri-apps/api/core";
-import { TypeContextType, TypesContext }                                  from "./Context.tsx";
-import { Climatizzazione, Illuminazione, MaterialeInfisso, VetroInfisso } from "../models/models.tsx";
-import { useDatabase }                                                    from "@/context/UseProvider.tsx";
-import { useErrorContext }                                                from "@/context/ErrorProvider.tsx";
+import * as React                                                                      from "react";
+import { useCallback, useEffect, useMemo, useRef, useState }                           from "react";
+import { invoke }                                                                      from "@tauri-apps/api/core";
+import { TypeContextType, TypesContext }                                               from "./Context.tsx";
+import { Climatizzazione, Illuminazione, MaterialeInfisso, TipoInfisso, VetroInfisso } from "../models/models.tsx";
+import { useDatabase }                                                                 from "@/context/UseProvider.tsx";
+import {
+    useErrorContext
+}                                                                                      from "@/context/ErrorProvider.tsx";
 
 interface TypePayload {
     "materiale_infissi": MaterialeInfisso[],
     "vetro_infissi": VetroInfisso[],
     "climatizzazione": Climatizzazione[],
-    "illuminazione": Illuminazione[]
+    "illuminazione": Illuminazione[],
+    "tipo_infissi": TipoInfisso[],
 }
 
 const TypesProvider = ({children}: { children: React.ReactNode }) => {
@@ -23,6 +26,7 @@ const TypesProvider = ({children}: { children: React.ReactNode }) => {
     const [ vetroInfissiType, setVetroInfissiType ] = useState<string[]>([]);
     const [ climatizzazioneType, setClimatizzazioneType ] = useState<string[]>([]);
     const [ illuminazioneType, setIlluminazioneType ] = useState<string[]>([]);
+    const [ tipoInfissi, setTipoInfissi ] = useState<string[]>([]);
     const [ isLoading, setIsLoading ] = useState(true);
     const errorContext = useErrorContext();
 
@@ -38,6 +42,7 @@ const TypesProvider = ({children}: { children: React.ReactNode }) => {
             setVetroInfissiType(data["vetro_infissi"].map(value => value.vetro));
             setClimatizzazioneType(data["climatizzazione"].map(value => value.climatizzazione));
             setIlluminazioneType(data["illuminazione"].map(value => value.lampadina));
+            setTipoInfissi(data["tipo_infissi"].map(value => value.nome));
         } catch (e) {
             if (typeof e === "string") {
                 errorContext.addError(e);
@@ -46,7 +51,7 @@ const TypesProvider = ({children}: { children: React.ReactNode }) => {
         } finally {
             setIsLoading(false);
         }
-    }, [errorContext]);
+    }, [ errorContext ]);
 
     useEffect(() => {
         if (needReload) {
@@ -66,6 +71,7 @@ const TypesProvider = ({children}: { children: React.ReactNode }) => {
             vetroInfissiType,
             climatizzazioneType,
             illuminazioneType,
+            tipoInfissi,
             isLoading
         } as TypeContextType;
     }, [ materialiInfissiType, vetroInfissiType, climatizzazioneType, illuminazioneType, isLoading ]);

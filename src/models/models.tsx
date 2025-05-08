@@ -57,12 +57,16 @@ export interface Climatizzazione {
     efficienza_energetica: number;
 }
 
+export interface TipoInfisso {
+    nome: string;
+}
+
 export interface IUtenza {
     id: number;
     id_edificio: string;
     tipo: string;
     cod_contatore: string;
-    indirizzo_contatore?: string
+    indirizzo_contatore?: string;
 }
 
 export interface IFotovoltaico {

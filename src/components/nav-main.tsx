@@ -67,7 +67,7 @@ export function NavMain() {
             console.log("Inserimento avvenuto con successo");
             toast.success("Inserimento avvenuto con successo");
         } catch (e) {
-            console.log("Errore durante l'inserimento: " + e);
+            console.log("Errore durante l'inserimento: ", e);
             toast.error("Errore durante il cambio di database");
         }
     };

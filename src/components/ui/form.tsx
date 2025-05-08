@@ -1,18 +1,19 @@
-import * as React from "react"
-import * as LabelPrimitive from "@radix-ui/react-label"
-import { Slot } from "@radix-ui/react-slot"
+import * as React          from "react";
+import { useMemo }         from "react";
+import * as LabelPrimitive from "@radix-ui/react-label";
+import { Slot }            from "@radix-ui/react-slot";
 import {
-  Controller,
-  FormProvider,
-  useFormContext,
-  useFormState,
-  type ControllerProps,
-  type FieldPath,
-  type FieldValues,
-} from "react-hook-form"
+    Controller,
+    type ControllerProps,
+    type FieldPath,
+    type FieldValues,
+    FormProvider,
+    useFormContext,
+    useFormState
+}                          from "react-hook-form";
 
-import { cn } from "@/lib/utils"
-import { Label } from "@/components/ui/label"
+import { cn }    from "@/lib/utils";
+import { Label } from "@/components/ui/label";
 
 const Form = FormProvider
 
@@ -33,8 +34,13 @@ const FormField = <
 >({
   ...props
 }: ControllerProps<TFieldValues, TName>) => {
+
+  const obj = useMemo(() => ({
+    name: props.name
+  }), [props.name])
+
   return (
-    <FormFieldContext.Provider value={{ name: props.name }}>
+    <FormFieldContext.Provider value={ obj }>
       <Controller {...props} />
     </FormFieldContext.Provider>
   )
@@ -74,8 +80,10 @@ const FormItemContext = React.createContext<FormItemContextValue>(
 function FormItem({ className, ...props }: React.ComponentProps<"div">) {
   const id = React.useId()
 
+  const obj = useMemo(() => ({id: id}), [id])
+
   return (
-    <FormItemContext.Provider value={{ id }}>
+    <FormItemContext.Provider value={ obj }>
       <div
         data-slot="form-item"
         className={cn("grid gap-2", className)}

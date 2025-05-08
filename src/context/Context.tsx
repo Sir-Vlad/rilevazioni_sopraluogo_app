@@ -16,6 +16,8 @@ export const DatabaseContext = createContext<DatabaseContextType | null>(null);
 export interface InfissiContextType {
     data: IInfisso[];
     insertInfisso: (newInfisso: IInfisso) => Promise<void>;
+    modifyInfisso: (infisso: Partial<IInfisso>) => Promise<void>;
+    isLoading: boolean;
 }
 
 export const InfissiContext = createContext<InfissiContextType | null>(null);
@@ -32,6 +34,7 @@ export interface TypeContextType {
     vetroInfissiType: string[];
     climatizzazioneType: string[];
     illuminazioneType: string[];
+    tipoInfissi: string[];
     isLoading: boolean;
 }
 

@@ -78,7 +78,7 @@ const columns: ColumnDef<IStanza>[] = [
                     </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent>
-                    { uniqueValues.map((value, index) => (<DropdownMenuItem key={ index }>
+                    { uniqueValues.map(value => (<DropdownMenuItem key={ value }>
                         { value } ({ valueCounts[value] })
                     </DropdownMenuItem>)) }
                 </DropdownMenuContent>

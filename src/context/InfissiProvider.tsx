@@ -33,7 +33,7 @@ const InfissiProvider = ({children}: { children: React.ReactNode }) => {
         } finally {
             setLoading(false);
         }
-    }, [errorContext]);
+    }, [ errorContext ]);
 
     // Ricarica i dati quando il database cambia
     useEffect(() => {
@@ -59,14 +59,25 @@ const InfissiProvider = ({children}: { children: React.ReactNode }) => {
         }
     }, []);
 
+    const modifyInfisso = useCallback(async (infisso: IInfisso) => {
+        try {
+            const inserted_infisso: IInfisso = await invoke("update_infisso", {infisso: infisso});
+            setInfissi((prev) => [ ...prev.filter(i => i.id !== infisso.id), inserted_infisso ]);
+        } catch (e) {
+            console.error(e);
+            throw e;
+        }
+    }, []);
+
 
     const obj = useMemo(() => {
         return {
             data         : infissi,
             insertInfisso: insertInfisso,
-            loading      : loading
+            modifyInfisso: modifyInfisso,
+            isLoading    : loading
         } as InfissiContextType;
-    }, [ infissi, insertInfisso, loading ]);
+    }, [ infissi, insertInfisso, loading, modifyInfisso ]);
 
     return <InfissiContext.Provider value={ obj }>
         { children }
