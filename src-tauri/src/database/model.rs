@@ -2,6 +2,7 @@ use log::info;
 use rusqlite::Connection;
 use serde::Serialize;
 use std::sync::{Mutex, MutexGuard};
+use crate::utils::AppError;
 
 pub struct Database {
     conn: Mutex<Option<Connection>>,
@@ -26,19 +27,19 @@ impl Database {
         self.conn.lock().unwrap()
     }
 
-    pub fn with_transaction<F, T>(&self, op: F) -> Result<T, String>
+    pub fn with_transaction<F, T>(&self, op: F) -> Result<T, AppError>
     where
         T: for<'de> serde::Deserialize<'de> + serde::Serialize,
-        F: FnOnce(&rusqlite::Transaction) -> Result<T, String>,
+        F: FnOnce(&rusqlite::Transaction) -> Result<T, AppError>,
     {
-        let mut conn_guard = self.conn.lock().unwrap();
+        let mut conn_guard = self.get_conn();
         if let Some(conn) = conn_guard.as_mut() {
-            let tx = conn.transaction().map_err(|e| e.to_string())?;
+            let tx = conn.transaction()?;
             let result = op(&tx)?;
-            tx.commit().map_err(|e| e.to_string())?;
+            tx.commit()?;
             Ok(result)
         } else {
-            Err("Database not initialized".to_string())
+            Err(AppError::DatabaseNotInitialized)
         }
     }
 }

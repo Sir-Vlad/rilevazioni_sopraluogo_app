@@ -21,6 +21,7 @@ export default tseslint.config({ignores: ["dist"]}, {
     },
     rules          : {
         ...reactHooks.configs.recommended.rules,
-        "react-refresh/only-export-components": ["warn", {allowConstantExport: true}]
+        "react-refresh/only-export-components": ["warn", {allowConstantExport: true}],
+        "@typescript-eslint/no-misused-promises": "off",
     }
 });

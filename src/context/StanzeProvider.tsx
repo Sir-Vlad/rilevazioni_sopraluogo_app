@@ -5,6 +5,7 @@ import { IStanza }                                           from "../models/mod
 import { IStanzaContext, StanzeContext }                     from "./Context.tsx";
 import { invoke }                                            from "@tauri-apps/api/core";
 import { toast }                                             from "sonner";
+import { useErrorContext }                                   from "@/context/ErrorProvider.tsx";
 
 const StanzeProvider = ({children}: { children: React.ReactNode }) => {
     const {
@@ -13,8 +14,8 @@ const StanzeProvider = ({children}: { children: React.ReactNode }) => {
           } = useDatabase();
     const providerRef = useRef<{ notifyReloadComplete: () => void; } | null>(null);
     const [ stanze, setStanze ] = useState<IStanza[]>([]);
-    const [ error, setError ] = useState<string | null>(null);
     const [ loading, setLoading ] = useState(true);
+    const errorContext = useErrorContext();
 
     useEffect(() => {
         providerRef.current = registerProvider("stanze");
@@ -23,18 +24,17 @@ const StanzeProvider = ({children}: { children: React.ReactNode }) => {
     const loadStanze = useCallback(async () => {
         try {
             setLoading(true);
-            setError(null);
             const data: IStanza[] = await invoke("get_stanze");
             setStanze(data);
         } catch (e) {
-            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-            // @ts-expect-error
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-            setError("Errore durante il caricamento degli infissi: " + e.toString());
+            if (typeof e === "string") {
+                errorContext.addError(e);
+                console.error(e);
+            }
         } finally {
             setLoading(false);
         }
-    }, []);
+    }, [ errorContext ]);
 
     useEffect(() => {
         if (needReload) {
@@ -79,10 +79,9 @@ const StanzeProvider = ({children}: { children: React.ReactNode }) => {
         return {
             data        : stanze,
             updateStanza: updateStanza,
-            error       : error,
             loading     : loading
         };
-    }, [ error, loading, stanze, updateStanza ]);
+    }, [ loading, stanze, updateStanza ]);
 
     return <StanzeContext.Provider value={ obj }>
         { children }

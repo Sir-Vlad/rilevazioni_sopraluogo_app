@@ -1,29 +1,14 @@
+use crate::dao::crud_operations::GetAll;
+use crate::dao::entity::{DatiStanza, Edificio, Fotovoltaico};
+use crate::dao::{DatiStanzeViewDAO, EdificioDAO, FotovoltaicoDAO};
 use crate::database::Database;
+use crate::utils::{AppError, ToList};
 use dirs_next::document_dir;
-use rusqlite::{Connection, Error};
-use rust_xlsxwriter::{Format, Workbook, Worksheet};
-use serde::Serialize;
+use log::info;
+use rust_xlsxwriter::{ColNum, Format, RowNum, Workbook, Worksheet};
+use std::any::{Any, TypeId};
 use std::fs;
 use tauri::State;
-
-#[derive(Debug, Serialize)]
-pub struct DatiStanza {
-    pub(crate) id: u64,
-    pub(crate) fascicolo: String,
-    pub(crate) chiave: String,
-    pub(crate) piano: String,
-    pub(crate) id_spazio: String,
-    pub(crate) stanza: String,
-    pub(crate) destinazione_uso: String,
-    pub(crate) altezza: Option<u16>,
-    pub(crate) spessore_muro: Option<u8>,
-    pub(crate) riscaldamento: Option<String>,
-    pub(crate) raffrescamento: Option<String>,
-    pub(crate) illuminazione: Option<String>,
-    pub(crate) mq_infissi: Option<f32>,
-    pub(crate) materiale: Option<String>,
-    pub(crate) vetro: Option<String>,
-}
 
 pub trait ExportData {
     fn export(db: State<'_, Database>, name_file: Option<String>) -> Result<(), String>;
@@ -35,22 +20,67 @@ impl ExportData for ExportDatiStanzaToExcel {
     fn export(db: State<'_, Database>, name_file: Option<String>) -> Result<(), String> {
         let conn = db.get_conn();
         if let Some(conn) = conn.as_ref() {
-            let dati_stanze = Self::retrieve_data(conn)?;
+            let dati_stanze = DatiStanzeViewDAO::get_all(conn)?;
 
             let mut workbook = Workbook::new();
+            // Primo worksheet
             let worksheet = workbook.add_worksheet();
-            worksheet.set_name("Dati").map_err(|e| e.to_string())?;
+            worksheet.set_name("Stanze").map_err(|e| e.to_string())?;
 
             // Scrittura dell'headers
-            Self::write_headers(worksheet, Self::HEADERS)?;
+            Self::write_headers(
+                worksheet,
+                DatiStanza::get_fields()
+                    .iter()
+                    .map(|x| x.to_string())
+                    .collect(),
+            )?;
 
             // Scrittura dei dati
-            for (i, dato) in dati_stanze.as_ref().unwrap().iter().enumerate() {
+            for (i, dato) in dati_stanze.iter().enumerate() {
                 let row = (i + 1) as u32;
-                Self::write_row(worksheet, row, dato)?
+                Self::write_row(worksheet, row, &dato.to_list())?
             }
 
             // Adatta le colonne
+            worksheet.autofit();
+
+            // Secondo worksheet
+            let worksheet = workbook.add_worksheet();
+            worksheet.set_name("Edifici").map_err(|e| e.to_string())?;
+
+            // headers
+            let f_headers = Fotovoltaico::get_fields();
+            let mut headers: Vec<String> = Edificio::get_fields();
+            headers.extend(vec![f_headers[2].clone(), f_headers[3].clone()]);
+            Self::write_headers(worksheet, headers)?;
+
+            // Dati
+            let edifici = EdificioDAO::get_all(conn)?;
+            let fotovoltaico = FotovoltaicoDAO::get_all(conn)?;
+            for (index, edificio) in edifici.iter().enumerate() {
+                let f = fotovoltaico
+                    .iter()
+                    .find(|&f| f.id_edificio == edificio.chiave);
+                let edificio = edificio.to_list();
+                Self::write_row(worksheet, (index + 1) as RowNum, &edificio)?;
+                if let Some(f) = f {
+                    let f_list = f.to_list();
+                    Self::write_cell(
+                        worksheet,
+                        0,
+                        (edificio.len() + 1) as ColNum,
+                        f_list.get(2).unwrap(),
+                    )?;
+                    Self::write_cell(
+                        worksheet,
+                        0,
+                        (edificio.len() + 2) as ColNum,
+                        f_list.get(3).unwrap(),
+                    )?;
+                }
+            }
+
             worksheet.autofit();
 
             // Determina il percorso di salvataggio
@@ -67,7 +97,7 @@ impl ExportData for ExportDatiStanzaToExcel {
                 "{}.xlsx",
                 match name_file {
                     Some(name) => name,
-                    None => dati_stanze.ok().unwrap().first().unwrap().fascicolo.clone(),
+                    None => dati_stanze.first().unwrap().fascicolo.clone(),
                 }
             ));
 
@@ -76,144 +106,148 @@ impl ExportData for ExportDatiStanzaToExcel {
                 .save(export_path.to_str().unwrap())
                 .map_err(|e| e.to_string())?;
 
-            println!("File Excel esportato con successo!");
+            info!("File Excel esportato con successo!");
 
             Ok(())
         } else {
-            Err("Errore durante la connessione al database".to_string())
+            Err(AppError::DatabaseNotInitialized.to_string())
         }
     }
 }
 
 impl ExportDatiStanzaToExcel {
-    const HEADERS: [&'static str; 15] = [
-        "ID",
-        "Fascicolo",
-        "Chiave",
-        "Piano",
-        "ID Spazio",
-        "Stanza",
-        "Destinazione Uso",
-        "Altezza",
-        "Spessore Muro",
-        "Riscaldamento",
-        "Raffrescamento",
-        "Illuminazione",
-        "MQ Infissi",
-        "Materiale",
-        "Vetro",
-    ];
-    fn retrieve_data(conn: &Connection) -> Result<Result<Vec<DatiStanza>, Error>, String> {
-        let mut stmt = conn
-            .prepare("SELECT * FROM DATI_STANZE")
-            .map_err(|e| e.to_string())?;
+    fn write_headers(worksheet: &mut Worksheet, fields: Vec<String>) -> Result<(), String> {
+        let format = Format::new().set_bold();
 
-        let dati_stanze: Result<Vec<DatiStanza>, rusqlite::Error> = stmt
-            .query_map([], |row| {
-                Ok(DatiStanza {
-                    id: row.get(0)?,
-                    fascicolo: row.get(1)?,
-                    chiave: row.get(2)?,
-                    piano: row.get(3)?,
-                    id_spazio: row.get(4)?,
-                    stanza: row.get(5)?,
-                    destinazione_uso: row.get(6)?,
-                    altezza: row.get(7)?,
-                    spessore_muro: row.get(8)?,
-                    riscaldamento: row.get(9)?,
-                    raffrescamento: row.get(10)?,
-                    illuminazione: row.get(11)?,
-                    mq_infissi: row.get(12)?,
-                    materiale: row.get(13)?,
-                    vetro: row.get(14)?,
-                })
-            })
-            .map_err(|e| e.to_string())?
-            .collect();
-        Ok(dati_stanze)
-    }
-
-    fn write_row(
-        worksheet: &mut Worksheet,
-        row: u32,
-        row_value: &DatiStanza,
-    ) -> Result<(), String> {
-        let format = Format::new().set_num_format("0.00");
-        worksheet
-            .write_number(row, 0, row_value.id as f64)
-            .map_err(|e| e.to_string())?;
-        worksheet
-            .write_string(row, 1, &row_value.fascicolo)
-            .map_err(|e| e.to_string())?;
-        worksheet
-            .write_string(row, 2, &row_value.chiave)
-            .map_err(|e| e.to_string())?;
-        worksheet
-            .write_string(row, 3, &row_value.piano)
-            .map_err(|e| e.to_string())?;
-        worksheet
-            .write_string(row, 4, &row_value.id_spazio)
-            .map_err(|e| e.to_string())?;
-        worksheet
-            .write_string(row, 5, &row_value.stanza)
-            .map_err(|e| e.to_string())?;
-        worksheet
-            .write_string(row, 6, &row_value.destinazione_uso)
-            .map_err(|e| e.to_string())?;
-        if let Some(altezza) = row_value.altezza {
+        for (i, dato) in fields.iter().enumerate() {
             worksheet
-                .write_number(row, 7, altezza)
-                .map_err(|e| e.to_string())?;
-        }
-        if let Some(altezza) = row_value.altezza {
-            worksheet
-                .write_number(row, 7, altezza)
-                .map_err(|e| e.to_string())?;
-        }
-        if let Some(spessore) = row_value.spessore_muro {
-            worksheet
-                .write_number(row, 8, spessore)
-                .map_err(|e| e.to_string())?;
-        }
-        if let Some(riscaldamento) = &row_value.riscaldamento {
-            worksheet
-                .write_string(row, 9, riscaldamento)
-                .map_err(|e| e.to_string())?;
-        }
-        if let Some(raffrescamento) = &row_value.raffrescamento {
-            worksheet
-                .write_string(row, 10, raffrescamento)
-                .map_err(|e| e.to_string())?;
-        }
-        if let Some(illuminazione) = &row_value.illuminazione {
-            worksheet
-                .write_string(row, 11, illuminazione)
-                .map_err(|e| e.to_string())?;
-        }
-        if let Some(mq_infissi) = row_value.mq_infissi {
-            worksheet
-                .write_number_with_format(row, 12, mq_infissi, &format)
-                .map_err(|e| e.to_string())?;
-        }
-        if let Some(materiale) = &row_value.materiale {
-            worksheet
-                .write_string(row, 13, materiale)
-                .map_err(|e| e.to_string())?;
-        }
-        if let Some(vetro) = &row_value.vetro {
-            worksheet
-                .write_string(row, 14, vetro)
+                .write_string_with_format(0, i as u16, dato, &format)
                 .map_err(|e| e.to_string())?;
         }
         Ok(())
     }
 
-    fn write_headers(worksheet: &mut Worksheet, headers: [&str; 15]) -> Result<(), String> {
-        for (i, dato) in headers.iter().enumerate() {
-            worksheet
-                .write_string(0, i as u16, *dato)
-                .map_err(|e| e.to_string())?;
+    fn write_row(
+        worksheet: &mut Worksheet,
+        row: RowNum,
+        row_value: &Vec<Box<dyn Any>>,
+    ) -> Result<(), String> {
+        for (index, value) in row_value.iter().enumerate() {
+            Self::write_cell(worksheet, row, index as ColNum, value)?;
         }
+        Ok(())
+    }
+
+    fn write_cell(
+        worksheet: &mut Worksheet,
+        row: RowNum,
+        col: ColNum,
+        value: &Box<dyn Any>,
+    ) -> Result<(), String> {
+        let format = Format::new().set_num_format("0.00");
+        let type_id = (**value).type_id();
+
+        match type_id {
+            id if id == TypeId::of::<String>() => {
+                let value = value.downcast_ref::<String>().unwrap();
+                Self::write_cell_string(worksheet, row, col, value)?;
+            }
+            id if id == TypeId::of::<u64>() => {
+                let value = value.downcast_ref::<u64>().unwrap();
+                Self::write_cell_number(worksheet, row, col, *value as f64)?;
+            }
+            id if id == TypeId::of::<Option<u16>>() || id == TypeId::of::<Option<u8>>() => {
+                let value_u16 = if id == TypeId::of::<Option<u8>>() {
+                    Self::try_convert_option_number::<u8, u16>(value).unwrap()
+                } else {
+                    *value.downcast_ref::<Option<u16>>().unwrap()
+                };
+
+                match value_u16 {
+                    Some(value) => Self::write_cell_number(worksheet, row, col, value as f64)?,
+                    None => Self::write_cell_number(worksheet, row, col, 0.0)?,
+                };
+            }
+            id if id == TypeId::of::<Option<String>>() => {
+                let value = value.downcast_ref::<Option<String>>().unwrap();
+                if let Some(value) = value.clone() {
+                    Self::write_cell_string(worksheet, row, col, value.as_str())?;
+                }
+            }
+            id if id == TypeId::of::<Option<f32>>() => {
+                match value.downcast_ref::<Option<f32>>().unwrap() {
+                    Some(value) => Self::write_cell_number_with_format(
+                        worksheet,
+                        row,
+                        col,
+                        *value as f64,
+                        &format,
+                    )?,
+                    None => Self::write_cell_number_with_format(worksheet, row, col, 0.0, &format)?,
+                };
+            }
+            id if id == TypeId::of::<Option<bool>>() => {
+                match value.downcast_ref::<Option<bool>>().unwrap() {
+                    Some(value) => Self::write_cell_string(
+                        worksheet,
+                        row,
+                        col,
+                        if *value { "SI" } else { "NO" },
+                    )?,
+                    None => Self::write_cell_string(worksheet, row, col, "NO")?,
+                };
+            }
+            _ => {} // Gestione per tipi non supportati
+        }
+        Ok(())
+    }
+
+    fn try_convert_option_number<From: Any + Copy, To: TryFrom<From>>(
+        value: &Box<dyn Any>,
+    ) -> Option<Option<To>>
+    where
+        <To as TryFrom<From>>::Error: std::fmt::Debug,
+    {
+        if let Some(opt_from) = value.downcast_ref::<Option<From>>() {
+            return Some(opt_from.map(|val| To::try_from(val).unwrap()));
+        }
+        None
+    }
+
+    fn write_cell_string(
+        worksheet: &mut Worksheet,
+        row: RowNum,
+        col: ColNum,
+        value: &str,
+    ) -> Result<(), String> {
+        worksheet
+            .write_string(row, col, value)
+            .map_err(|e| e.to_string())?;
+        Ok(())
+    }
+
+    fn write_cell_number(
+        worksheet: &mut Worksheet,
+        row: RowNum,
+        col: ColNum,
+        value: f64,
+    ) -> Result<(), String> {
+        worksheet
+            .write_number(row, col, value)
+            .map_err(|e| e.to_string())?;
+        Ok(())
+    }
+
+    fn write_cell_number_with_format(
+        worksheet: &mut Worksheet,
+        row: RowNum,
+        col: ColNum,
+        value: f64,
+        format: &Format,
+    ) -> Result<(), String> {
+        worksheet
+            .write_number_with_format(row, col, value, format)
+            .map_err(|e| e.to_string())?;
         Ok(())
     }
 }

@@ -1,44 +1,45 @@
-use crate::dao::{InfissoDao, InfissoDaoImpl};
+use crate::dao::crud_operations::{GetAll, Insert, Update};
+use crate::dao::InfissoDAO;
 use crate::database::Database;
-use crate::dto::InfissoDto;
+use crate::dto::InfissoDTO;
+use crate::service::utils::{CreateService, RetrieveManyService, UpdateService};
 use tauri::State;
+use crate::utils::AppError;
 
-pub trait InfissoService {
-    fn get_all(db: State<'_, Database>) -> Result<Vec<InfissoDto>, String>;
-    fn insert(db: State<'_, Database>, infisso: InfissoDto) -> Result<InfissoDto, String>;
-    fn update(db: State<'_, Database>, infisso: InfissoDto) -> Result<InfissoDto, String>;
+pub struct InfissoService;
+
+impl RetrieveManyService<InfissoDTO> for InfissoService {
+    fn retrieve_many(db: State<'_, Database>) -> Result<Vec<InfissoDTO>, AppError> {
+        let conn = db.get_conn();
+        if let Some(conn) = conn.as_ref() {
+            let result = InfissoDAO::get_all(conn)?;
+            Ok(result.iter().map(InfissoDTO::from).collect())
+        } else {
+            Err(AppError::DatabaseNotInitialized)
+        }
+    }
 }
 
-pub struct InfissoServiceImpl;
-
-impl InfissoService for InfissoServiceImpl {
-    fn get_all(db: State<'_, Database>) -> Result<Vec<InfissoDto>, String> {
+impl CreateService<InfissoDTO> for InfissoService {
+    fn create(db: State<'_, Database>, infisso: InfissoDTO) -> Result<InfissoDTO, AppError> {
         let conn = db.get_conn();
         if let Some(conn) = conn.as_ref() {
-            let result = InfissoDaoImpl::get_all(conn)?;
-            Ok(result.iter().map(InfissoDto::from).collect())
+            let result = InfissoDAO::insert(conn, infisso.clone().into())?;
+            Ok(InfissoDTO::from(&result))
         } else {
-            Err("Database not initialized".to_string())
+            Err(AppError::DatabaseNotInitialized)
         }
     }
+}
 
-    fn insert(db: State<'_, Database>, infisso: InfissoDto) -> Result<InfissoDto, String> {
+impl UpdateService<InfissoDTO> for InfissoService {
+    fn update(db: State<'_, Database>, infisso: InfissoDTO) -> Result<InfissoDTO, AppError> {
         let conn = db.get_conn();
         if let Some(conn) = conn.as_ref() {
-            let result = InfissoDaoImpl::insert(conn, &infisso)?;
-            Ok(InfissoDto::from(&result))
+            let result = InfissoDAO::update(conn, infisso.clone().into())?;
+            Ok(InfissoDTO::from(&result))
         } else {
-            Err("Database not initialized".to_string())
-        }
-    }
-
-    fn update(db: State<'_, Database>, infisso: InfissoDto) -> Result<InfissoDto, String> {
-        let conn = db.get_conn();
-        if let Some(conn) = conn.as_ref() {
-            let result = InfissoDaoImpl::update(conn, &infisso)?;
-            Ok(InfissoDto::from(&result))
-        } else {
-            Err("Database not initialized".to_string())
+            Err(AppError::DatabaseNotInitialized)
         }
     }
 }

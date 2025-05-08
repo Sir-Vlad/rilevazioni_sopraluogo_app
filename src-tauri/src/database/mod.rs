@@ -1,9 +1,12 @@
-mod db;
-mod model;
-mod utils;
 mod database_connection;
+mod model;
+#[allow(dead_code)]
+mod query_builder;
+mod utils;
 
-pub use db::{get_all_name_database, set_database, switch_database};
+pub use database_connection::DatabaseConnection;
 pub use model::{Database, DatabaseEventPayload};
-pub use database_connection::{DatabaseConnection};
-pub use utils::NAME_DIR_DATABASE;
+pub use query_builder::{
+    QueryBuilder, QueryBuilderError, QueryParam, SqlQueryBuilder, WhereBuilder,
+};
+pub use utils::{convert_param, get_db_path, init_database, set_pragma, NAME_DIR_DATABASE};

@@ -1,7 +1,10 @@
+use crate::dto::DTO;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Deserialize, Serialize)]
-pub struct MaterialeInfissoDto {
+pub struct MaterialeInfissoDTO {
     pub materiale: String,
-    pub efficienza_energetica: i8,
+    pub efficienza_energetica: u8,
 }
+
+impl DTO for MaterialeInfissoDTO {}

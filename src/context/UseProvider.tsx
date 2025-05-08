@@ -1,5 +1,13 @@
-import { useContext }                                                                    from "react";
-import { DatabaseContext, EdificioContext, InfissiContext, StanzeContext, TypesContext } from "./Context.tsx";
+import { useContext } from "react";
+import {
+    DatabaseContext,
+    EdificioContext,
+    FotovoltaicoContext,
+    InfissiContext,
+    StanzeContext,
+    TypesContext,
+    UtenzeContext
+}                     from "./Context.tsx";
 
 export const useDatabase = () => {
     const context = useContext(DatabaseContext);
@@ -40,3 +48,19 @@ export const useEdifici = () => {
     }
     return edificio;
 };
+
+export const useUtenze = () => {
+    const utenze = useContext(UtenzeContext);
+    if (!utenze) {
+        throw new Error("useUtenze must be used within the DatabaseProvider");
+    }
+    return utenze;
+}
+
+export const useFotovoltaico = () => {
+    const utenze = useContext(FotovoltaicoContext);
+    if (!utenze) {
+        throw new Error("useUtenze must be used within the DatabaseProvider");
+    }
+    return utenze;
+}

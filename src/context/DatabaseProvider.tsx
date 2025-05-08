@@ -19,39 +19,37 @@ const DatabaseProvider = ({children}: { children: React.ReactNode }) => {
     const [ pendingProviders, setPendingProviders ] = useState(new Set());
 
     // Inizializzazione iniziale
-    useEffect(() => {
-        const set_database = async () => {
-            try {
-                setIsLoading(true);
-                const dbName = localStorage.getItem("databaseName");
-                if (dbName === null && databaseName === null) {
-                    setError("Database non settato");
-                    return;
-                }
-
-                const dbPath: string = await invoke("set_database", {dbName: dbName ?? databaseName});
-                setDatabasePath(dbPath);
-                setDatabaseName(getFileName(dbPath) ?? "");
-                setError(null);
-            } catch (e) {
-                setError("Errore durante l'inizializzazione del database");
-                console.error(e);
-            } finally {
-                setIsLoading(false);
-            }
-        };
-        set_database().catch(console.error);
-    }, []);
+    // useEffect(() => {
+    //     const set_database = async () => {
+    //         try {
+    //             setIsLoading(true);
+    //             const dbName = localStorage.getItem("databaseName");
+    //             if (dbName === null && databaseName === null) {
+    //                 setError("Database non settato");
+    //                 return;
+    //             }
+    //
+    //             const dbPath: string = await invoke("set_database", {dbName: dbName ?? databaseName});
+    //             setDatabasePath(dbPath);
+    //             setDatabaseName(getFileName(dbPath) ?? "");
+    //             setError(null);
+    //         } catch (e) {
+    //             setError("Errore durante l'inizializzazione del database");
+    //             console.error(e);
+    //         } finally {
+    //             setIsLoading(false);
+    //         }
+    //     };
+    //     set_database().catch(console.error);
+    // }, []);
 
     const switchDatabase = useCallback(async (dbName: string) => {
         try {
             setIsLoading(true);
             setError(null);
-
             await invoke("switch_database", {dbName});
         } catch (e) {
             setError("Errore durante il cambio di database: " + e);
-            setIsLoading(false);
         } finally {
             setIsLoading(false);
         }
@@ -67,7 +65,6 @@ const DatabaseProvider = ({children}: { children: React.ReactNode }) => {
 
             if (payload.type_event === "database_switched") {
                 const databaseName = getFileName(payload.path);
-                localStorage.setItem("databaseName", databaseName);
                 setDatabasePath(payload.path);
                 setDatabaseName(databaseName ?? "");
                 setNeedReload(true);

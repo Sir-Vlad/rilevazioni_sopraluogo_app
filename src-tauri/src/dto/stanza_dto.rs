@@ -1,8 +1,9 @@
-use crate::dao::Stanza;
+use crate::dao::entity::Stanza;
+use crate::dto::DTO;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct StanzaDto {
+pub struct StanzaDTO {
     pub id: u64,
     pub chiave: String,
     pub piano: String,
@@ -17,9 +18,11 @@ pub struct StanzaDto {
     pub infissi: Option<Vec<String>>,
 }
 
-impl StanzaDto {
+impl DTO for StanzaDTO {}
+
+impl StanzaDTO {
     fn from_stanza_common(stanza: &Stanza) -> Self {
-        StanzaDto {
+        StanzaDTO {
             id: stanza.id.unwrap_or(0),
             chiave: stanza.chiave.clone(),
             piano: stanza.piano.clone(),
@@ -34,17 +37,16 @@ impl StanzaDto {
             infissi: None,
         }
     }
-
 }
 
-impl From<Stanza> for StanzaDto {
+impl From<Stanza> for StanzaDTO {
     fn from(value: Stanza) -> Self {
-        StanzaDto::from_stanza_common(&value)
+        StanzaDTO::from_stanza_common(&value)
     }
 }
 
-impl From<&Stanza> for StanzaDto {
+impl From<&Stanza> for StanzaDTO {
     fn from(value: &Stanza) -> Self {
-        StanzaDto::from_stanza_common(value)   
+        StanzaDTO::from_stanza_common(value)
     }
 }

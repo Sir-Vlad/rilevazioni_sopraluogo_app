@@ -1,4 +1,4 @@
-import CardTableStanze  from "@/card-table-stanze.tsx";
+import CardTableStanze  from "@/pages/DashboardPage/card-table-stanze.tsx";
 import CardDataEdificio from "@/pages/DashboardPage/card-data-edificio.tsx";
 
 const SectionData = () => {

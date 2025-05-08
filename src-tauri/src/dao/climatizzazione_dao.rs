@@ -1,35 +1,89 @@
+use crate::dao::crud_operations::{GetAll, Insert};
 use crate::dao::entity::Climatizzazione;
-use rusqlite::Connection;
+use crate::dao::schema_operations::CreateTable;
+use crate::dao::utils::DAO;
+use crate::database::{convert_param, DatabaseConnection, QueryBuilder, SqlQueryBuilder};
+use crate::utils::AppError;
+use log::info;
 
-pub trait ClimatizzazioneDao {
-    fn get_all(conn: &Connection) -> Result<Vec<Climatizzazione>, String>;
+pub struct ClimatizzazioneDAO;
+
+impl DAO for ClimatizzazioneDAO {
+    fn table_name() -> &'static str {
+        "CLIMATIZZAZIONE"
+    }
 }
 
-pub struct ClimatizzazioneDaoImpl;
+impl CreateTable for ClimatizzazioneDAO {
+    fn create_table<C: DatabaseConnection>(conn: &C) -> Result<(), AppError> {
+        conn.execute(
+            format!(
+                "CREATE TABLE IF NOT EXISTS {}
+                (
+                    ID                    INTEGER PRIMARY KEY AUTOINCREMENT,
+                    CLIMATIZZAZIONE       TEXT    NOT NULL UNIQUE COLLATE NOCASE,
+                    EFFICIENZA_ENERGETICA INTEGER NOT NULL
+                ) STRICT;",
+                Self::table_name()
+            )
+            .as_str(),
+            (),
+        )?;
+        info!("Tabella CLIMATIZZAZIONE creata");
+        Ok(())
+    }
+}
 
-impl ClimatizzazioneDao for ClimatizzazioneDaoImpl {
-    fn get_all(conn: &Connection) -> Result<Vec<Climatizzazione>, String> {
-        let mut stmt = conn
-            .prepare("SELECT * FROM CLIMATIZZAZIONE")
-            .map_err(|e| format!("Errore nella creazione della query: {}", e))?;
+impl GetAll<Climatizzazione> for ClimatizzazioneDAO {
+    fn get_all<C: DatabaseConnection>(conn: &C) -> Result<Vec<Climatizzazione>, AppError> {
+        let (query, _) = QueryBuilder::select().table(Self::table_name()).build()?;
+
+        let mut stmt = conn.prepare(query.as_str())?;
 
         let result: Result<Vec<Climatizzazione>, rusqlite::Error> = stmt
             .query_map([], |row| {
                 Ok(Climatizzazione {
-                    id: row.get::<_, u64>(0)?,
-                    climatizzazione: row.get::<_, String>(1)?,
-                    efficienza_energetica: row.get::<_, i8>(2)?,
+                    id: row.get::<_, u64>("ID")?,
+                    climatizzazione: row.get::<_, String>("CLIMATIZZAZIONE")?,
+                    efficienza_energetica: row.get::<_, u8>("EFFICIENZA_ENERGETICA")?,
                 })
-            })
-            .expect("Errore nella lettura dei dati di tipo materiale")
+            })?
             .collect();
-        result.map_err(|e| e.to_string())
+        result.map_err(AppError::from)
+    }
+}
+
+impl Insert<Climatizzazione> for ClimatizzazioneDAO {
+    fn insert<C: DatabaseConnection>(
+        conn: &C,
+        item: Climatizzazione,
+    ) -> Result<Climatizzazione, AppError> {
+        let builder = QueryBuilder::insert()
+            .table(Self::table_name())
+            .columns(vec!["CLIMATIZZAZIONE", "EFFICIENZA_ENERGETICA"])
+            .values(vec![
+                item.climatizzazione.clone().into(),
+                item.efficienza_energetica.into(),
+            ])
+            .returning("ID");
+        let (query, param) = builder.build()?;
+        let mut stmt = conn.prepare(query.as_str())?;
+        let mut res = stmt.query_map(rusqlite::params_from_iter(convert_param(param)), |row| {
+            row.get::<_, u64>(0)
+        })?;
+        let id = res.next().unwrap()?;
+        Ok(Climatizzazione {
+            id,
+            climatizzazione: item.climatizzazione,
+            efficienza_energetica: item.efficienza_energetica,
+        })
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use rusqlite::Connection;
 
     fn setup_db() -> Connection {
         let conn = Connection::open_in_memory().unwrap();
@@ -73,7 +127,7 @@ mod tests {
     fn get_all() {
         let conn = setup_db();
         let excepted_data = insert_test_data(&conn);
-        let actual_data = ClimatizzazioneDaoImpl::get_all(&conn).unwrap();
+        let actual_data = ClimatizzazioneDAO::get_all(&conn).unwrap();
 
         assert_eq!(actual_data.len(), excepted_data.len());
 
@@ -87,7 +141,7 @@ mod tests {
         let conn = setup_db();
 
         // Test
-        let risultati = ClimatizzazioneDaoImpl::get_all(&conn).unwrap();
+        let risultati = ClimatizzazioneDAO::get_all(&conn).unwrap();
 
         // Verifica
         assert!(risultati.is_empty());
@@ -99,7 +153,7 @@ mod tests {
         let conn = Connection::open_in_memory().unwrap();
 
         // Il metodo dovrebbe restituire un errore
-        let risultato = ClimatizzazioneDaoImpl::get_all(&conn);
+        let risultato = ClimatizzazioneDAO::get_all(&conn);
         assert!(risultato.is_err());
     }
 }

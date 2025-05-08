@@ -1,9 +1,14 @@
-import CardProgress   from "@/pages/DashboardPage/card-progress.tsx";
-import { useInfissi } from "@/context/UseProvider.tsx";
-import { useMemo }    from "react";
+import CardProgress             from "@/pages/DashboardPage/card-progress.tsx";
+import { useInfissi, useTypes } from "@/context/UseProvider.tsx";
+import { useMemo }              from "react";
 
 const SectionProgressGraph = () => {
     const infissiContext = useInfissi();
+    const {
+              materialiInfissiType,
+              vetroInfissiType
+          } = useTypes();
+
 
     const materialiValues = useMemo(
         () => {
@@ -12,12 +17,18 @@ const SectionProgressGraph = () => {
                 const materiali = infisso.materiale;
                 conteggioMateriali.set(materiali, (conteggioMateriali.get(materiali) ?? 0) + 1);
             });
+            materialiInfissiType.forEach(material => {
+                if (!conteggioMateriali.has(material)) {
+                    conteggioMateriali.set(material, 0);
+                }
+            });
+
             return Array.from(conteggioMateriali.entries()).map(([ key, value ]) => ({
                 label: key,
                 value: value
             }));
         },
-        [ infissiContext.data ]
+        [ infissiContext.data, materialiInfissiType ]
     );
 
     const vetroValues = useMemo(
@@ -27,12 +38,17 @@ const SectionProgressGraph = () => {
                 const vetro = infisso.vetro;
                 conteggioMateriali.set(vetro, (conteggioMateriali.get(vetro) ?? 0) + 1);
             });
+            vetroInfissiType.forEach(material => {
+                if (!conteggioMateriali.has(material)) {
+                    conteggioMateriali.set(material, 0);
+                }
+            });
             return Array.from(conteggioMateriali.entries()).map(([ key, value ]) => ({
                 label: key,
                 value: value
             }));
         },
-        [ infissiContext.data ]
+        [ infissiContext.data, vetroInfissiType ]
     );
 
 

@@ -23,7 +23,8 @@ export function SectionCards() {
                 return totale + (infisso.altezza * infisso.larghezza) / 10000;
             }
             return totale;
-        }, 0);
+        }, 0)
+        .toFixed(2);
 
 
     return (<div

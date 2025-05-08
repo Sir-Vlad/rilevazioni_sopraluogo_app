@@ -1,6 +1,10 @@
+use crate::dao::crud_operations::Insert;
+use crate::dao::{create_tables, create_views};
+use crate::dao::{entity::TipoInfisso, TipoInfissoDAO};
+use crate::database::{DatabaseConnection, QueryParam};
 use dirs_next::document_dir;
-use log::{info, warn};
-use rusqlite::{params, Connection};
+use log::{error, info, warn};
+use rusqlite::{params, Connection, Transaction};
 use serde::Deserialize;
 use std::collections::HashMap;
 use std::fs;
@@ -33,42 +37,58 @@ pub fn get_db_path(db_name: String) -> Result<String, String> {
     Err("Impossibile determinare la directory dei documenti".to_string())
 }
 
-pub fn init_database(app_handle: AppHandle, conn: &Connection) -> Result<(), rusqlite::Error> {
-    let path = app_handle
-        .path()
-        .resolve(
-            "resources/query_create_database.sql",
-            BaseDirectory::Resource,
-        )
-        .expect("Non è possibile costruire il database");
+pub fn init_database(app_handle: AppHandle, tx: &Transaction) -> Result<(), String> {
+    create_tables(tx).map_err(|e| {
+        error!("{}", e);
+        e.to_string()
+    })?;
+    create_views(tx).map_err(|e| {
+        error!("{}", e);
+        e.to_string()
+    })?;
 
-    let query_content = fs::read_to_string(path).expect("Impossibile leggere il file sql");
-    conn.execute_batch(&query_content)?;
-
-    let type_data = match retrieve_type_to_file(app_handle, "type.json") {
-        Ok(data) => data,
-        Err(e) => {
-            return Err(rusqlite::Error::InvalidParameterName(format!(
-                "JsonParseError: {}",
-                e
-            )))
-        }
-    };
+    let type_data = retrieve_type_to_file(app_handle, "type.json")?;
     for (table_name, data) in type_data {
         match table_name.as_str() {
             "materiale_infisso" => {
-                insert_values_into_table(conn, table_name.as_str(), "MATERIALE", data)
+                insert_values_into_table(tx, table_name.as_str(), "MATERIALE", data)?
             }
-            "vetro_infisso" => insert_values_into_table(conn, table_name.as_str(), "VETRO", data),
+            "vetro_infisso" => insert_values_into_table(tx, table_name.as_str(), "VETRO", data)?,
             "climatizzazione" => {
-                insert_values_into_table(conn, table_name.as_str(), "CLIMATIZZAZIONE", data)
+                insert_values_into_table(tx, table_name.as_str(), "CLIMATIZZAZIONE", data)?
             }
             "illuminazione" => {
-                insert_values_into_table(conn, table_name.as_str(), "LAMPADINA", data)
+                insert_values_into_table(tx, table_name.as_str(), "LAMPADINA", data)?
             }
             _ => warn!("Tabella {} non presente", table_name),
         }
     }
+
+    for tipo in vec![
+        "FINESTRA",
+        "PORTA",
+        "VETRATA",
+        "PORTA-FINESTRA",
+        "LUCERNARIO",
+    ]
+    .into_iter()
+    {
+        let tipo_infisso = TipoInfisso {
+            id: 0,
+            nome: tipo.to_string(),
+        };
+        TipoInfissoDAO::insert(tx, tipo_infisso)?;
+    }
+    info!("Tabella TIPO_INFISSO popolata con successo");
+
+    Ok(())
+}
+
+pub fn set_pragma(connection: &Connection) -> Result<(), rusqlite::Error> {
+    connection.pragma_update(None, "foreign_keys", "ON")?;
+    info!("Foreign keys enabled");
+    connection.pragma_update(None, "journal_mode", "WAL")?;
+    info!("Journal mode enabled");
     Ok(())
 }
 
@@ -90,22 +110,36 @@ fn retrieve_type_to_file(app_handle: AppHandle, file_name: &str) -> Result<JsonT
     Ok(data)
 }
 
-fn insert_values_into_table(
-    conn: &Connection,
+fn insert_values_into_table<C: DatabaseConnection>(
+    conn: &C,
     table_name: &str,
     column_name: &str,
     values: Vec<TypeRecord>,
-) {
+) -> Result<(), String> {
     let query = format!(
         "INSERT OR IGNORE INTO {}({}, EFFICIENZA_ENERGETICA) VALUES (?1, ?2)",
         table_name, column_name
     );
     let mut stmt = conn
         .prepare(&query)
-        .expect("Errore nella preparazione della query per inserire i dati nel database");
+        .map_err(|_e| "Errore nella preparazione della query per inserire i dati nel database")?;
     for value in values {
         stmt.execute(params![value.value, value.efficienza_energetica])
-            .expect("Errore nell'inserimento dei dati nel database");
+            .map_err(|_e| "Errore nell'inserimento dei dati nel database")?;
     }
     info!("Tabella {} popolata con successo", table_name);
+    Ok(())
+}
+
+pub fn convert_param(params: Vec<&QueryParam>) -> Vec<rusqlite::types::Value> {
+    params
+        .iter()
+        .map(|p| match p {
+            QueryParam::String(s) => rusqlite::types::Value::Text(s.clone()),
+            QueryParam::Integer(i) => rusqlite::types::Value::Integer(*i),
+            QueryParam::Float(f) => rusqlite::types::Value::Real(*f),
+            QueryParam::Boolean(b) => rusqlite::types::Value::Integer(if *b { 1 } else { 0 }),
+            QueryParam::Null => rusqlite::types::Value::Null,
+        })
+        .collect()
 }
