@@ -7,6 +7,7 @@ use crate::dao::{
 use crate::dao::dati_stanze_view_dao::DatiStanzeViewDAO;
 use crate::dao::mat_min_eff_stanza_view_dao::MatMinEffStanzaViewDao;
 use crate::dao::mq_infissi_view_dao::MqInfissiViewDAO;
+use crate::dao::tipo_infisso_dao::TipoInfissoDAO;
 use crate::dao::vet_min_eff_stanza_view_dao::VetMinEffStanzaViewDao;
 use crate::database::DatabaseConnection;
 use crate::utils::AppError;
@@ -73,6 +74,7 @@ pub fn create_tables<C: DatabaseConnection>(conn: &C) -> Result<(), AppError> {
 }
 
 pub fn create_types_tables<C: DatabaseConnection>(conn: &C) -> Result<(), AppError> {
+    TipoInfissoDAO::create_table(conn)?;
     MaterialeInfissoDAO::create_table(conn)?;
     VetroInfissoDAO::create_table(conn)?;
     IlluminazioneDAO::create_table(conn)?;

@@ -1,4 +1,6 @@
+use crate::dao::crud_operations::Insert;
 use crate::dao::{create_tables, create_views};
+use crate::dao::{entity::TipoInfisso, TipoInfissoDAO};
 use crate::database::{DatabaseConnection, QueryParam};
 use dirs_next::document_dir;
 use log::{error, info, warn};
@@ -61,6 +63,24 @@ pub fn init_database(app_handle: AppHandle, tx: &Transaction) -> Result<(), Stri
             _ => warn!("Tabella {} non presente", table_name),
         }
     }
+
+    for tipo in vec![
+        "FINESTRA",
+        "PORTA",
+        "VETRATA",
+        "PORTA-FINESTRA",
+        "LUCERNARIO",
+    ]
+    .into_iter()
+    {
+        let tipo_infisso = TipoInfisso {
+            id: 0,
+            nome: tipo.to_string(),
+        };
+        TipoInfissoDAO::insert(tx, tipo_infisso)?;
+    }
+    info!("Tabella TIPO_INFISSO popolata con successo");
+
     Ok(())
 }
 

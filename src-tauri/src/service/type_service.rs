@@ -1,7 +1,9 @@
 use crate::dao::crud_operations::GetAll;
-use crate::dao::{ClimatizzazioneDAO, IlluminazioneDAO, MaterialeInfissoDAO, VetroInfissoDAO};
+use crate::dao::{ClimatizzazioneDAO, IlluminazioneDAO, MaterialeInfissoDAO, TipoInfissoDAO, VetroInfissoDAO};
 use crate::database::Database;
-use crate::dto::{ClimatizzazioneDTO, IlluminazioneDTO, MaterialeInfissoDTO, VetroInfissoDTO, DTO};
+use crate::dto::{
+    ClimatizzazioneDTO, IlluminazioneDTO, MaterialeInfissoDTO, TipoInfissiDTO, VetroInfissoDTO, DTO,
+};
 use crate::service::utils::RetrieveManyService;
 use crate::utils::AppError;
 use serde::Serialize;
@@ -38,6 +40,9 @@ impl TypeService for TypeServiceImpl {
 
         let illuminazione = convert_to_json(IlluminazioneService::retrieve_many(db.clone())?);
         result_map.insert("illuminazione".to_string(), illuminazione);
+
+        let tipo_infissi = convert_to_json(TipoInfissoService::retrieve_many(db.clone())?);
+        result_map.insert("tipo_infissi".to_string(), tipo_infissi);
 
         Ok(result_map)
     }
@@ -118,6 +123,26 @@ impl RetrieveManyService<IlluminazioneDTO> for IlluminazioneService {
                 .map(|x| IlluminazioneDTO {
                     lampadina: x.lampadina.clone(),
                     efficienza_energetica: x.efficienza_energetica,
+                })
+                .collect())
+        } else {
+            Err(AppError::DatabaseNotInitialized)
+        }
+    }
+}
+
+struct TipoInfissoService;
+
+impl RetrieveManyService<TipoInfissiDTO> for TipoInfissoService {
+    fn retrieve_many(db: State<'_, Database>) -> Result<Vec<TipoInfissiDTO>, AppError> {
+        let conn = db.get_conn();
+        if let Some(conn) = conn.as_ref() {
+            let result = TipoInfissoDAO::get_all(conn)?;
+
+            Ok(result
+                .iter()
+                .map(|x| TipoInfissiDTO {
+                    nome: x.nome.clone(),
                 })
                 .collect())
         } else {

@@ -2,7 +2,9 @@ use crate::dao::crud_operations::{GetAll, Insert, Update};
 use crate::dao::entity::Infisso;
 use crate::dao::utils::schema_operations::CreateTable;
 use crate::dao::utils::DAO;
-use crate::database::{convert_param, DatabaseConnection, QueryBuilder, SqlQueryBuilder};
+use crate::database::{
+    convert_param, DatabaseConnection, QueryBuilder, SqlQueryBuilder, WhereBuilder,
+};
 use crate::utils::AppError;
 use log::{error, info};
 
@@ -21,17 +23,18 @@ impl CreateTable for InfissoDAO {
                 "CREATE TABLE IF NOT EXISTS {}
                 (
                     ID        TEXT PRIMARY KEY,
-                    TIPO      TEXT    NOT NULL CHECK ( TIPO IN ('PORTA', 'FINESTRA') ) DEFAULT 'FINESTRA',
+                    TIPO      TEXT    NOT NULL REFERENCES TIPO_INFISSO (NOME),
                     ALTEZZA   INTEGER NOT NULL CHECK ( ALTEZZA >= 0 ),
                     LARGHEZZA INTEGER NOT NULL CHECK ( LARGHEZZA >= 0 ),
                     MATERIALE TEXT    NOT NULL REFERENCES MATERIALE_INFISSO (MATERIALE),
                     VETRO     TEXT    NOT NULL REFERENCES VETRO_INFISSO (VETRO),
                     MQ        REAL GENERATED ALWAYS AS ((ALTEZZA * LARGHEZZA) / 10000.0) VIRTUAL,
                     UNIQUE (TIPO, ALTEZZA, LARGHEZZA, MATERIALE, VETRO)
-                ) STRICT;", 
+                ) STRICT;",
                 Self::table_name()
-            ).as_str(),
-            ()
+            )
+            .as_str(),
+            (),
         )?;
         info!("Tabella INFISSO creata");
         Ok(())
@@ -95,7 +98,7 @@ impl Insert<Infisso> for InfissoDAO {
             }
             Err(e) => {
                 error!("Errore durante l'inserimento {{ infisso }}: {}", e);
-                Err(AppError::from(e))
+                Err(e)
             }
         }
     }
@@ -108,7 +111,8 @@ impl Update<Infisso> for InfissoDAO {
             .set("ALTEZZA", item.altezza)
             .set("LARGHEZZA", item.larghezza)
             .set("MATERIALE", item.materiale.clone())
-            .set("VETRO", item.vetro.clone());
+            .set("VETRO", item.vetro.clone())
+            .where_eq("ID", item.id.clone());
         let (query, params) = builder.build()?;
 
         match conn.execute(
@@ -121,7 +125,7 @@ impl Update<Infisso> for InfissoDAO {
             }
             Err(e) => {
                 error!("Errore durante l'aggiornamento {{ infisso }}: {}", e);
-                Err(AppError::from(e))
+                Err(e)
             }
         }
     }
