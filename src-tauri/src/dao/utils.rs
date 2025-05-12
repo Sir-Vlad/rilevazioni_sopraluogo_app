@@ -1,16 +1,17 @@
+use crate::dao::dati_stanze_view_dao::DatiStanzeViewDAO;
+use crate::dao::mat_min_eff_stanza_view_dao::MatMinEffStanzaViewDao;
+use crate::dao::mq_infissi_view_dao::MqInfissiViewDAO;
 use crate::dao::schema_operations::{CreateTable, CreateView};
+use crate::dao::tipo_infisso_dao::TipoInfissoDAO;
+use crate::dao::vet_min_eff_stanza_view_dao::VetMinEffStanzaViewDao;
 use crate::dao::{
     AnnotazioneEdificioDAO, AnnotazioneInfissoDAO, AnnotazioneStanzaDAO, ClimatizzazioneDAO,
     EdificioDAO, FotovoltaicoDAO, IlluminazioneDAO, InfissoDAO, MaterialeInfissoDAO,
     StanzaConInfissiDao, StanzaDAO, UtenzeDAO, VetroInfissoDAO,
 };
-use crate::dao::dati_stanze_view_dao::DatiStanzeViewDAO;
-use crate::dao::mat_min_eff_stanza_view_dao::MatMinEffStanzaViewDao;
-use crate::dao::mq_infissi_view_dao::MqInfissiViewDAO;
-use crate::dao::tipo_infisso_dao::TipoInfissoDAO;
-use crate::dao::vet_min_eff_stanza_view_dao::VetMinEffStanzaViewDao;
 use crate::database::DatabaseConnection;
 use crate::utils::AppError;
+use chrono::{DateTime, Local, NaiveDateTime, TimeZone, Utc};
 
 pub trait DAO {
     fn table_name() -> &'static str;
@@ -88,4 +89,11 @@ pub fn create_views<C: DatabaseConnection>(conn: &C) -> Result<(), AppError> {
     MatMinEffStanzaViewDao::create_view(conn)?;
     DatiStanzeViewDAO::create_view(conn)?;
     Ok(())
+}
+
+pub(crate) fn convert_timestamp_to_local(timestamp: String) -> Result<String, AppError> {
+    let naive_dt = NaiveDateTime::parse_from_str(&timestamp, "%Y-%m-%d %H:%M:%S")
+        .map_err(|e| AppError::GenericError(e.to_string()))?;
+    let local_time: DateTime<Local> = DateTime::from(Utc.from_utc_datetime(&naive_dt));
+    Ok(local_time.format("%Y-%m-%d %H:%M:%S").to_string())
 }

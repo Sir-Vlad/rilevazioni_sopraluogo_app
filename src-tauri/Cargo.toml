@@ -33,6 +33,7 @@ rust_xlsxwriter = "0.85.0"
 zip = "=2.5.0"
 tauri-plugin-fs = "2"
 thiserror = "2.0.12"
+chrono = "0.4.41"
 
 [target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
 tauri-plugin-single-instance = "2"

@@ -1,9 +1,10 @@
 use crate::dao::crud_operations::{GetAll, Insert};
 use crate::dao::entity::AnnotazioneInfisso;
 use crate::dao::utils::schema_operations::CreateTable;
-use crate::dao::utils::DAO;
-use crate::database::DatabaseConnection;
+use crate::dao::utils::{convert_timestamp_to_local, DAO};
+use crate::database::{convert_param, DatabaseConnection, QueryBuilder, SqlQueryBuilder};
 use crate::utils::AppError;
+use rusqlite::{params, Error};
 
 pub struct AnnotazioneInfissoDAO;
 
@@ -35,7 +36,19 @@ impl CreateTable for AnnotazioneInfissoDAO {
 
 impl GetAll<AnnotazioneInfisso> for AnnotazioneInfissoDAO {
     fn get_all<C: DatabaseConnection>(conn: &C) -> Result<Vec<AnnotazioneInfisso>, AppError> {
-        todo!()
+        let (query, _) = QueryBuilder::select().table(Self::table_name()).build()?;
+        let mut stmt = conn.prepare(query.as_str())?;
+        let result: Result<Vec<AnnotazioneInfisso>, Error> = stmt
+            .query_map(params![], |row| {
+                Ok(AnnotazioneInfisso {
+                    id: row.get("ID")?,
+                    id_infisso: row.get("ID_STANZA")?,
+                    content: row.get("CONTENT")?,
+                    data: row.get("DATA")?,
+                })
+            })?
+            .collect();
+        result.map_err(AppError::DatabaseError)
     }
 }
 
@@ -44,6 +57,25 @@ impl Insert<AnnotazioneInfisso> for AnnotazioneInfissoDAO {
         conn: &C,
         item: AnnotazioneInfisso,
     ) -> Result<AnnotazioneInfisso, AppError> {
-        todo!()
+        let builder = QueryBuilder::insert()
+            .table(Self::table_name())
+            .columns(vec!["ID_INFISSO", "CONTENT"])
+            .values(vec![
+                item.id_infisso.clone().into(),
+                item.content.clone().into(),
+            ])
+            .returning("ID, DATA");
+        let (query, param) = builder.build()?;
+        let mut stmt = conn.prepare(query.as_str())?;
+        let (id, timestamp) = stmt
+            .query_row(rusqlite::params_from_iter(convert_param(param)), |row| {
+                Ok((row.get::<_, u64>(0)?, row.get::<_, String>(1)?))
+            })?;
+
+        Ok(AnnotazioneInfisso {
+            id,
+            data: Some(convert_timestamp_to_local(timestamp)?),
+            ..item
+        })
     }
 }

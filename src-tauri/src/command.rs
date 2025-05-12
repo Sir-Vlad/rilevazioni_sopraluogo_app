@@ -1,7 +1,13 @@
 pub mod command_tauri {
     use crate::dao::crud_operations::Insert;
-    use crate::dto::UtenzaDTO;
-    use crate::service::{CreateService, RetrieveManyService, UpdateService, UtenzeService};
+    use crate::dto::{
+        AnnotazioneDTO, AnnotazioneEdificioDTO, AnnotazioneInfissoDTO, AnnotazioneStanzaDTO,
+        FotovoltaicoDTO, UtenzaDTO,
+    };
+    use crate::service::{
+        AnnotazioneService, CreateService, FotovoltaicoService, RetrieveManyService, UpdateService,
+        UtenzeService,
+    };
     use crate::utils::AppError;
     use crate::{
         dao::{
@@ -13,8 +19,8 @@ pub mod command_tauri {
             NAME_DIR_DATABASE,
         },
         dto::{
-            ClimatizzazioneDTO, EdificioDTO, IlluminazioneDTO, InfissoDTO, MaterialeInfissoDTO,
-            StanzaDTO, VetroInfissoDTO,
+            EdificioDTO, IlluminazioneDTO, InfissoDTO, MaterialeInfissoDTO, StanzaDTO,
+            VetroInfissoDTO,
         },
         service::{
             EdificioService, ExportData, ExportDatiStanzaToExcel, InfissoService, StanzaService,
@@ -376,19 +382,63 @@ pub mod command_tauri {
     }
 
     /**************************************************************************************************/
-    /************************************ COMMAND PER UTENZE ****************************************/
+    /******************************** COMMAND PER FOTOVOLTAICO ****************************************/
     /**************************************************************************************************/
 
     #[tauri::command]
-    pub fn get_fotovoltaico(db: State<'_, Database>) -> ResultCommand<Vec<UtenzaDTO>> {
-        UtenzeService::retrieve_many(db).map_err(|e| e.to_string())
+    pub fn get_fotovoltaico(db: State<'_, Database>) -> ResultCommand<Vec<FotovoltaicoDTO>> {
+        FotovoltaicoService::retrieve_many(db).map_err(|e| e.to_string())
     }
 
     #[tauri::command]
     pub fn insert_fotovoltaico(
         db: State<'_, Database>,
-        fotovoltaico: UtenzaDTO,
-    ) -> ResultCommand<UtenzaDTO> {
-        UtenzeService::create(db, fotovoltaico).map_err(|e| e.to_string())
+        fotovoltaico: FotovoltaicoDTO,
+    ) -> ResultCommand<FotovoltaicoDTO> {
+        FotovoltaicoService::create(db, fotovoltaico).map_err(|e| e.to_string())
+    }
+
+    /**************************************************************************************************/
+    /************************************ COMMAND PER UTENZE ****************************************/
+    /**************************************************************************************************/
+
+    #[tauri::command]
+    pub fn get_annotazioni(
+        db: State<'_, Database>,
+        table: String,
+    ) -> ResultCommand<Vec<AnnotazioneDTO>> {
+        match table.as_str() {
+            "edificio" => Ok(
+                <AnnotazioneService as RetrieveManyService<AnnotazioneEdificioDTO>>::retrieve_many(
+                    db,
+                )
+                .map_err(|e| e.to_string())?
+                .into_iter()
+                .map(AnnotazioneDTO::from)
+                .collect::<Vec<AnnotazioneDTO>>(),
+            ),
+            "stanza" => Ok(
+                <AnnotazioneService as RetrieveManyService<AnnotazioneStanzaDTO>>::retrieve_many(
+                    db,
+                )
+                .map_err(|e| e.to_string())?
+                .into_iter()
+                .map(AnnotazioneDTO::from)
+                .collect::<Vec<AnnotazioneDTO>>(),
+            ),
+            "infisso" => Ok(
+                <AnnotazioneService as RetrieveManyService<AnnotazioneInfissoDTO>>::retrieve_many(
+                    db,
+                )
+                .map_err(|e| e.to_string())?
+                .into_iter()
+                .map(AnnotazioneDTO::from)
+                .collect::<Vec<AnnotazioneDTO>>(),
+            ),
+            _ => Err(format!(
+                "Tabella {table} non ha le annotazioni",
+                table = table
+            )),
+        }
     }
 }

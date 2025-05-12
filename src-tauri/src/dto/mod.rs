@@ -9,6 +9,7 @@ mod tipo_infisso_dto;
 mod utenze_dto;
 mod utils;
 mod vetro_infisso_dto;
+mod annotazione_dto;
 
 pub use climatizzazione_dto::*;
 pub use edificio_dto::*;
@@ -21,3 +22,4 @@ pub use utenze_dto::*;
 pub use utils::*;
 pub use vetro_infisso_dto::*;
 pub use tipo_infisso_dto::*;
+pub use annotazione_dto::*;
