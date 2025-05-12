@@ -27,7 +27,7 @@ impl StanzaDTO {
             chiave: stanza.chiave.clone(),
             piano: stanza.piano.clone(),
             id_spazio: stanza.id_spazio.clone(),
-            stanza: stanza.stanza.clone(),
+            stanza: stanza.cod_stanza.clone(),
             destinazione_uso: stanza.destinazione_uso.clone(),
             altezza: stanza.altezza,
             spessore_muro: stanza.spessore_muro,
