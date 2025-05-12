@@ -1,4 +1,4 @@
-const TitleCard = ({title}: { title: string }) => {
+const TitleCard = ({ title }: { title: string }) => {
     return <h1 className="text-xl font-bold tracking-tight">{ title }</h1>;
 };
 

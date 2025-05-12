@@ -1,18 +1,18 @@
-import { EdificioContext, EdificioContextType }              from "@/context/Context.tsx";
-import * as React                                            from "react";
+import { EdificioContext, EdificioContextType } from "@/context/Context.tsx";
+import * as React from "react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { IEdificio }                                         from "@/models/models.tsx";
-import { useDatabase }                                       from "@/context/UseProvider.tsx";
-import { invoke }                                            from "@tauri-apps/api/core";
-import { useErrorContext }                                   from "@/context/ErrorProvider.tsx";
+import { IEdificio } from "@/models/models.tsx";
+import { useDatabase } from "@/context/UseProvider.tsx";
+import { invoke } from "@tauri-apps/api/core";
+import { useErrorContext } from "@/context/ErrorProvider.tsx";
 
 
-const EdificioProvider = ({children}: { children: React.ReactNode }) => {
+const EdificioProvider = ({ children }: { children: React.ReactNode }) => {
     const [ edifici, setEdifici ] = useState<IEdificio[]>([]);
     const {
-              needReload,
-              registerProvider
-          } = useDatabase();
+        needReload,
+        registerProvider
+    } = useDatabase();
     const providerRef = useRef<{ notifyReloadComplete: () => void; } | null>(null);
     const [ isLoading, setIsLoading ] = useState(true);
     const [ selectedEdificio, setSelectedEdificio ] = useState<string | undefined>(undefined);
@@ -29,14 +29,11 @@ const EdificioProvider = ({children}: { children: React.ReactNode }) => {
             setEdifici(edifici);
             setSelectedEdificio([ ...edifici.map(value => value.chiave) ][0]);
         } catch (e) {
-            if (typeof e === "string") {
-                errorContext.addError(e);
-                console.error(e);
-            }
+            errorContext.addError(e as string);
         } finally {
             setIsLoading(false);
         }
-    }, [errorContext]);
+    }, [ errorContext ]);
 
     // Ricarica i dati quando il database cambia
     useEffect(() => {

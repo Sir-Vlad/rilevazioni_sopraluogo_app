@@ -17,9 +17,9 @@ export const getFileName = (filePath: string): string => {
 export const handleInputNumericChange = <T extends (value: number) => void>(event: ChangeEvent<HTMLInputElement>, onChange: T) => {
     const input = event.target;
     const {
-              value,
-              selectionStart
-          } = input;
+        value,
+        selectionStart
+    } = input;
     if (value.length === 0) {
         onChange(0);
         return;

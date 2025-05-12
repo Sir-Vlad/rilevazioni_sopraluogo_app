@@ -8,24 +8,26 @@ import {
     SidebarMenuAction,
     SidebarMenuButton,
     SidebarMenuItem
-}                                                       from "@/components/ui/sidebar";
-import { useCallback, useEffect, useState }             from "react";
-import { useDatabase }                                  from "@/context/UseProvider.tsx";
-import { invoke }                                       from "@tauri-apps/api/core";
-import { open }                                         from "@tauri-apps/plugin-dialog";
-import { toast }                                        from "sonner";
+} from "@/components/ui/sidebar";
+import { useCallback, useEffect, useState } from "react";
+import { useDatabase } from "@/context/UseProvider.tsx";
+import { invoke } from "@tauri-apps/api/core";
+import { open } from "@tauri-apps/plugin-dialog";
+import { toast } from "sonner";
 import { Check, FileSpreadsheet, MoreHorizontal, Plus } from "lucide-react";
-import { getFileName, getFileNameWithExtension }        from "@/helpers/helpers.ts";
+import { getFileName, getFileNameWithExtension } from "@/helpers/helpers.ts";
 import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
     DropdownMenuTrigger
-}                                                       from "@/components/ui/dropdown-menu";
+} from "@/components/ui/dropdown-menu";
+import { useErrorContext } from "@/context/ErrorProvider.tsx";
 
 export function NavMain() {
-    const [ databasesNameFiles, setDatabasesNameFiles ] = useState<string[]>([]);
     const database = useDatabase();
+    const { addError } = useErrorContext();
+    const [ databasesNameFiles, setDatabasesNameFiles ] = useState<string[]>([]);
     const [ selectedDatabase, setSelectedDatabase ] = useState<string>(database.databaseName);
 
     const retrieveNameDatabases = useCallback(async () => {
@@ -46,12 +48,10 @@ export function NavMain() {
             title    : "Seleziona il file da caricare",
             multiple : false,
             directory: false,
-            filters  : [
-                {
-                    name      : "Excel file",
-                    extensions: [ "xlsx", "xls" ]
-                }
-            ]
+            filters  : [ {
+                name      : "Excel file",
+                extensions: [ "xlsx", "xls" ]
+            } ]
         });
         if (!file) {
             return;
@@ -64,10 +64,9 @@ export function NavMain() {
             });
             const name_db: string = getFileNameWithExtension(path_db);
             setDatabasesNameFiles((prev) => [ ...prev, name_db ]);
-            console.log("Inserimento avvenuto con successo");
             toast.success("Inserimento avvenuto con successo");
         } catch (e) {
-            console.log("Errore durante l'inserimento: ", e);
+            addError(e as string);
             toast.error("Errore durante il cambio di database");
         }
     };
@@ -86,7 +85,7 @@ export function NavMain() {
     return (<SidebarGroup>
         <SidebarGroupLabel>Fascicoli</SidebarGroupLabel>
         <SidebarGroupAction title="Aggiungi Fascicolo" onClick={ () => void addNewFascicolo() }>
-            <Plus /> <span className="sr-only">Aggiungi Fascicolo</span>
+            <Plus/> <span className="sr-only">Aggiungi Fascicolo</span>
         </SidebarGroupAction>
         <SidebarMenu>
             { databasesNameFiles.map((file) => {
@@ -99,11 +98,11 @@ export function NavMain() {
                                                setSelectedDatabase(nameDatabase);
                                            } }>
                             <div className="flex items-center">
-                                <FileSpreadsheet />
+                                <FileSpreadsheet/>
                                 <span>{ Number(nameDatabase) }</span>
                                 <div
                                     className={ `flex w-full justify-end ${ selectedDatabase === nameDatabase ? "" : "hidden" }` }>
-                                    <Check />
+                                    <Check/>
                                 </div>
                             </div>
                         </SidebarMenuButton>
@@ -111,11 +110,12 @@ export function NavMain() {
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                             <SidebarMenuAction>
-                                <MoreHorizontal />
+                                <MoreHorizontal/>
                             </SidebarMenuAction>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent side="right" align="start">
-                            <DropdownMenuItem onClick={ () => void handleExcelExport() } disabled={ selectedDatabase !== nameDatabase }>
+                            <DropdownMenuItem onClick={ () => void handleExcelExport() }
+                                              disabled={ selectedDatabase !== nameDatabase }>
                                 <span>Esporta in excel</span>
                             </DropdownMenuItem>
                         </DropdownMenuContent>

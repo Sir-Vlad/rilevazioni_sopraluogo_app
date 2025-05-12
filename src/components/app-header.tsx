@@ -1,37 +1,22 @@
 import { SidebarIcon } from "lucide-react";
-import {
-    Button
-}                      from "@/components/ui/button";
-import {
-    useSidebar
-}                      from "@/components/ui/sidebar";
-import {
-    NavLink
-}                      from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { useSidebar } from "@/components/ui/sidebar";
+import { NavLink } from "react-router-dom";
 import {
     NavigationMenu,
     NavigationMenuItem,
     NavigationMenuLink,
     NavigationMenuList,
     navigationMenuTriggerStyle
-}                      from "@/components/ui/navigation-menu.tsx";
-import {
-    useDatabase
-}                      from "@/context/UseProvider.tsx";
-import {
-    Separator
-}                      from "@/components/ui/separator.tsx";
-import {
-    ModeToggle
-}                      from "@/components/mode-toggle.tsx";
-import {
-    ReactNode,
-    useMemo
-}                      from "react";
+} from "@/components/ui/navigation-menu.tsx";
+import { useDatabase } from "@/context/UseProvider.tsx";
+import { Separator } from "@/components/ui/separator.tsx";
+import { ModeToggle } from "@/components/mode-toggle.tsx";
+import { ReactNode, useMemo } from "react";
 
 export default function SiteHeader() {
-    const {toggleSidebar} = useSidebar();
-    const {databaseName} = useDatabase();
+    const { toggleSidebar } = useSidebar();
+    const { databaseName } = useDatabase();
 
     const fileSelected = useMemo((): ReactNode => {
         return databaseName !== null ? <>Stai lavorando
@@ -47,9 +32,9 @@ export default function SiteHeader() {
                     size="icon"
                     onClick={ toggleSidebar }
                 >
-                    <SidebarIcon />
+                    <SidebarIcon/>
                 </Button>
-                <Separator orientation="vertical" className="mx-2" />
+                <Separator orientation="vertical" className="mx-2"/>
                 <p>Dashboard</p>
             </div>
             <div className="w-full justify-center align-middle">
@@ -84,8 +69,8 @@ export default function SiteHeader() {
                     </NavigationMenuList>
                 </NavigationMenu>
             </div>
-            <Separator orientation="vertical" className="mx-2" />
-            <ModeToggle />
+            <Separator orientation="vertical" className="mx-2"/>
+            <ModeToggle/>
         </div>
     </header>);
 }

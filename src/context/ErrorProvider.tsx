@@ -13,7 +13,7 @@ interface ErrorContextType {
     removeError: (id: string) => void;
     clearErrors: () => void;
 }
- 
+
 // Creazione del contesto
 const ErrorContext = createContext<ErrorContextType | null>(null);
 
@@ -27,7 +27,7 @@ export const useErrorContext = (): ErrorContextType => {
 };
 
 // Componente provider
-export const ErrorProvider = ({children}: { children: ReactNode }) => {
+export const ErrorProvider = ({ children }: { children: ReactNode }) => {
     const [ errors, setErrors ] = useState<ErrorType[]>([]);
 
     // Funzione per aggiungere un errore

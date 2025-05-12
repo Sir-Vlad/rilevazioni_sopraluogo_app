@@ -7,20 +7,20 @@ import {
     getSortedRowModel,
     SortingState,
     useReactTable
-}                               from "@tanstack/react-table";
-import { IStanza }              from "@/models/models.tsx";
-import { StanzeContext }        from "@/context/Context.tsx";
+} from "@tanstack/react-table";
+import { IStanza } from "@/models/models.tsx";
+import { StanzeContext } from "@/context/Context.tsx";
 import { useContext, useState } from "react";
-import TitlePage                from "@/components/title-page.tsx";
-import CardDataGrid             from "@/components/card-data-grid.tsx";
+import TitlePage from "@/components/title-page.tsx";
+import CardDataGrid from "@/components/card-data-grid.tsx";
 import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
     DropdownMenuTrigger
-}                               from "@/components/ui/dropdown-menu";
-import { Button }               from "@/components/ui/button";
-import { ChevronDown }          from "lucide-react";
+} from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
+import { ChevronDown } from "lucide-react";
 
 const columns: ColumnDef<IStanza>[] = [
     {
@@ -74,7 +74,7 @@ const columns: ColumnDef<IStanza>[] = [
                 <DropdownMenuTrigger asChild>
                     <Button variant="ghost" className="p-0 m-0">
                         ({ values.length })
-                        <ChevronDown className="ml-2 h-4 w-4" />
+                        <ChevronDown className="ml-2 h-4 w-4"/>
                     </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent>
@@ -103,7 +103,7 @@ const Panoramica = () => {
         onColumnFiltersChange: setColumnFilters,
         getFilteredRowModel  : getFilteredRowModel(),
         initialState         : {
-            pagination: {pageSize: 17}
+            pagination: { pageSize: 17 }
         },
         state                : {
             sorting      : sorting,
@@ -115,10 +115,10 @@ const Panoramica = () => {
         <div className="@container/main flex flex-1 flex-col gap-2">
             <div className="flex flex-col gap-3 py-4 md:gap-4 md:py-6">
                 <div className="flex flex-row justify-start items-center px-7 gap-5 mb-4">
-                    <TitlePage title={ "Visualizzazione Stanze" } />
+                    <TitlePage title={ "Visualizzazione Stanze" }/>
                 </div>
                 <div className="px-7">
-                    <CardDataGrid table={ table } />
+                    <CardDataGrid table={ table }/>
                 </div>
             </div>
         </div>

@@ -1,22 +1,22 @@
-import TitleCard                                                         from "@/components/title-card";
-import { Card, CardContent, CardHeader }                                 from "@/components/ui/card.tsx";
+import TitleCard from "@/components/title-card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card.tsx";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table.tsx";
-import { useEdifici, useStanze }                                         from "@/context/UseProvider.tsx";
-import { useMemo }                                                       from "react";
+import { useEdifici, useStanze } from "@/context/UseProvider.tsx";
+import { useMemo } from "react";
 
 const CardTableStanze = () => {
     const stanzeContext = useStanze();
-    const {selectedEdificio} = useEdifici();
+    const { selectedEdificio } = useEdifici();
     const stanze = useMemo(() => {
         const piani = [
             ...new Set(stanzeContext.data
-                                    .filter(value => value.chiave === selectedEdificio)
-                                    .map(stanza => stanza.piano))
+                .filter(value => value.chiave === selectedEdificio)
+                .map(stanza => stanza.piano))
         ];
         return piani.map(piano => {
             const stanzaPerPiano = stanzeContext.data
-                                                .filter(value => value.chiave === selectedEdificio)
-                                                .filter(stanza => stanza.piano === piano);
+                .filter(value => value.chiave === selectedEdificio)
+                .filter(stanza => stanza.piano === piano);
             const stanzeVisitate = stanzaPerPiano.filter(stanza => {
                 if (stanza.altezza === undefined) return false; else return stanza.altezza > 0;
             }).length;
@@ -33,7 +33,7 @@ const CardTableStanze = () => {
 
     return <Card className="@container/card col-span-5">
         <CardHeader>
-            <TitleCard title="Stanze" />
+            <TitleCard title="Stanze"/>
         </CardHeader>
         <CardContent>
             <div className="rounded-md border">

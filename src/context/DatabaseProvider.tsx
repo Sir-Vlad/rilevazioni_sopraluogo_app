@@ -1,16 +1,16 @@
-import * as React                                    from "react";
+import * as React from "react";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { invoke }                                    from "@tauri-apps/api/core";
-import { listen }                                    from "@tauri-apps/api/event";
-import { DatabaseContext, DatabaseContextType }      from "./Context.tsx";
-import { getFileName }                               from "../helpers/helpers.ts";
+import { invoke } from "@tauri-apps/api/core";
+import { listen } from "@tauri-apps/api/event";
+import { DatabaseContext, DatabaseContextType } from "./Context.tsx";
+import { getFileName } from "../helpers/helpers.ts";
 
 interface DatabaseEventPayload {
     type_event: string;
     path: string;
 }
 
-const DatabaseProvider = ({children}: { children: React.ReactNode }) => {
+const DatabaseProvider = ({ children }: { children: React.ReactNode }) => {
     const [ databaseName, setDatabaseName ] = useState<string | null>(null);
     const [ databasePath, setDatabasePath ] = useState<string | null>(null);
     const [ isLoading, setIsLoading ] = useState(false);
@@ -47,9 +47,9 @@ const DatabaseProvider = ({children}: { children: React.ReactNode }) => {
         try {
             setIsLoading(true);
             setError(null);
-            await invoke("switch_database", {dbName});
+            await invoke("switch_database", { dbName });
         } catch (e) {
-            setError("Errore durante il cambio di database: " + e);
+            setError(e as string);
         } finally {
             setIsLoading(false);
         }
@@ -61,7 +61,7 @@ const DatabaseProvider = ({children}: { children: React.ReactNode }) => {
         // @ts-expect-error
         const databaseChangeListener = listen<DatabaseEventPayload>("database-changed", (e: Event<DatabaseEventPayload>) => {
             console.log("Evento ricevuto: ", e);
-            const {payload}: { payload: DatabaseEventPayload } = e;
+            const { payload } = e as { payload: DatabaseEventPayload };
 
             if (payload.type_event === "database_switched") {
                 const databaseName = getFileName(payload.path);

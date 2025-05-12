@@ -1,18 +1,18 @@
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card.tsx";
-import { useEdifici, useInfissi, useStanze }            from "@/context/UseProvider.tsx";
+import { useEdifici, useInfissi, useStanze } from "@/context/UseProvider.tsx";
 
 export function SectionCards() {
     const stanzeContext = useStanze();
     const infissiContext = useInfissi();
-    const {selectedEdificio} = useEdifici();
+    const { selectedEdificio } = useEdifici();
     const totPiani = [
         ...new Set(stanzeContext.data
-                                .filter(value => value.chiave === selectedEdificio)
-                                .map(value => value.piano))
+            .filter(value => value.chiave === selectedEdificio)
+            .map(value => value.piano))
     ].length;
 
     const stanzeEdificioSelezionato = stanzeContext.data
-                                                   .filter(value => value.chiave === selectedEdificio);
+        .filter(value => value.chiave === selectedEdificio);
     const totStanze = stanzeEdificioSelezionato.length;
     const infissiList = stanzeEdificioSelezionato.flatMap(value => value.infissi || []);
     const totInfissi = infissiList.length;

@@ -1,16 +1,16 @@
-import * as React                                            from "react";
+import * as React from "react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { IInfisso }                                          from "../models/models.tsx";
-import { useDatabase }                                       from "./UseProvider.tsx";
-import { invoke }                                            from "@tauri-apps/api/core";
-import { InfissiContext, InfissiContextType }                from "./Context.tsx";
-import { useErrorContext }                                   from "./ErrorProvider.tsx";
+import { IInfisso } from "../models/models.tsx";
+import { useDatabase } from "./UseProvider.tsx";
+import { invoke } from "@tauri-apps/api/core";
+import { InfissiContext, InfissiContextType } from "./Context.tsx";
+import { useErrorContext } from "./ErrorProvider.tsx";
 
-const InfissiProvider = ({children}: { children: React.ReactNode }) => {
+const InfissiProvider = ({ children }: { children: React.ReactNode }) => {
     const {
-              needReload,
-              registerProvider
-          } = useDatabase();
+        needReload,
+        registerProvider
+    } = useDatabase();
     const [ infissi, setInfissi ] = useState<IInfisso[]>([]);
     const providerRef = useRef<{ notifyReloadComplete: () => void; } | null>(null);
     const [ loading, setLoading ] = useState(true);
@@ -26,10 +26,7 @@ const InfissiProvider = ({children}: { children: React.ReactNode }) => {
             const data: IInfisso[] = await invoke("get_infissi");
             setInfissi(data);
         } catch (e) {
-            if (typeof e === "string") {
-                errorContext.addError(e);
-                console.error(e);
-            }
+            errorContext.addError(e as string);
         } finally {
             setLoading(false);
         }
@@ -51,23 +48,21 @@ const InfissiProvider = ({children}: { children: React.ReactNode }) => {
 
     const insertInfisso = useCallback(async (newInfisso: IInfisso) => {
         try {
-            const inserted_infisso: IInfisso = await invoke("insert_infisso", {infisso: newInfisso});
+            const inserted_infisso: IInfisso = await invoke("insert_infisso", { infisso: newInfisso });
             setInfissi((prev) => [ ...prev, inserted_infisso ]);
         } catch (e) {
-            console.error(e);
-            throw e;
+            errorContext.addError(e as string);
         }
-    }, []);
+    }, [ errorContext ]);
 
     const modifyInfisso = useCallback(async (infisso: IInfisso) => {
         try {
-            const inserted_infisso: IInfisso = await invoke("update_infisso", {infisso: infisso});
+            const inserted_infisso: IInfisso = await invoke("update_infisso", { infisso: infisso });
             setInfissi((prev) => [ ...prev.filter(i => i.id !== infisso.id), inserted_infisso ]);
         } catch (e) {
-            console.error(e);
-            throw e;
+            errorContext.addError(e as string);
         }
-    }, []);
+    }, [ errorContext ]);
 
 
     const obj = useMemo(() => {

@@ -1,14 +1,14 @@
-import { Card, CardContent, CardHeader }                                 from "@/components/ui/card.tsx";
+import { Card, CardContent, CardHeader } from "@/components/ui/card.tsx";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table.tsx";
-import TitleCard                                                         from "@/components/title-card.tsx";
-import { useFotovoltaico }                                               from "@/context/UseProvider.tsx";
+import TitleCard from "@/components/title-card.tsx";
+import { useFotovoltaico } from "@/context/UseProvider.tsx";
 
 const CardFotovoltaico = () => {
     const fotovoltaicoContext = useFotovoltaico();
 
     return <Card>
         <CardHeader>
-            <TitleCard title="Fotovoltaico" />
+            <TitleCard title="Fotovoltaico"/>
         </CardHeader>
         <CardContent>
             <div className="rounded-md border">

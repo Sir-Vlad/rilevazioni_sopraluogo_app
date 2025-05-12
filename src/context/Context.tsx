@@ -1,4 +1,4 @@
-import { createContext }                                        from "react";
+import { createContext } from "react";
 import { IEdificio, IFotovoltaico, IInfisso, IStanza, IUtenza } from "../models/models.tsx";
 
 export interface DatabaseContextType {

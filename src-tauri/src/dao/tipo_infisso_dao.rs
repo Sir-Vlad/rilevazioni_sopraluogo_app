@@ -1,11 +1,11 @@
-use log::info;
 use crate::dao::crud_operations::{GetAll, Insert};
 use crate::dao::entity::TipoInfisso;
 use crate::dao::schema_operations::CreateTable;
 use crate::dao::utils::DAO;
 use crate::database::{DatabaseConnection, QueryBuilder, SqlQueryBuilder};
 use crate::utils::AppError;
-use rusqlite::{params, ToSql};
+use log::info;
+use rusqlite::params;
 
 pub struct TipoInfissoDAO;
 

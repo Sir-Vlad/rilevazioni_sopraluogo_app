@@ -1,14 +1,14 @@
-import { Card, CardContent, CardHeader }                                 from "@/components/ui/card.tsx";
+import { Card, CardContent, CardHeader } from "@/components/ui/card.tsx";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table.tsx";
-import TitleCard                                                         from "@/components/title-card.tsx";
-import { useUtenze }                                                     from "@/context/UseProvider.tsx";
+import TitleCard from "@/components/title-card.tsx";
+import { useUtenze } from "@/context/UseProvider.tsx";
 
 const CardUtenzeEdificio = () => {
     const utenzeContext = useUtenze();
 
     return <Card>
         <CardHeader>
-            <TitleCard title="Utenze" />
+            <TitleCard title="Utenze"/>
         </CardHeader>
         <CardContent>
             <div className="rounded-md border">

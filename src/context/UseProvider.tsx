@@ -7,7 +7,7 @@ import {
     StanzeContext,
     TypesContext,
     UtenzeContext
-}                     from "./Context.tsx";
+} from "./Context.tsx";
 
 export const useDatabase = () => {
     const context = useContext(DatabaseContext);
