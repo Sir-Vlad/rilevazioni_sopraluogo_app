@@ -1,16 +1,16 @@
-import {Card, CardContent, CardHeader} from "@/components/ui/card";
-import {z} from "zod";
-import {useForm} from "react-hook-form";
-import {zodResolver} from "@hookform/resolvers/zod";
-import {Form, FormField, FormItem, FormLabel, FormMessage} from "@/components/ui/form.tsx";
-import {Input} from "@/components/ui/input.tsx";
-import {ChangeEvent} from "react";
-import {Button} from "@/components/ui/button.tsx";
-import {PlusIcon, Trash} from "lucide-react";
-import {useDatabase, useInfissi, useTypes} from "@/context/UseProvider.tsx";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { z } from "zod";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Form, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form.tsx";
+import { Input } from "@/components/ui/input.tsx";
+import { ChangeEvent } from "react";
+import { Button } from "@/components/ui/button.tsx";
+import { PlusIcon, Trash } from "lucide-react";
+import { useDatabase, useInfissi, useTypes } from "@/context/UseProvider.tsx";
 import CommentsButton from "@/components/comment-button.tsx";
-import {toast} from "sonner";
-import {IInfisso} from "@/models/models.tsx";
+import { toast } from "sonner";
+import { IInfisso } from "@/models/models.tsx";
 import HelpBadge from "@/components/help-badge.tsx";
 import TitleCard from "@/components/title-card.tsx";
 import ClearableSelect from "@/components/clearable-select.tsx";
@@ -36,27 +36,34 @@ const nextAlphabeticalID = (prevID: string | null) => {
 };
 
 const FormInfisso = z.object({
-    tipo: z.string(), altezza: z.number().positive().max(65000, {
+    tipo     : z.string(),
+    altezza  : z.number().positive().max(65000, {
         message: "L'altezza deve essere maggiore di 0 e minore di 65000"
-    }), larghezza: z.number().positive().max(65000, {
+    }),
+    larghezza: z.number().positive().max(65000, {
         message: "La larghezza deve essere maggiore di 0 e minore di 65000"
-    }), materiale: z.string(), vetro: z.string()
+    }),
+    materiale: z.string(),
+    vetro    : z.string()
 });
 
 const CardFormInfisso = () => {
     const {
-        materialiInfissiType, vetroInfissiType, tipoInfissi
+        materialiInfissiType,
+        vetroInfissiType,
+        tipoInfissi
     } = useTypes();
     const infissi = useInfissi();
-    const {error} = useDatabase();
+    const { error } = useDatabase();
 
     const form = useForm<z.infer<typeof FormInfisso>>({
-        resolver: zodResolver(FormInfisso), defaultValues: {
-            tipo: tipoInfissi.find(value => value === "FINESTRA") ?? "",
-            altezza: 0,
+        resolver     : zodResolver(FormInfisso),
+        defaultValues: {
+            tipo     : tipoInfissi.find(value => value === "FINESTRA") ?? "",
+            altezza  : 0,
             larghezza: 0,
             materiale: "",
-            vetro: ""
+            vetro    : ""
         }
     });
 
@@ -64,7 +71,7 @@ const CardFormInfisso = () => {
     const handleInputNumericChange = (event: ChangeEvent<HTMLInputElement>, field: {
         onChange: (value: number) => void
     }) => {
-        const {value} = event.target;
+        const { value } = event.target;
         if (value.length === 0) {
             field.onChange(0);
             return;
@@ -100,7 +107,8 @@ const CardFormInfisso = () => {
             }
         }
         const newInfisso: IInfisso = {
-            ...data, id: nextAlphabeticalID(lastInfissoId)
+            ...data,
+            id: nextAlphabeticalID(lastInfissoId)
         };
         try {
             await infissi.insertInfisso(newInfisso);
@@ -113,17 +121,17 @@ const CardFormInfisso = () => {
 
     function clearForm() {
         form.reset({
-            tipo: tipoInfissi.find(value => value === "FINESTRA") ?? "",
-            altezza: 0,
+            tipo     : tipoInfissi.find(value => value === "FINESTRA") ?? "",
+            altezza  : 0,
             larghezza: 0,
             materiale: "",
-            vetro: ""
+            vetro    : ""
         }, {
-            keepErrors: false,
-            keepDirty: false,
+            keepErrors     : false,
+            keepDirty      : false,
             keepIsSubmitted: false,
-            keepTouched: false,
-            keepIsValid: false,
+            keepTouched    : false,
+            keepIsValid    : false,
             keepSubmitCount: false
 
         });
@@ -139,108 +147,108 @@ const CardFormInfisso = () => {
                     <TitleCard title="Inserisci Infisso"/>
                     <CommentsButton/>
                     <div className="flex flex-1 justify-end">
-                        <Button type="button" className="dark:text-white" variant="secondary" onClick={clearForm}>
+                        <Button type="button" className="dark:text-white" variant="secondary" onClick={ clearForm }>
                             <Trash/> Pulisci Form
                         </Button>
                     </div>
                 </div>
             </CardHeader>
             <CardContent>
-                <Form {...form}>
-                    <form onSubmit={form.handleSubmit(onSubmit)}>
+                <Form { ...form }>
+                    <form onSubmit={ form.handleSubmit(onSubmit) }>
                         <div className="grid grid-cols-12 gap-5">
                             <div className="row-start-1 col-span-12">
                                 <div className="grid grid-cols-12 gap-5">
-                                    <FormField control={form.control}
+                                    <FormField control={ form.control }
                                                name="tipo"
-                                               render={({field}) => (<div className="col-span-6">
+                                               render={ ({ field }) => (<div className="col-span-6">
                                                    <FormItem>
                                                        <FormLabel>Tipo</FormLabel>
-                                                       <ClearableSelect onChange={field.onChange}
-                                                                        value={field.value}
-                                                                        options={tipoInfissi}
-                                                                        onClear={() => {
+                                                       <ClearableSelect onChange={ field.onChange }
+                                                                        value={ field.value }
+                                                                        options={ tipoInfissi }
+                                                                        onClear={ () => {
                                                                             form.reset({
                                                                                 "tipo": tipoInfissi.find(value => value === "FINESTRA") ?? ""
                                                                             });
-                                                                        }}
+                                                                        } }
                                                        />
                                                    </FormItem>
-                                               </div>)}/>
+                                               </div>) }/>
                                 </div>
                             </div>
                             <div className="row-start-2 col-span-12">
                                 <div className="grid grid-cols-12 gap-5">
                                     <FormField
-                                        control={form.control}
+                                        control={ form.control }
                                         name="altezza"
-                                        render={({field}) => (<div className="col-span-6">
+                                        render={ ({ field }) => (<div className="col-span-6">
                                             <FormItem>
                                                 <FormLabel className="flex items-center">
                                                     <p>Altezza</p>
                                                     <HelpBadge message="Il valore va inserito in cm"/>
                                                 </FormLabel>
-                                                <Input value={field.value}
-                                                       onChange={e => handleInputNumericChange(e, field)}
+                                                <Input value={ field.value }
+                                                       onChange={ e => handleInputNumericChange(e, field) }
                                                 />
                                                 <FormMessage/>
                                             </FormItem>
-                                        </div>)}
+                                        </div>) }
                                     />
                                     <FormField
-                                        control={form.control}
+                                        control={ form.control }
                                         name="larghezza"
-                                        render={({field}) => (<div className="col-span-6">
+                                        render={ ({ field }) => (<div className="col-span-6">
                                             <FormItem>
                                                 <FormLabel className="flex items-center">
                                                     <p>Larghezza</p>
                                                     <HelpBadge message="Il valore va inserito in cm"/>
                                                 </FormLabel>
-                                                <Input value={field.value}
-                                                       onChange={e => handleInputNumericChange(e, field)}
+                                                <Input value={ field.value }
+                                                       onChange={ e => handleInputNumericChange(e, field) }
                                                 />
                                                 <FormMessage/>
                                             </FormItem>
-                                        </div>)}
+                                        </div>) }
                                     />
                                 </div>
                             </div>
-                            {/*  Materiale e Vetro  */}
+                            {/*  Materiale e Vetro  */ }
                             <div className="row-start-3 col-span-12">
                                 <div className="grid grid-cols-12 gap-5">
                                     <FormField
-                                        control={form.control}
+                                        control={ form.control }
                                         name="materiale"
-                                        render={({field}) => (<div className="col-span-6">
+                                        render={ ({ field }) => (<div className="col-span-6">
                                             <FormItem>
                                                 <FormLabel>Materiale</FormLabel>
-                                                <ClearableSelect onChange={field.onChange}
-                                                                 options={materialiInfissiType} value={field.value}
-                                                                 onClear={() => {
+                                                <ClearableSelect onChange={ field.onChange }
+                                                                 options={ materialiInfissiType } value={ field.value }
+                                                                 onClear={ () => {
                                                                      form.reset({
                                                                          "materiale": ""
                                                                      });
-                                                                 }}/>
+                                                                 } }/>
                                                 <FormMessage/>
                                             </FormItem>
-                                        </div>)}
+                                        </div>) }
                                     />
                                     <FormField
-                                        control={form.control}
+                                        control={ form.control }
                                         name="vetro"
-                                        render={({field}) => (<div className="col-span-6">
+                                        render={ ({ field }) => (<div className="col-span-6">
                                             <FormItem>
                                                 <FormLabel>Vetro</FormLabel>
-                                                <ClearableSelect onChange={field.onChange}
-                                                                 options={vetroInfissiType} value={field.value}
-                                                                 onClear={() => {
+                                                <ClearableSelect onChange={ field.onChange }
+                                                                 options={ vetroInfissiType } value={ field.value }
+                                                                 onClear={ () => {
                                                                      form.reset({
                                                                          "vetro": ""
                                                                      });
-                                                                 }}/>
+                                                                 } }/>
                                                 <FormMessage/>
                                             </FormItem>
-                                        </div>)}
+                                        </div>) }
                                     />
                                 </div>
                             </div>

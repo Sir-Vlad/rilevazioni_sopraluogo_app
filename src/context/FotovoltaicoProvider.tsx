@@ -1,16 +1,16 @@
-import * as React                                            from "react";
+import * as React from "react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { FotovoltaicoContext, FotovoltaicoContextType }      from "@/context/Context.tsx";
-import { IFotovoltaico }                                     from "@/models/models.tsx";
-import { useDatabase }                                       from "@/context/UseProvider.tsx";
-import { invoke }                                            from "@tauri-apps/api/core";
-import { useErrorContext }                                   from "@/context/ErrorProvider.tsx";
+import { FotovoltaicoContext, FotovoltaicoContextType } from "@/context/Context.tsx";
+import { IFotovoltaico } from "@/models/models.tsx";
+import { useDatabase } from "@/context/UseProvider.tsx";
+import { invoke } from "@tauri-apps/api/core";
+import { useErrorContext } from "@/context/ErrorProvider.tsx";
 
-const FotovoltaicoProvider = ({children}: { children: React.ReactNode }) => {
+const FotovoltaicoProvider = ({ children }: { children: React.ReactNode }) => {
     const {
-              needReload,
-              registerProvider
-          } = useDatabase();
+        needReload,
+        registerProvider
+    } = useDatabase();
     const providerRef = useRef<{ notifyReloadComplete: () => void; } | null>(null);
     const [ fotovoltaico, setFotovoltaico ] = useState<IFotovoltaico[]>([]);
     const [ loading, setLoading ] = useState(true);
@@ -26,10 +26,7 @@ const FotovoltaicoProvider = ({children}: { children: React.ReactNode }) => {
             const fotovoltaico: IFotovoltaico[] = await invoke("get_fotovoltaico");
             setFotovoltaico(fotovoltaico);
         } catch (e) {
-            if (typeof e === "string") {
-                errorContext.addError(e);
-                console.error(e);
-            }
+            errorContext.addError(e as string);
         } finally {
             setLoading(false);
         }

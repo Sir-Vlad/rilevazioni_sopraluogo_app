@@ -1,17 +1,17 @@
-import * as React                                            from "react";
+import * as React from "react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useDatabase }                                       from "./UseProvider.tsx";
-import { IStanza }                                           from "../models/models.tsx";
-import { IStanzaContext, StanzeContext }                     from "./Context.tsx";
-import { invoke }                                            from "@tauri-apps/api/core";
-import { toast }                                             from "sonner";
-import { useErrorContext }                                   from "@/context/ErrorProvider.tsx";
+import { useDatabase } from "./UseProvider.tsx";
+import { IStanza } from "../models/models.tsx";
+import { IStanzaContext, StanzeContext } from "./Context.tsx";
+import { invoke } from "@tauri-apps/api/core";
+import { toast } from "sonner";
+import { useErrorContext } from "@/context/ErrorProvider.tsx";
 
-const StanzeProvider = ({children}: { children: React.ReactNode }) => {
+const StanzeProvider = ({ children }: { children: React.ReactNode }) => {
     const {
-              needReload,
-              registerProvider
-          } = useDatabase();
+        needReload,
+        registerProvider
+    } = useDatabase();
     const providerRef = useRef<{ notifyReloadComplete: () => void; } | null>(null);
     const [ stanze, setStanze ] = useState<IStanza[]>([]);
     const [ loading, setLoading ] = useState(true);
@@ -27,10 +27,7 @@ const StanzeProvider = ({children}: { children: React.ReactNode }) => {
             const data: IStanza[] = await invoke("get_stanze");
             setStanze(data);
         } catch (e) {
-            if (typeof e === "string") {
-                errorContext.addError(e);
-                console.error(e);
-            }
+            errorContext.addError(e as string);
         } finally {
             setLoading(false);
         }
@@ -50,7 +47,7 @@ const StanzeProvider = ({children}: { children: React.ReactNode }) => {
 
     const updateStanza = useCallback(async (newStanza: IStanza) => {
         try {
-            await invoke("update_stanza", {stanza: newStanza});
+            await invoke("update_stanza", { stanza: newStanza });
             setStanze((prev) => {
                 const newStanzaIndex = prev.findIndex(s => s.id === newStanza.id);
                 if (newStanzaIndex !== -1) {
@@ -61,18 +58,13 @@ const StanzeProvider = ({children}: { children: React.ReactNode }) => {
             toast.success("Stanza aggiornata");
         } catch (e) {
             if (e === "Nessun record aggiornato") {
-                toast.info("Nessun record aggiornato");
+                toast.info(e as string);
                 return;
             }
-            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-            // @ts-expect-error
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-            console.error("Errore durante l'aggiornamento della stanza: " + e.toString());
-            toast.error("Errore durante l'aggiornamento della stanza");
-            throw e;
+            errorContext.addError(e as string);
         }
 
-    }, []);
+    }, [ errorContext ]);
 
 
     const obj: IStanzaContext = useMemo(() => {

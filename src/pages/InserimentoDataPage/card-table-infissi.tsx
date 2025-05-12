@@ -1,4 +1,4 @@
-import { useInfissi, useTypes }                                               from "@/context/UseProvider.tsx";
+import { useInfissi, useTypes } from "@/context/UseProvider.tsx";
 import {
     CellContext,
     ColumnDef,
@@ -13,16 +13,16 @@ import {
     RowData,
     SortingState,
     useReactTable
-}                                                                             from "@tanstack/react-table";
-import { IInfisso }                                                           from "@/models/models.tsx";
-import { Button }                                                             from "@/components/ui/button.tsx";
+} from "@tanstack/react-table";
+import { IInfisso } from "@/models/models.tsx";
+import { Button } from "@/components/ui/button.tsx";
 import { Dispatch, SetStateAction, useCallback, useEffect, useRef, useState } from "react";
-import { CheckIcon, PencilIcon, XIcon }                                       from "lucide-react";
-import CardDataGrid                                                           from "@/components/card-data-grid.tsx";
-import { Input }                                                              from "@/components/ui/input.tsx";
-import { debounce }                                                           from "lodash";
-import ClearableSelect                                                        from "@/components/clearable-select.tsx";
-import { handleInputNumericChange }                                           from "@/helpers/helpers.ts";
+import { CheckIcon, PencilIcon, XIcon } from "lucide-react";
+import CardDataGrid from "@/components/card-data-grid.tsx";
+import { Input } from "@/components/ui/input.tsx";
+import { debounce } from "lodash";
+import ClearableSelect from "@/components/clearable-select.tsx";
+import { handleInputNumericChange } from "@/helpers/helpers.ts";
 
 declare module "@tanstack/react-table" {
     interface TableMeta<TData extends RowData> {
@@ -30,7 +30,6 @@ declare module "@tanstack/react-table" {
     }
 
     interface ColumnMeta<TData extends RowData, TValue> {
-        title?: string;
         editable?: boolean;
         filterVariant?: "text" | "range" | "select";
     }
@@ -63,9 +62,9 @@ const CardTableInfissi = () => {
 
     const infissi = useInfissi();
     const {
-              materialiInfissiType,
-              vetroInfissiType
-          } = useTypes();
+        materialiInfissiType,
+        vetroInfissiType
+    } = useTypes();
 
 
     const handleEdit = (rowIndex: number, rowData: IInfisso) => {
@@ -79,7 +78,7 @@ const CardTableInfissi = () => {
             if (dataToSave) {
                 await infissi.modifyInfisso(dataToSave);
                 const newData = [ ...infissi.data ];
-                newData[rowIndex] = {...newData[rowIndex], ...dataToSave};
+                newData[rowIndex] = { ...newData[rowIndex], ...dataToSave };
                 setEditedData(null);
                 setEditingRow(null);
             }
@@ -88,142 +87,138 @@ const CardTableInfissi = () => {
         }
     };
 
-    const columns: ColumnDef<IInfisso> [] = [
-        {
-            accessorKey: "id",
-            meta       : {
-                title   : "ID",
-                editable: false
-            }
-        }, {
-            accessorKey: "altezza",
-            header     : "Altezza",
-            cell       : (cell) => {
-                return InsertCell({
-                                      ...cell,
-                                      editingRow,
-                                      editedData,
-                                      setEditedData
-                                  });
-            },
-            meta       : {
-                filterVariant: "range"
-            }
-        }, {
-            accessorKey: "larghezza",
-            header     : "Larghezza",
-            cell       : (cell) => {
-                return InsertCell({
-                                      ...cell,
-                                      editingRow,
-                                      editedData,
-                                      setEditedData
-                                  });
-            },
-            meta       : {
-                filterVariant: "range"
-            }
-        }, {
-            accessorKey: "materiale",
-            header     : "Materiale",
-            cell       : (cell) => SelectCell({
-                                                  ...cell,
-                                                  editingRow,
-                                                  editedData,
-                                                  setEditedData,
-                                                  options: materialiInfissiType
-                                              }),
-            meta       : {
-                filterVariant: "select"
-            }
-        }, {
-            accessorKey: "vetro",
-            header     : "Vetro",
-            cell       : (cell) => SelectCell({
-                                                  ...cell,
-                                                  editingRow,
-                                                  editedData,
-                                                  setEditedData,
-                                                  options: vetroInfissiType
-                                              }),
-            meta       : {
-                filterVariant: "select"
-            }
-        }, {
-            accessorKey: "tipo",
-            header     : "Tipo",
-            cell       : (cell) => SelectCell({
-                                                  ...cell,
-                                                  editingRow,
-                                                  editedData,
-                                                  setEditedData,
-                                                  options: [ "PORTA", "FINESTRA" ]
-                                              }),
-            meta       : {
-                filterVariant: "select"
-            }
-        }, {
-            header: "Azioni",
-            cell  : ({row}) => {
-                const isEditing = editingRow === row.index;
-
-                return isEditing ? (<>
-                    <Button key={ `save-btn-${ row.index }` }
-                            type="button" variant="ghost" size="sm"
-                            onClick={ () => {
-                                handleSave(row.index, editedData)
-                                    .then()
-                                    .catch(console.error);
-                            } }>
-                        <CheckIcon />
-                    </Button>
-                    <Button key={ `annulla-btn-${ row.index }` } type="button" variant="ghost" size="sm"
-                            onClick={ () => setEditingRow(null) }>
-                        <XIcon />
-                    </Button>
-                </>) : (<Button key={ `edit-btn-${ row.index }` } type="button" variant="ghost" size="sm"
-                                onClick={ () => {
-                                    handleEdit(row.index, row.original);
-                                } }>
-                    <PencilIcon />
-                </Button>);
-
-            }
+    const columns: ColumnDef<IInfisso> [] = [ {
+        accessorKey: "id",
+        header     : "ID",
+        meta       : {
+            editable: false
         }
-    ];
+    }, {
+        accessorKey: "altezza",
+        header     : "Altezza",
+        cell       : (cell) => {
+            return InsertCell({
+                ...cell,
+                editingRow,
+                editedData,
+                setEditedData
+            });
+        },
+        meta       : {
+            filterVariant: "range"
+        }
+    }, {
+        accessorKey: "larghezza",
+        header     : "Larghezza",
+        cell       : (cell) => {
+            return InsertCell({
+                ...cell,
+                editingRow,
+                editedData,
+                setEditedData
+            });
+        },
+        meta       : {
+            filterVariant: "range"
+        }
+    }, {
+        accessorKey: "materiale",
+        header     : "Materiale",
+        cell       : (cell) => SelectCell({
+            ...cell,
+            editingRow,
+            editedData,
+            setEditedData,
+            options: materialiInfissiType
+        }),
+        meta       : {
+            filterVariant: "select"
+        }
+    }, {
+        accessorKey: "vetro",
+        header     : "Vetro",
+        cell       : (cell) => SelectCell({
+            ...cell,
+            editingRow,
+            editedData,
+            setEditedData,
+            options: vetroInfissiType
+        }),
+        meta       : {
+            filterVariant: "select"
+        }
+    }, {
+        accessorKey: "tipo",
+        header     : "Tipo",
+        cell       : (cell) => SelectCell({
+            ...cell,
+            editingRow,
+            editedData,
+            setEditedData,
+            options: [ "PORTA", "FINESTRA" ]
+        }),
+        meta       : {
+            filterVariant: "select"
+        }
+    }, {
+        header: "Azioni",
+        cell  : ({ row }) => {
+            const isEditing = editingRow === row.index;
+
+            return isEditing ? (<>
+                <Button key={ `save-btn-${ row.index }` }
+                        type="button" variant="ghost" size="sm"
+                        onClick={ () => {
+                            handleSave(row.index, editedData)
+                                .then()
+                                .catch(console.error);
+                        } }>
+                    <CheckIcon/>
+                </Button>
+                <Button key={ `annulla-btn-${ row.index }` } type="button" variant="ghost" size="sm"
+                        onClick={ () => setEditingRow(null) }>
+                    <XIcon/>
+                </Button>
+            </>) : (<Button key={ `edit-btn-${ row.index }` } type="button" variant="ghost" size="sm"
+                            onClick={ () => {
+                                handleEdit(row.index, row.original);
+                            } }>
+                <PencilIcon/>
+            </Button>);
+
+        }
+    } ];
 
     const table = useReactTable({
-                                    data                  : infissi.data,
-                                    columns               : columns,
-                                    getCoreRowModel       : getCoreRowModel(),
-                                    getPaginationRowModel : getPaginationRowModel(),
-                                    onSortingChange       : setSorting,
-                                    getSortedRowModel     : getSortedRowModel(),
-                                    onColumnFiltersChange : setColumnFilters,
-                                    getFilteredRowModel   : getFilteredRowModel(),
-                                    getFacetedRowModel    : getFacetedRowModel(),
-                                    getFacetedUniqueValues: getFacetedUniqueValues(),
-                                    getFacetedMinMaxValues: getFacetedMinMaxValues(),
-                                    initialState          : {
-                                        pagination: {pageSize: 5}
-                                    },
-                                    state                 : {
-                                        sorting      : sorting,
-                                        columnFilters: columnFilters
-                                    },
-                                    autoResetPageIndex    : autoResetPageIndex,
-                                });
+        data                  : infissi.data,
+        columns               : columns,
+        getCoreRowModel       : getCoreRowModel(),
+        getPaginationRowModel : getPaginationRowModel(),
+        onSortingChange       : setSorting,
+        getSortedRowModel     : getSortedRowModel(),
+        onColumnFiltersChange : setColumnFilters,
+        getFilteredRowModel   : getFilteredRowModel(),
+        getFacetedRowModel    : getFacetedRowModel(),
+        getFacetedUniqueValues: getFacetedUniqueValues(),
+        getFacetedMinMaxValues: getFacetedMinMaxValues(),
+        initialState          : {
+            pagination: { pageSize: 5 }
+        },
+        state                 : {
+            sorting      : sorting,
+            columnFilters: columnFilters
+        },
+        autoResetPageIndex    : autoResetPageIndex,
+    });
 
     return <div className="*:data-[slot=card]:shadow-xs grid grid-cols-1 gap-0
             px-4 *:data-[slot=card]:bg-gradient-to-t *:data-[slot=card]:from-primary/5 *:data-[slot=card]:to-card
             dark:*:data-[slot=card]:bg-card lg:px-5 h-full">
-        <CardDataGrid table={ table } title={ "Visualizzazione Infissi" } />
+        <CardDataGrid table={ table } title={ "Visualizzazione Infissi" }/>
     </div>;
 };
 
-const useEditingCellState = (editingRow: number | null, rowIndex: number, columnId: string,
-                             editedData: Partial<IInfisso> | null, getValue: () => unknown,
-                             setEditedData: Dispatch<SetStateAction<Partial<IInfisso> | null>>) => {
+const useEditingCellState = (editingRow: number | null, rowIndex: number, columnId: string, editedData: Partial<IInfisso> | null, getValue: () => unknown, setEditedData: Dispatch<SetStateAction<Partial<IInfisso> | null>>) => {
     const isEditing = editingRow === rowIndex;
     const [ localValue, setLocalValue ] = useState(() => {
         return isEditing ? editedData?.[columnId as keyof IInfisso] ?? getValue() : getValue();
@@ -245,7 +240,7 @@ const useEditingCellState = (editingRow: number | null, rowIndex: number, column
     };
 };
 
-const NonEditableCell = ({value}: { value: string }) => <span>{ value }</span>;
+const NonEditableCell = ({ value }: { value: string }) => <span>{ value }</span>;
 
 interface ICellProps extends CellContext<IInfisso, unknown> {
     editingRow: number | null;
@@ -262,15 +257,15 @@ const InsertCell = ({
                         setEditedData
                     }: ICellProps) => {
     const {
-              isEditing,
-              localValue,
-              setLocalValue,
-              updateEditingData
-          } = useEditingCellState(editingRow, row.index, column.id, editedData, getValue, setEditedData);
+        isEditing,
+        localValue,
+        setLocalValue,
+        updateEditingData
+    } = useEditingCellState(editingRow, row.index, column.id, editedData, getValue, setEditedData);
 
 
     if (column.columnDef.meta?.editable === false) {
-        return <NonEditableCell value={ getValue() as string } />;
+        return <NonEditableCell value={ getValue() as string }/>;
     }
 
     return <div className="flex flex-row items-center justify-center">
@@ -284,7 +279,7 @@ const InsertCell = ({
                 });
             } }
             className={ "text-center" }
-            style={ {"width": "4rem"} }
+            style={ { "width": "4rem" } }
         />) : (<span>{ localValue as string }</span>) }
     </div>;
 };
@@ -303,21 +298,21 @@ const SelectCell = ({
                         options
                     }: ISelectCellProps) => {
     const {
-              isEditing,
-              localValue,
-              setLocalValue,
-              updateEditingData
-          } = useEditingCellState(editingRow, row.index, column.id, editedData, getValue, setEditedData);
+        isEditing,
+        localValue,
+        setLocalValue,
+        updateEditingData
+    } = useEditingCellState(editingRow, row.index, column.id, editedData, getValue, setEditedData);
 
     if (column.columnDef.meta?.editable === false) {
-        return <NonEditableCell value={ getValue() as string } />;
+        return <NonEditableCell value={ getValue() as string }/>;
     }
 
     return <div className="flex flex-row items-center justify-center">
         { isEditing ? (<ClearableSelect onChange={ (value) => {
             setLocalValue(value);
             updateEditingData(value);
-        } } options={ options } value={ localValue as string } className={ "w-30" } />) : (
+        } } options={ options } value={ localValue as string } className={ "w-30" }/>) : (
             <span>{ localValue as string }</span>) }
     </div>;
 };

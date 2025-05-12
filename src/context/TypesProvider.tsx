@@ -1,12 +1,10 @@
-import * as React                                                                      from "react";
-import { useCallback, useEffect, useMemo, useRef, useState }                           from "react";
-import { invoke }                                                                      from "@tauri-apps/api/core";
-import { TypeContextType, TypesContext }                                               from "./Context.tsx";
+import * as React from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { invoke } from "@tauri-apps/api/core";
+import { TypeContextType, TypesContext } from "./Context.tsx";
 import { Climatizzazione, Illuminazione, MaterialeInfisso, TipoInfisso, VetroInfisso } from "../models/models.tsx";
-import { useDatabase }                                                                 from "@/context/UseProvider.tsx";
-import {
-    useErrorContext
-}                                                                                      from "@/context/ErrorProvider.tsx";
+import { useDatabase } from "@/context/UseProvider.tsx";
+import { useErrorContext } from "@/context/ErrorProvider.tsx";
 
 interface TypePayload {
     "materiale_infissi": MaterialeInfisso[],
@@ -16,11 +14,11 @@ interface TypePayload {
     "tipo_infissi": TipoInfisso[],
 }
 
-const TypesProvider = ({children}: { children: React.ReactNode }) => {
+const TypesProvider = ({ children }: { children: React.ReactNode }) => {
     const {
-              needReload,
-              registerProvider
-          } = useDatabase();
+        needReload,
+        registerProvider
+    } = useDatabase();
     const providerRef = useRef<{ notifyReloadComplete: () => void; } | null>(null);
     const [ materialiInfissiType, setMaterialiInfissiType ] = useState<string[]>([]);
     const [ vetroInfissiType, setVetroInfissiType ] = useState<string[]>([]);
@@ -44,10 +42,7 @@ const TypesProvider = ({children}: { children: React.ReactNode }) => {
             setIlluminazioneType(data["illuminazione"].map(value => value.lampadina));
             setTipoInfissi(data["tipo_infissi"].map(value => value.nome));
         } catch (e) {
-            if (typeof e === "string") {
-                errorContext.addError(e);
-                console.error(e);
-            }
+            errorContext.addError(e as string);
         } finally {
             setIsLoading(false);
         }

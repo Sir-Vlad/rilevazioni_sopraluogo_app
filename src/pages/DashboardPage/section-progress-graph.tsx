@@ -1,13 +1,13 @@
-import CardProgress             from "@/pages/DashboardPage/card-progress.tsx";
+import CardProgress from "@/pages/DashboardPage/card-progress.tsx";
 import { useInfissi, useTypes } from "@/context/UseProvider.tsx";
-import { useMemo }              from "react";
+import { useMemo } from "react";
 
 const SectionProgressGraph = () => {
     const infissiContext = useInfissi();
     const {
-              materialiInfissiType,
-              vetroInfissiType
-          } = useTypes();
+        materialiInfissiType,
+        vetroInfissiType
+    } = useTypes();
 
 
     const materialiValues = useMemo(
@@ -55,8 +55,8 @@ const SectionProgressGraph = () => {
     return <div className="*:data-[slot=card]:shadow-xs grid grid-cols-2 gap-4
             px-4 *:data-[slot=card]:bg-gradient-to-t *:data-[slot=card]:from-primary/5 *:data-[slot=card]:to-card
             dark:*:data-[slot=card]:bg-card lg:px-6">
-        <CardProgress title={ "Materiali" } values={ materialiValues } />
-        <CardProgress title={ "Vetro" } values={ vetroValues } />
+        <CardProgress title={ "Materiali" } values={ materialiValues }/>
+        <CardProgress title={ "Vetro" } values={ vetroValues }/>
     </div>;
 };
 

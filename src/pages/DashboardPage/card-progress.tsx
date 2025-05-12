@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card.tsx";
-import { Label }                                    from "@/components/ui/label.tsx";
-import { Progress }                                 from "@/components/ui/progress.tsx";
-import TitleCard                                    from "@/components/title-card.tsx";
+import { Label } from "@/components/ui/label.tsx";
+import { Progress } from "@/components/ui/progress.tsx";
+import TitleCard from "@/components/title-card.tsx";
 
 interface CardProgressProps {
     title: string;
@@ -21,7 +21,7 @@ const CardProgress = ({
     return <Card className="@container/card">
         <CardHeader className="relative">
             <CardTitle className="text-2xl font-semibold tabular-nums">
-                <TitleCard title={ title } />
+                <TitleCard title={ title }/>
             </CardTitle>
         </CardHeader>
         <CardContent>
@@ -33,7 +33,7 @@ const CardProgress = ({
                             className="grid grid-cols-12 items-center align-middle rounded-md border p-4 hover:bg-sidebar-accent/90"
                             key={ value.label }>
                             <Label className="col-span-2">{ value.label }</Label>
-                            <Progress className="col-span-9" value={ valuePercent } />
+                            <Progress className="col-span-9" value={ valuePercent }/>
                             <div className="flex justify-end">
                                 <Label className="col-span-1">{ Math.round(valuePercent) } %</Label>
                             </div>

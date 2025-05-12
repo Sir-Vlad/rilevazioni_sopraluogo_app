@@ -7,10 +7,8 @@ import {
     SelectSeparator,
     SelectTrigger,
     SelectValue
-}                             from "@/components/ui/select.tsx";
-import {
-    Button
-}                             from "@/components/ui/button.tsx";
+} from "@/components/ui/select.tsx";
+import { Button } from "@/components/ui/button.tsx";
 
 interface InfissiSelectProps {
     options: string[]; // Lista delle opzioni da visualizzare
@@ -33,9 +31,9 @@ const ClearableSelect = ({
 
     return (<Select onValueChange={ onChange } value={ value } onOpenChange={ setOpen } open={ open }>
         <SelectTrigger className={ `w-full ${ className ?? "" }` }>
-            <SelectValue placeholder={ placeholder } />
+            <SelectValue placeholder={ placeholder }/>
         </SelectTrigger>
-        <SelectContent>
+        <SelectContent className={ "max-h-96" }>
             { onClear && (<>
                 <Button
                     className="w-full px-2"
@@ -49,7 +47,7 @@ const ClearableSelect = ({
                 >
                     Clear
                 </Button>
-                <SelectSeparator />
+                <SelectSeparator/>
             </>) }
             { options.map((option, index) => (<Fragment key={ `${ option }-${ index }` }>
                 <SelectItem value={ option }>{ option }</SelectItem>

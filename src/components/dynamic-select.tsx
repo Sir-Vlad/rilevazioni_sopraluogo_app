@@ -1,24 +1,8 @@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select.tsx";
-import {
-    Form,
-    FormControl,
-    FormField,
-    FormItem,
-    FormLabel,
-    FormMessage
-}                                                                        from "@/components/ui/form.tsx";
-import {
-    Button
-}                                                                        from "@/components/ui/button.tsx";
-import {
-    EllipsisIcon,
-    MinusIcon,
-    PlusIcon,
-    Trash
-}                                                                        from "lucide-react";
-import {
-    useInfissi
-}                                                                        from "@/context/UseProvider.tsx";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form.tsx";
+import { Button } from "@/components/ui/button.tsx";
+import { EllipsisIcon, MinusIcon, PlusIcon, Trash } from "lucide-react";
+import { useInfissi } from "@/context/UseProvider.tsx";
 import {
     Dialog,
     DialogContent,
@@ -27,26 +11,14 @@ import {
     DialogHeader,
     DialogTitle,
     DialogTrigger
-}                                                                        from "@/components/ui/dialog.tsx";
-import {
-    Input
-}                                                                        from "@/components/ui/input.tsx";
-import {
-    useState
-}                                                                        from "react";
-import {
-    handleInputNumericChange
-}                                                                        from "@/helpers/helpers.ts";
-import {
-    ScrollArea
-}                                                                        from "@/components/ui/scroll-area.tsx";
-import { z }                                                             from "zod";
-import {
-    useForm
-}                                                                        from "react-hook-form";
-import {
-    zodResolver
-}                                                                        from "@hookform/resolvers/zod";
+} from "@/components/ui/dialog.tsx";
+import { Input } from "@/components/ui/input.tsx";
+import { useState } from "react";
+import { handleInputNumericChange } from "@/helpers/helpers.ts";
+import { ScrollArea } from "@/components/ui/scroll-area.tsx";
+import { z } from "zod";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 
 interface DynamicSelectProps {
     onChange: (value: string[]) => void;
@@ -84,7 +56,7 @@ export default function DynamicSelect({
                     } } value={ item }>
                         <FormControl>
                             <SelectTrigger className="w-full">
-                                <SelectValue placeholder="" />
+                                <SelectValue placeholder=""/>
                             </SelectTrigger>
                         </FormControl>
                         <SelectContent className="max-h-65">
@@ -101,7 +73,7 @@ export default function DynamicSelect({
                     const newValues = [ ...(values || []), "" ];
                     onChange(newValues);
                 } }>
-                    <PlusIcon />
+                    <PlusIcon/>
                 </Button>
                 <Button variant="outline" size="icon" type="button"
                         disabled={ values === undefined || values.length === 0 }
@@ -111,16 +83,16 @@ export default function DynamicSelect({
                             newValues.pop();
                             onChange(newValues);
                         } }>
-                    <MinusIcon />
+                    <MinusIcon/>
                 </Button>
                 <Button variant="outline" size="icon" type="button"
                         disabled={ values === undefined || values.length === 0 }
                         onClick={ () => {
                             onChange([]);
                         } }>
-                    <Trash />
+                    <Trash/>
                 </Button>
-                <AddInfissiDialog values={ values } onChange={ onChange } infissiData={ infissiData } />
+                <AddInfissiDialog values={ values } onChange={ onChange } infissiData={ infissiData }/>
             </div>
         </div>
     </ScrollArea>;
@@ -157,7 +129,7 @@ function AddInfissiDialog({
     } }>
         <DialogTrigger asChild>
             <Button variant="outline" size="icon" type="button">
-                <EllipsisIcon />
+                <EllipsisIcon/>
             </Button>
         </DialogTrigger>
         <DialogContent>
@@ -176,7 +148,7 @@ function AddInfissiDialog({
                             <FormField
                                 control={ form.control }
                                 name="quantity"
-                                render={ ({field}) => <FormItem>
+                                render={ ({ field }) => <FormItem>
                                     <FormLabel>Numero di infissi</FormLabel>
                                     <Input
                                         id="number-of-infissi"
@@ -184,13 +156,13 @@ function AddInfissiDialog({
                                         value={ field.value }
                                         onChange={ (e) => handleInputNumericChange(e, field.onChange) }
                                     />
-                                    <FormMessage />
+                                    <FormMessage/>
                                 </FormItem> }
                             />
                             <FormField
                                 control={ form.control }
                                 name={ "type" }
-                                render={ ({field}) => <FormItem>
+                                render={ ({ field }) => <FormItem>
                                     <FormLabel>Tipologia di infisso</FormLabel>
                                     <Select
                                         value={ field.value }
@@ -198,7 +170,7 @@ function AddInfissiDialog({
                                     >
                                         <FormControl>
                                             <SelectTrigger className="w-full">
-                                                <SelectValue placeholder="Seleziona la tipologia" />
+                                                <SelectValue placeholder="Seleziona la tipologia"/>
                                             </SelectTrigger>
                                         </FormControl>
                                         <SelectContent className="max-h-65">
@@ -207,8 +179,8 @@ function AddInfissiDialog({
                                             </SelectItem>)) }
                                         </SelectContent>
                                     </Select>
-                                    <FormMessage />
-                                </FormItem> } />
+                                    <FormMessage/>
+                                </FormItem> }/>
                         </div>
                     </div>
                     <div className="flex justify-end pt-4">
@@ -217,7 +189,7 @@ function AddInfissiDialog({
                             variant="default"
                             className="text-white"
                         >
-                            <PlusIcon /><span>Aggiungi</span>
+                            <PlusIcon/><span>Aggiungi</span>
                         </Button>
                     </div>
                 </form>
