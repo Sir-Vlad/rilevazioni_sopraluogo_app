@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Serialize, Deserialize)]
 pub struct AnnotazioneDTO {
     id: u64,
-    ref_table: String,
+    pub(crate) ref_table: String,
     id_ref_table: String,
     content: String,
 }
@@ -64,6 +64,16 @@ impl From<AnnotazioneEdificio> for AnnotazioneEdificioDTO {
     }
 }
 
+impl From<AnnotazioneDTO> for AnnotazioneEdificioDTO {
+    fn from(dto: AnnotazioneDTO) -> Self {
+        Self {
+            id: dto.id,
+            id_edificio: dto.id_ref_table,
+            content: dto.content,
+        }
+    }
+}
+
 #[derive(Clone)]
 pub struct AnnotazioneStanzaDTO {
     pub(crate) id: u64,
@@ -83,6 +93,22 @@ impl From<AnnotazioneStanza> for AnnotazioneStanzaDTO {
     }
 }
 
+impl From<AnnotazioneDTO> for AnnotazioneStanzaDTO {
+    fn from(dto: AnnotazioneDTO) -> Self {
+        Self {
+            id: dto.id,
+            id_stanza: dto.id_ref_table.parse::<u64>().unwrap_or_else(|_| {
+                log::warn!(
+                    "Impossibile convertire id_ref_table '{}' in u64",
+                    dto.id_ref_table
+                );
+                0
+            }),
+            content: dto.content,
+        }
+    }
+}
+
 #[derive(Clone)]
 pub struct AnnotazioneInfissoDTO {
     pub(crate) id: u64,
@@ -97,6 +123,16 @@ impl From<AnnotazioneInfisso> for AnnotazioneInfissoDTO {
         Self {
             id: dto.id,
             id_infisso: dto.id_infisso,
+            content: dto.content,
+        }
+    }
+}
+
+impl From<AnnotazioneDTO> for AnnotazioneInfissoDTO {
+    fn from(dto: AnnotazioneDTO) -> Self {
+        Self {
+            id: dto.id,
+            id_infisso: dto.id_ref_table,
             content: dto.content,
         }
     }

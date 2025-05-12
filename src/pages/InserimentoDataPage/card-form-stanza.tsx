@@ -8,11 +8,11 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import DynamicSelect from "@/components/dynamic-select.tsx";
 import { Input } from "@/components/ui/input.tsx";
 import { Pencil, PlusIcon, Trash } from "lucide-react";
-import CommentButton from "@/components/comment-button.tsx";
+import AnnotazioneButton from "@/components/annotazione-button.tsx";
 import HelpBadge from "@/components/help-badge.tsx";
 import { useDatabase, useEdifici, useStanze, useTypes } from "@/context/UseProvider.tsx";
 import { handleInputNumericChange } from "@/helpers/helpers";
-import { IStanza } from "@/models/models.tsx";
+import { IAnnotazione, IStanza } from "@/models/models.tsx";
 import { toast } from "sonner";
 import TitleCard from "@/components/title-card";
 import ClearableSelect from "@/components/clearable-select.tsx";
@@ -28,6 +28,7 @@ import {
 } from "@/components/ui/sheet.tsx";
 import { Label } from "@/components/ui/label";
 import { useState } from "react";
+import { invoke } from "@tauri-apps/api/core";
 
 
 const FormSchema = z.object({
@@ -58,6 +59,8 @@ const CardFormStanza = () => {
             infissi      : []
         }
     });
+    const [ annotazioni, setAnnotazioni ] = useState<string[]>([]);
+
     const stanzaContext = useStanze();
     const {
         illuminazioneType,
@@ -129,6 +132,26 @@ const CardFormStanza = () => {
                 toast.error(`Errore durante la modifica della stanza ${ data.stanza }`);
                 console.log(e);
             }
+            if (annotazioni.length > 0) onSubmitAnnotazioni(stanza).then().catch(console.error);
+        }
+    }
+
+    async function onSubmitAnnotazioni(stanza: IStanza) {
+        for (const content of annotazioni) {
+            try {
+                const annotazione = {
+                    id          : 0,
+                    ref_table   : "stanza",
+                    id_ref_table: stanza.id.toString(),
+                    content     : content,
+                } as IAnnotazione;
+
+                await invoke("insert_annotazione", {
+                    annotazione: annotazione,
+                })
+            } catch (e) {
+                console.error(e)
+            }
         }
     }
 
@@ -154,7 +177,7 @@ const CardFormStanza = () => {
                 <CardTitle>
                     <div className="flex gap-5 items-center">
                         <TitleCard title="Modifica Stanza"/>
-                        <CommentButton/>
+                        <AnnotazioneButton setAnnotazione={ setAnnotazioni }/>
                         <div className="flex flex-1 justify-end">
                             <Button type="button" className="dark:text-white" variant="secondary" onClick={ clearForm }>
                                 <Trash/> Pulisci Form

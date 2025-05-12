@@ -75,3 +75,10 @@ export interface IFotovoltaico {
     potenza: number,
     proprietario: string,
 }
+
+export interface IAnnotazione {
+    id: number,
+    ref_table: "edificio" | "stanza" | "infisso",
+    id_ref_table: string,
+    content: string,
+}

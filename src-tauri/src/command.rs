@@ -441,4 +441,41 @@ pub mod command_tauri {
             )),
         }
     }
+
+    #[tauri::command]
+    pub fn insert_annotazione(
+        db: State<'_, Database>,
+        annotazione: AnnotazioneDTO,
+    ) -> ResultCommand<AnnotazioneDTO> {
+        match annotazione.ref_table.as_str() {
+            "edificio" => Ok(
+                <AnnotazioneService as CreateService<AnnotazioneEdificioDTO>>::create(
+                    db,
+                    annotazione.into(),
+                )
+                .map_err(|e| e.to_string())?
+                .into(),
+            ),
+            "stanza" => Ok(
+                <AnnotazioneService as CreateService<AnnotazioneStanzaDTO>>::create(
+                    db,
+                    annotazione.into(),
+                )
+                .map_err(|e| e.to_string())?
+                .into(),
+            ),
+            "infisso" => Ok(
+                <AnnotazioneService as CreateService<AnnotazioneInfissoDTO>>::create(
+                    db,
+                    annotazione.into(),
+                )
+                .map_err(|e| e.to_string())?
+                .into(),
+            ),
+            _ => Err(format!(
+                "Tabella {table} non ha le annotazioni",
+                table = annotazione.ref_table
+            )),
+        }
+    }
 }

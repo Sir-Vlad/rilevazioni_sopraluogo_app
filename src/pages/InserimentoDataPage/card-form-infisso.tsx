@@ -4,16 +4,17 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Form, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form.tsx";
 import { Input } from "@/components/ui/input.tsx";
-import { ChangeEvent } from "react";
+import { ChangeEvent, useState } from "react";
 import { Button } from "@/components/ui/button.tsx";
 import { PlusIcon, Trash } from "lucide-react";
 import { useDatabase, useInfissi, useTypes } from "@/context/UseProvider.tsx";
-import CommentsButton from "@/components/comment-button.tsx";
+import CommentsButton from "@/components/annotazione-button.tsx";
 import { toast } from "sonner";
-import { IInfisso } from "@/models/models.tsx";
+import { IAnnotazione, IInfisso } from "@/models/models.tsx";
 import HelpBadge from "@/components/help-badge.tsx";
 import TitleCard from "@/components/title-card.tsx";
 import ClearableSelect from "@/components/clearable-select.tsx";
+import { invoke } from "@tauri-apps/api/core";
 
 const nextAlphabeticalID = (prevID: string | null) => {
     if (!prevID || prevID === "") return "A";
@@ -66,7 +67,7 @@ const CardFormInfisso = () => {
             vetro    : ""
         }
     });
-
+    const [ annotazioni, setAnnotazioni ] = useState<string[]>([]);
 
     const handleInputNumericChange = (event: ChangeEvent<HTMLInputElement>, field: {
         onChange: (value: number) => void
@@ -117,6 +118,29 @@ const CardFormInfisso = () => {
             toast.error("Errore durante l'inserimento del nuovo infisso");
             console.error(e);
         }
+        if (annotazioni.length > 0) onSubmitAnnotazioni(newInfisso).then().catch(console.error);
+    }
+
+    async function onSubmitAnnotazioni(infisso: IInfisso) {
+        for (const content of annotazioni) {
+            try {
+                const annotazione = {
+                    id          : 0,
+                    ref_table   : "infisso",
+                    id_ref_table: infisso.id!.toString(),
+                    content     : content,
+                } as IAnnotazione;
+
+                await invoke("insert_annotazione", {
+                    annotazione: annotazione,
+                })
+            } catch (e) {
+                toast.error("Errore durante l'inserimento delle annotazioni");
+                console.error(e)
+            }
+        }
+        setAnnotazioni([]);
+        toast.success("Annotazioni inserite con successo");
     }
 
     function clearForm() {
@@ -145,7 +169,7 @@ const CardFormInfisso = () => {
             <CardHeader>
                 <div className="flex gap-5 items-center">
                     <TitleCard title="Inserisci Infisso"/>
-                    <CommentsButton/>
+                    <CommentsButton setAnnotazione={ setAnnotazioni }/>
                     <div className="flex flex-1 justify-end">
                         <Button type="button" className="dark:text-white" variant="secondary" onClick={ clearForm }>
                             <Trash/> Pulisci Form

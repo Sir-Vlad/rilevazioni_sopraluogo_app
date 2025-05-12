@@ -56,7 +56,10 @@ pub fn run() {
             insert_utenza,
             // fotovoltaico
             get_fotovoltaico,
-            insert_fotovoltaico
+            insert_fotovoltaico,
+            // annotazioni
+            get_annotazioni,
+            insert_annotazione
         ])
         .on_window_event(handle_window_events)
         .run(tauri::generate_context!())
