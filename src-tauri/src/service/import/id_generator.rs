@@ -20,8 +20,13 @@ impl Display for Error {
 
 impl std::error::Error for Error {}
 
+type IdEdificio = String;
+type Piano = String;
+type DestUso = String;
+
 pub struct IdGeneratorStanza {
-    counters: HashMap<String, HashMap<String, u32>>,
+    /// (chiave, piano) -> (destinazione uso) -> contatore
+    counters: HashMap<(IdEdificio, Piano), HashMap<DestUso, u32>>,
 }
 
 impl IdGeneratorStanza {
@@ -45,8 +50,10 @@ impl IdGeneratorStanza {
                 return Err(AppError::IdInvalid(Error::InvalidUso));
             };
 
+            let key_hash = (stanza.chiave.clone(), piano.clone());
+
             self.counters
-                .entry(piano.clone())
+                .entry(key_hash.clone())
                 .or_default()
                 .entry(des_uso.clone())
                 .and_modify(|e| *e += 1)
@@ -54,7 +61,7 @@ impl IdGeneratorStanza {
 
             stanza.cod_stanza = format!(
                 "{}_{}_{:02}",
-                piano, des_uso, self.counters[&piano][&des_uso]
+                piano, des_uso, self.counters[&key_hash][&des_uso]
             );
         }
         Ok(stanza)
