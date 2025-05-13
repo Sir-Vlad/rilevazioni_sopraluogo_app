@@ -67,7 +67,10 @@ const CardFormStanza = () => {
         illuminazioneType,
         climatizzazioneType
     } = useTypes();
-    const { error } = useDatabase();
+    const {
+        error,
+        databaseName
+    } = useDatabase();
     const { selectedEdificio } = useEdifici();
 
     const stanzeOptions = [ ...[ ...new Set(stanzaContext.data
@@ -178,7 +181,7 @@ const CardFormStanza = () => {
                 <CardTitle>
                     <div className="flex gap-5 items-center">
                         <TitleCard title="Modifica Stanza"/>
-                        <AnnotazioneButton setAnnotazione={ setAnnotazioni }/>
+                        <AnnotazioneButton setAnnotazione={ setAnnotazioni } disabled={ databaseName === null }/>
                         <div className="flex flex-1 justify-end">
                             <Button type="button" className="dark:text-white" variant="secondary" onClick={ clearForm }>
                                 <Trash/> Pulisci Form
@@ -223,7 +226,10 @@ const CardFormStanza = () => {
                                                 <FormLabel>Destinazione Uso</FormLabel>
                                                 <ClearableSelect onChange={ field.onChange }
                                                                  options={ destinazioneUsoOptions }
-                                                                 value={ field.value }/>
+                                                                 value={ field.value }
+                                                                 disabled={ true }
+                                                                 placeholder={ "" }
+                                                />
                                                 <FormMessage/>
                                             </FormItem>
                                         </div>) }
@@ -236,7 +242,10 @@ const CardFormStanza = () => {
                                                 <FormLabel>Piano</FormLabel>
                                                 <ClearableSelect onChange={ field.onChange }
                                                                  options={ pianoOptions }
-                                                                 value={ field.value }/>
+                                                                 value={ field.value }
+                                                                 disabled={ true }
+                                                                 placeholder={ "" }
+                                                />
                                                 <FormMessage/>
                                             </FormItem>
                                         </div>) }
@@ -257,6 +266,7 @@ const CardFormStanza = () => {
                                                 </FormLabel>
                                                 <Input value={ field.value }
                                                        onChange={ e => handleInputNumericChange(e, field.onChange) }
+                                                       disabled={ databaseName === null }
                                                 />
                                                 <FormMessage/>
                                             </FormItem>
@@ -272,7 +282,9 @@ const CardFormStanza = () => {
                                                     <HelpBadge message="Il valore va inserito in cm"/>
                                                 </FormLabel>
                                                 <Input value={ field.value }
-                                                       onChange={ e => handleInputNumericChange(e, field.onChange) }/>
+                                                       onChange={ e => handleInputNumericChange(e, field.onChange) }
+                                                       disabled={ databaseName === null }
+                                                />
                                                 <FormMessage/>
                                             </FormItem>
                                         </div>) }
@@ -286,11 +298,13 @@ const CardFormStanza = () => {
                                                           label="Riscaldamento"
                                                           options={ climatizzazioneType }
                                                           tipo={ "riscaldamento" }
+                                                          disabled={ databaseName === null }
                                     />
                                     <SelectWithOtherField form={ form } name="raffrescamento"
                                                           label="Raffrescamento"
                                                           options={ climatizzazioneType }
                                                           tipo={ "raffrescamento" }
+                                                          disabled={ databaseName === null }
                                     />
                                 </div>
                             </div>
@@ -310,7 +324,8 @@ const CardFormStanza = () => {
                                     render={ ({ field }) => (<FormItem>
                                         <FormLabel>Infissi</FormLabel>
                                         <FormControl>
-                                            <DynamicSelect onChange={ field.onChange } values={ field.value }/>
+                                            <DynamicSelect onChange={ field.onChange } values={ field.value }
+                                                           disabled={ databaseName === null }/>
                                         </FormControl>
                                         <FormMessage/>
                                     </FormItem>) }
@@ -318,7 +333,7 @@ const CardFormStanza = () => {
                             </div>
                         </div>
                         <div className="flex justify-end pt-4">
-                            <Button type="submit" className="text-white">
+                            <Button type="submit" className="text-white" disabled={ databaseName === null }>
                                 <Pencil/> <span>Modifica Stanza</span>
                             </Button>
                         </div>
@@ -335,6 +350,7 @@ interface SelectWithOtherFieldProps<TFormValues extends Record<string, unknown>>
     label: string;
     options: string[];
     tipo: TipoKey;
+    disabled?: boolean;
 }
 
 
@@ -344,6 +360,7 @@ const SelectWithOtherField = <TFormValues extends Record<string, unknown>>({
                                                                                label,
                                                                                options,
                                                                                tipo,
+                                                                               disabled
                                                                            }: SelectWithOtherFieldProps<TFormValues>) => {
     return (<FormField
         control={ form.control }
@@ -354,7 +371,9 @@ const SelectWithOtherField = <TFormValues extends Record<string, unknown>>({
                     <FormLabel>{ label }</FormLabel>
                     <SheetAddNewTipo tipo={ tipo }></SheetAddNewTipo>
                 </div>
-                <ClearableSelect onChange={ field.onChange } options={ options } value={ field.value as string }
+                <ClearableSelect onChange={ field.onChange } options={ options }
+                                 value={ field.value as string }
+                                 disabled={ disabled }
                                  onClear={ () => {
                                      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
                                      // @ts-expect-error
@@ -373,7 +392,7 @@ const SheetAddNewTipo = ({ tipo }: { tipo: TipoKey }) => {
     const [ effEnergetica, setEffEnergetica ] = useState(0);
     const { insertType } = useTypes();
     const { addError } = useErrorContext();
-
+    const { databaseName } = useDatabase();
 
     const handleSubmit = async () => {
         try {
@@ -395,7 +414,7 @@ const SheetAddNewTipo = ({ tipo }: { tipo: TipoKey }) => {
 
     return <Sheet>
         <SheetTrigger asChild>
-            <Button variant="ghost" size={ "sm" }><PlusIcon/></Button>
+            <Button variant="ghost" size={ "sm" } disabled={ databaseName === null }><PlusIcon/></Button>
         </SheetTrigger>
         <SheetContent className="w-[400px]">
             <SheetHeader>

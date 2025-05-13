@@ -23,6 +23,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 interface DynamicSelectProps {
     onChange: (value: string[]) => void;
     values: string[] | undefined;
+    disabled?: boolean;
 }
 
 const FormSchema = z.object({
@@ -35,7 +36,8 @@ const FormSchema = z.object({
 
 export default function DynamicSelect({
                                           onChange,
-                                          values
+                                          values,
+                                          disabled
                                       }: Readonly<DynamicSelectProps>) {
     const infissi = useInfissi();
     const infissiData = infissi.data.map((item) => {
@@ -72,7 +74,7 @@ export default function DynamicSelect({
                 <Button variant="outline" size="icon" type="button" onClick={ () => {
                     const newValues = [ ...(values || []), "" ];
                     onChange(newValues);
-                } }>
+                } } disabled={ disabled }>
                     <PlusIcon/>
                 </Button>
                 <Button variant="outline" size="icon" type="button"
@@ -92,7 +94,7 @@ export default function DynamicSelect({
                         } }>
                     <Trash/>
                 </Button>
-                <AddInfissiDialog values={ values } onChange={ onChange } infissiData={ infissiData }/>
+                <AddInfissiDialog values={ values } onChange={ onChange } infissiData={ infissiData } disabled={ disabled }/>
             </div>
         </div>
     </ScrollArea>;
@@ -101,9 +103,10 @@ export default function DynamicSelect({
 function AddInfissiDialog({
                               values,
                               onChange,
-                              infissiData
+                              infissiData,
+                              disabled
                           }: Readonly<{
-    values: string[] | undefined, onChange: (value: string[]) => void, infissiData: string[]
+    values: string[] | undefined, onChange: (value: string[]) => void, infissiData: string[], disabled?: boolean;
 }>) {
     const [ isOpen, setIsOpen ] = useState(false);
     const form = useForm<z.infer<typeof FormSchema>>({
@@ -128,7 +131,7 @@ function AddInfissiDialog({
         setIsOpen(state);
     } }>
         <DialogTrigger asChild>
-            <Button variant="outline" size="icon" type="button">
+            <Button variant="outline" size="icon" type="button" disabled={ disabled }>
                 <EllipsisIcon/>
             </Button>
         </DialogTrigger>

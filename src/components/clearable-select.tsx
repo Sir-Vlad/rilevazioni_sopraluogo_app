@@ -17,6 +17,7 @@ interface InfissiSelectProps {
     placeholder?: string; // Placeholder per il valore di default
     onClear?: () => void; // Funzione opzionale per gestire il reset
     className?: string;
+    disabled?: boolean; // Disabilitare il componente
 }
 
 const ClearableSelect = ({
@@ -25,11 +26,13 @@ const ClearableSelect = ({
                              onChange,
                              placeholder = "Seleziona un'opzione",
                              onClear,
-                             className
+                             className,
+                             disabled = false,
                          }: Readonly<InfissiSelectProps>) => {
     const [ open, setOpen ] = useState(false);
 
-    return (<Select onValueChange={ onChange } value={ value } onOpenChange={ setOpen } open={ open }>
+    return (<Select onValueChange={ onChange } value={ value } onOpenChange={ setOpen } open={ open }
+                    disabled={ options.length === 0 || disabled }>
         <SelectTrigger className={ `w-full ${ className ?? "" }` }>
             <SelectValue placeholder={ placeholder }/>
         </SelectTrigger>

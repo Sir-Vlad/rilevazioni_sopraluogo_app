@@ -55,7 +55,10 @@ const CardFormInfisso = () => {
         tipoInfissi
     } = useTypes();
     const infissi = useInfissi();
-    const { error } = useDatabase();
+    const {
+        error,
+        databaseName
+    } = useDatabase();
 
     const form = useForm<z.infer<typeof FormInfisso>>({
         resolver     : zodResolver(FormInfisso),
@@ -169,7 +172,7 @@ const CardFormInfisso = () => {
             <CardHeader>
                 <div className="flex gap-5 items-center">
                     <TitleCard title="Inserisci Infisso"/>
-                    <CommentsButton setAnnotazione={ setAnnotazioni }/>
+                    <CommentsButton setAnnotazione={ setAnnotazioni } disabled={ databaseName === null }/>
                     <div className="flex flex-1 justify-end">
                         <Button type="button" className="dark:text-white" variant="secondary" onClick={ clearForm }>
                             <Trash/> Pulisci Form
@@ -214,6 +217,7 @@ const CardFormInfisso = () => {
                                                 </FormLabel>
                                                 <Input value={ field.value }
                                                        onChange={ e => handleInputNumericChange(e, field) }
+                                                       disabled={ databaseName === null }
                                                 />
                                                 <FormMessage/>
                                             </FormItem>
@@ -230,6 +234,7 @@ const CardFormInfisso = () => {
                                                 </FormLabel>
                                                 <Input value={ field.value }
                                                        onChange={ e => handleInputNumericChange(e, field) }
+                                                       disabled={ databaseName === null }
                                                 />
                                                 <FormMessage/>
                                             </FormItem>
@@ -278,7 +283,7 @@ const CardFormInfisso = () => {
                             </div>
                         </div>
                         <div className="flex items-center justify-end pt-4">
-                            <Button type="submit" className="text-white">
+                            <Button type="submit" className="text-white" disabled={ databaseName === null }>
                                 <PlusIcon/> <span>Aggiungi Infisso</span>
                             </Button>
                         </div>
