@@ -12,7 +12,7 @@ import AnnotazioneButton from "@/components/annotazione-button.tsx";
 import HelpBadge from "@/components/help-badge.tsx";
 import { useDatabase, useEdifici, useStanze, useTypes } from "@/context/UseProvider.tsx";
 import { handleInputNumericChange } from "@/helpers/helpers";
-import { IAnnotazione, IStanza } from "@/models/models.tsx";
+import { IAnnotazione, IStanza, NuovoTipo, TipoKey } from "@/models/models.tsx";
 import { toast } from "sonner";
 import TitleCard from "@/components/title-card";
 import ClearableSelect from "@/components/clearable-select.tsx";
@@ -29,6 +29,7 @@ import {
 import { Label } from "@/components/ui/label";
 import { useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
+import { useErrorContext } from "@/context/ErrorProvider.tsx";
 
 
 const FormSchema = z.object({
@@ -283,17 +284,23 @@ const CardFormStanza = () => {
                                 <div className="grid grid-cols-12 gap-5">
                                     <SelectWithOtherField form={ form } name="riscaldamento"
                                                           label="Riscaldamento"
-                                                          options={ climatizzazioneType }/>
+                                                          options={ climatizzazioneType }
+                                                          tipo={ "riscaldamento" }
+                                    />
                                     <SelectWithOtherField form={ form } name="raffrescamento"
                                                           label="Raffrescamento"
-                                                          options={ climatizzazioneType }/>
+                                                          options={ climatizzazioneType }
+                                                          tipo={ "raffrescamento" }
+                                    />
                                 </div>
                             </div>
                             {/* Illuminazione e altro */ }
                             <div className="row-start-4 col-span-6">
                                 <SelectWithOtherField form={ form } name="illuminazione"
                                                       label="Illuminazione"
-                                                      options={ illuminazioneType }/>
+                                                      options={ illuminazioneType }
+                                                      tipo={ "illuminazione" }
+                                />
                             </div>
                             {/* Infissi */ }
                             <div className="row-start-6 col-span-12">
@@ -327,6 +334,7 @@ interface SelectWithOtherFieldProps<TFormValues extends Record<string, unknown>>
     name: FieldPath<TFormValues>;
     label: string;
     options: string[];
+    tipo: TipoKey;
 }
 
 
@@ -334,7 +342,8 @@ const SelectWithOtherField = <TFormValues extends Record<string, unknown>>({
                                                                                form,
                                                                                name,
                                                                                label,
-                                                                               options
+                                                                               options,
+                                                                               tipo,
                                                                            }: SelectWithOtherFieldProps<TFormValues>) => {
     return (<FormField
         control={ form.control }
@@ -343,7 +352,7 @@ const SelectWithOtherField = <TFormValues extends Record<string, unknown>>({
             <FormItem>
                 <div className="flex justify-between">
                     <FormLabel>{ label }</FormLabel>
-                    <SheetAddNewTipo tipo={ label }></SheetAddNewTipo>
+                    <SheetAddNewTipo tipo={ tipo }></SheetAddNewTipo>
                 </div>
                 <ClearableSelect onChange={ field.onChange } options={ options } value={ field.value as string }
                                  onClear={ () => {
@@ -359,16 +368,28 @@ const SelectWithOtherField = <TFormValues extends Record<string, unknown>>({
     />);
 };
 
-const SheetAddNewTipo = ({ tipo }: { tipo: string }) => {
-    const [ newTipo, setNewTipo ] = useState("");
+const SheetAddNewTipo = ({ tipo }: { tipo: TipoKey }) => {
+    const [ newNameTipo, setNewNameTipo ] = useState("");
     const [ effEnergetica, setEffEnergetica ] = useState(0);
+    const { insertType } = useTypes();
+    const { addError } = useErrorContext();
 
-    const handleSubmit = () => {
-        console.log(newTipo, effEnergetica);
-        toast.warning("Funzionalità non implementata");
-        // todo: implementare l'inserimento del nuovo tipo
-        setNewTipo("");
-        setEffEnergetica(0);
+
+    const handleSubmit = async () => {
+        try {
+            const insertTipo: NuovoTipo = {
+                tipo                 : tipo,
+                name                 : newNameTipo,
+                efficienza_energetica: effEnergetica,
+            };
+            await insertType(insertTipo);
+            toast.success(`Tipo ${ newNameTipo } inserito`);
+        } catch (e) {
+            addError(e as string);
+        } finally {
+            setNewNameTipo("");
+            setEffEnergetica(0);
+        }
     };
 
 
@@ -389,8 +410,8 @@ const SheetAddNewTipo = ({ tipo }: { tipo: string }) => {
                         Nuovo Tipo
                     </Label>
                     <Input id="name" className="col-span-3" placeholder="Inserisci il nome del nuovo tipo"
-                           onChange={ (e) => setNewTipo(e.target.value) }
-                           value={ newTipo }
+                           onChange={ (e) => setNewNameTipo(e.target.value) }
+                           value={ newNameTipo }
                     />
                 </div>
                 <div className="grid grid-cols-4 items-center gap-4">

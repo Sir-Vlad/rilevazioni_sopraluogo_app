@@ -61,6 +61,15 @@ export interface TipoInfisso {
     nome: string;
 }
 
+export interface NuovoTipo {
+    tipo: TipoKey;
+    name: string;
+    efficienza_energetica: number;
+}
+
+export type TipoKey = "riscaldamento" | "raffrescamento" | "illuminazione" | "climatizzazione";
+
+
 export interface IUtenza {
     id: number;
     id_edificio: string;

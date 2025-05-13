@@ -1,5 +1,5 @@
 import { createContext } from "react";
-import { IEdificio, IFotovoltaico, IInfisso, IStanza, IUtenza } from "../models/models.tsx";
+import { IEdificio, IFotovoltaico, IInfisso, IStanza, IUtenza, NuovoTipo } from "../models/models.tsx";
 
 export interface DatabaseContextType {
     databasePath: string;
@@ -36,6 +36,7 @@ export interface TypeContextType {
     illuminazioneType: string[];
     tipoInfissi: string[];
     isLoading: boolean;
+    insertType: (newType: NuovoTipo) => Promise<void>;
 }
 
 export const TypesContext = createContext<TypeContextType | null>(null);
