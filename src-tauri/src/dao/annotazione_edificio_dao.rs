@@ -44,7 +44,7 @@ impl GetAll<AnnotazioneEdificio> for AnnotazioneEdificioDAO {
                     id: row.get("ID")?,
                     id_edificio: row.get("ID_STANZA")?,
                     content: row.get("CONTENT")?,
-                    data: row.get("DATA")?,
+                    _data: row.get("DATA")?,
                 })
             })?
             .collect();
@@ -74,7 +74,7 @@ impl Insert<AnnotazioneEdificio> for AnnotazioneEdificioDAO {
 
         Ok(AnnotazioneEdificio {
             id,
-            data: Some(convert_timestamp_to_local(timestamp)?),
+            _data: Some(convert_timestamp_to_local(timestamp)?),
             ..item
         })
     }

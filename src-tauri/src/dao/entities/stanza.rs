@@ -16,6 +16,24 @@ pub struct Stanza {
     pub(crate) illuminazione: Option<String>,
 }
 
+impl Default for Stanza {
+    fn default() -> Self {
+        Self {
+            id: None,
+            chiave: "".to_string(),
+            piano: "".to_string(),
+            id_spazio: "".to_string(),
+            cod_stanza: "".to_string(),
+            destinazione_uso: "".to_string(),
+            altezza: None,
+            spessore_muro: None,
+            riscaldamento: None,
+            raffrescamento: None,
+            illuminazione: None,
+        }
+    }
+}
+
 impl Stanza {
     pub fn new(
         chiave: &str,
@@ -25,17 +43,12 @@ impl Stanza {
         destinazione_uso: &str,
     ) -> Self {
         Stanza {
-            id: None,
             chiave: chiave.to_string(),
             piano: piano.to_string(),
             id_spazio: id_spazio.to_string(),
             cod_stanza: stanza.to_string(),
             destinazione_uso: destinazione_uso.to_string(),
-            altezza: None,
-            spessore_muro: None,
-            riscaldamento: None,
-            raffrescamento: None,
-            illuminazione: None,
+            ..Self::default()
         }
     }
 }

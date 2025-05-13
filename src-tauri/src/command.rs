@@ -1,41 +1,26 @@
 pub mod command_tauri {
-    use crate::dao::crud_operations::Insert;
     use crate::dto::{
         AnnotazioneDTO, AnnotazioneEdificioDTO, AnnotazioneInfissoDTO, AnnotazioneStanzaDTO,
         FotovoltaicoDTO, UtenzaDTO,
     };
     use crate::service::{
-        AnnotazioneService, CreateService, FotovoltaicoService, IdGeneratorStanza, ImportData,
-        ImportDatiStanzaToExcel, RetrieveManyService, UpdateService, UtenzeService,
+        import::ImportData, import::ImportDatiStanzaToExcel, AnnotazioneService, CreateService,
+        FotovoltaicoService, RetrieveManyService, UpdateService, UtenzeService,
     };
     use crate::utils::AppError;
     use crate::{
-        dao::{
-            entity::{Edificio, Stanza},
-            EdificioDAO, StanzaDAO,
-        },
         database::{
             get_db_path, init_database, set_pragma, Database, DatabaseEventPayload,
             NAME_DIR_DATABASE,
         },
-        dto::{
-            EdificioDTO, IlluminazioneDTO, InfissoDTO, MaterialeInfissoDTO, StanzaDTO,
-            VetroInfissoDTO,
-        },
+        dto::{EdificioDTO, InfissoDTO, StanzaDTO},
         service::{
             EdificioService, ExportData, ExportDatiStanzaToExcel, InfissoService, StanzaService,
             TypeService, TypeServiceImpl,
         },
     };
-    use calamine::{open_workbook, Reader, Xlsx};
     use dirs_next::document_dir;
-    use itertools::izip;
     use log::info;
-    use polars::prelude::PolarsError;
-    use polars::{
-        frame::{DataFrame, UniqueKeepStrategy},
-        prelude::{col, ChunkExplode, IntoLazy, NamedFrom, Series},
-    };
     use rusqlite::Connection;
     use serde_json::Value;
     use std::{collections::HashMap, ffi::OsStr, fs};

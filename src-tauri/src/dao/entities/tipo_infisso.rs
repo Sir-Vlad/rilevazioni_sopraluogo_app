@@ -1,4 +1,4 @@
 pub struct TipoInfisso {
-    pub(crate) id: u64,
+    pub(crate) _id: u64,
     pub(crate) nome: String,
 }

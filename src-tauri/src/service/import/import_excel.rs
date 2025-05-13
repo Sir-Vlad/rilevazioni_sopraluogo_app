@@ -2,7 +2,7 @@ use crate::dao::crud_operations::Insert;
 use crate::dao::entity::{Edificio, Stanza};
 use crate::dao::{EdificioDAO, StanzaDAO};
 use crate::database::Database;
-use crate::service::IdGeneratorStanza;
+use crate::service::import::IdGeneratorStanza;
 use crate::utils::AppError;
 use calamine::{open_workbook, Reader, Xlsx};
 use itertools::izip;
@@ -106,7 +106,7 @@ impl ImportData for ImportDatiStanzaToExcel {
                     Self::retrieve_string_field_df(&df, "cod_stanza", i)?.as_str(),
                     Self::retrieve_string_field_df(&df, "destinazione_uso", i)?.as_str(),
                 ));
-                StanzaDAO::insert(tx, stanza)?;
+                StanzaDAO::insert(tx, stanza?)?;
             }
 
             Ok(())

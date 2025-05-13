@@ -1,81 +1,27 @@
 use crate::dao::entity::Stanza;
+use crate::utils::AppError;
 use std::collections::HashMap;
 use std::fmt::{Display, Formatter};
 
-#[derive(Debug, PartialEq, Eq, Clone, Hash)]
-enum TipologieStanze {
-    Magazzino,
-    Corridoio,
-    Archivio,
-    VanoTecnico,
-    SpazioServizi,
-    Spogliatoi,
-    Bagno,
-    Ripostiglio,
-    Atrio,
-    VanoScale,
-    Garage,
-    Disimpegno,
-    Ufficio,
-    SalaConvegli,
-    Palestra,
-    Altro,
+#[derive(Debug)]
+pub enum Error {
+    InvalidPiano,
+    InvalidUso,
 }
 
-impl Display for TipologieStanze {
+impl Display for Error {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
-            TipologieStanze::Magazzino => f.write_str("Magazzino"),
-            TipologieStanze::Corridoio => f.write_str("Corridoio"),
-            TipologieStanze::Archivio => f.write_str("Archivio"),
-            TipologieStanze::VanoTecnico => f.write_str("Vano tecnico"),
-            TipologieStanze::SpazioServizi => f.write_str("Spazio servizi"),
-            TipologieStanze::Spogliatoi => f.write_str("Spogliatoi"),
-            TipologieStanze::Bagno => f.write_str("Bagno"),
-            TipologieStanze::Ripostiglio => f.write_str("Ripostiglio"),
-            TipologieStanze::Atrio => f.write_str("Atrio"),
-            TipologieStanze::VanoScale => f.write_str("Vano scale"),
-            TipologieStanze::Garage => f.write_str("Garage"),
-            TipologieStanze::Disimpegno => f.write_str("Disimpegno"),
-            TipologieStanze::Ufficio => f.write_str("Ufficio"),
-            TipologieStanze::SalaConvegli => f.write_str("Sala convegli"),
-            TipologieStanze::Palestra => f.write_str("Palestra"),
-            TipologieStanze::Altro => f.write_str("Altro"),
+            Error::InvalidPiano => f.write_str("Piano non valido o vuoto"),
+            Error::InvalidUso => f.write_str("Destinazione uso non valido o vuoto"),
         }
     }
 }
 
-impl PartialEq<&str> for TipologieStanze {
-    fn eq(&self, other: &&str) -> bool {
-        self.to_string().eq_ignore_ascii_case(other)
-    }
-}
-
-impl From<&str> for TipologieStanze {
-    fn from(s: &str) -> Self {
-        match s {
-            "Magazzino" => TipologieStanze::Magazzino,
-            "Corridoio" => TipologieStanze::Corridoio,
-            "Archivio" => TipologieStanze::Archivio,
-            "Vano tecnico" | "Vano Tecnico" => TipologieStanze::VanoTecnico,
-            "Spazio servizi" | "Spazio Servizi" => TipologieStanze::SpazioServizi,
-            "Spogliatoi" => TipologieStanze::Spogliatoi,
-            "Bagno" => TipologieStanze::Bagno,
-            "Ripostiglio" => TipologieStanze::Ripostiglio,
-            "Atrio" => TipologieStanze::Atrio,
-            "Vano scale" | "Vano Scale" => TipologieStanze::VanoScale,
-            "Garage" => TipologieStanze::Garage,
-            "Disimpegno" => TipologieStanze::Disimpegno,
-            "Ufficio" => TipologieStanze::Ufficio,
-            "Sala convegli" | "Sala Convegli" => TipologieStanze::SalaConvegli,
-            "Palestra" => TipologieStanze::Palestra,
-            _ => TipologieStanze::Altro,
-        }
-    }
-}
+impl std::error::Error for Error {}
 
 pub struct IdGeneratorStanza {
-    counters: HashMap<String, HashMap<TipologieStanze, u32>>,
+    counters: HashMap<String, HashMap<String, u32>>,
 }
 
 impl IdGeneratorStanza {
@@ -85,82 +31,232 @@ impl IdGeneratorStanza {
         }
     }
 
-    pub fn generate_id(&mut self, mut stanza: Stanza) -> Stanza {
-        if stanza.cod_stanza == "_" {
-            let tipo = TipologieStanze::from(stanza.destinazione_uso.as_str());
+    pub fn generate_id(&mut self, mut stanza: Stanza) -> Result<Stanza, AppError> {
+        if ["_", ""].iter().any(|&x| x == stanza.cod_stanza) {
+            let piano = if let Some(piano) = self.format_piano(stanza.piano.as_str()) {
+                piano
+            } else {
+                return Err(AppError::IdInvalid(Error::InvalidPiano));
+            };
+
+            let des_uso = if let Some(des_uso) = self.format_uso(stanza.destinazione_uso.as_str()) {
+                des_uso
+            } else {
+                return Err(AppError::IdInvalid(Error::InvalidUso));
+            };
+
             self.counters
-                .entry(stanza.piano.clone())
-                .or_insert_with(HashMap::new)
-                .entry(tipo.clone())
+                .entry(piano.clone())
+                .or_default()
+                .entry(des_uso.clone())
                 .and_modify(|e| *e += 1)
                 .or_insert(1);
 
-            let cod_tipo = match tipo {
-                TipologieStanze::Magazzino => "MAG",
-                TipologieStanze::Corridoio => "COR",
-                TipologieStanze::Archivio => "ARC",
-                TipologieStanze::VanoTecnico => "TEC",
-                TipologieStanze::SpazioServizi => "SER",
-                TipologieStanze::Spogliatoi => "SPO",
-                TipologieStanze::Bagno => "BGN",
-                TipologieStanze::Ripostiglio => "RPS",
-                TipologieStanze::Atrio => "ATR",
-                TipologieStanze::VanoScale => "SCA",
-                TipologieStanze::Garage => "GRG",
-                TipologieStanze::Disimpegno => "DSM",
-                TipologieStanze::Ufficio => "UFF",
-                TipologieStanze::SalaConvegli => "CVG",
-                TipologieStanze::Palestra => "PLS",
-                TipologieStanze::Altro => "AA",
-            };
-
             stanza.cod_stanza = format!(
                 "{}_{}_{:02}",
-                stanza.piano, cod_tipo, self.counters[&stanza.piano][&tipo]
+                piano, des_uso, self.counters[&piano][&des_uso]
             );
-
-            return stanza;
         }
-        stanza
+        Ok(stanza)
+    }
+
+    fn format_piano(&self, piano: &str) -> Option<String> {
+        match piano.trim() {
+            s if s.parse::<i32>().is_ok_and(|i| i < 0) => {
+                Some(format!("S{:02}", s.parse::<i32>().unwrap().abs()))
+            }
+            "T" => Some("PT".to_string()),
+            s if s.parse::<i32>().is_ok_and(|i| i > 0) => {
+                Some(format!("P{:02}", s.parse::<i32>().unwrap()))
+            }
+            _ => None,
+        }
+    }
+
+    fn format_uso(&self, uso: &str) -> Option<String> {
+        if uso.is_empty() {
+            return None;
+        }
+
+        let split: Vec<_> = uso
+            .trim()
+            .split(" ")
+            .map(|w| w.to_ascii_uppercase())
+            .collect();
+        if split.len() == 1 {
+            return Some(split[0].chars().take(3).collect());
+        }
+
+        let mut v: Vec<char> = split.iter().filter_map(|s| s.chars().next()).collect();
+        if v.len() < 3 {
+            if let Some(last_word) = split.last() {
+                let remaining_chars = last_word.chars().skip(1);
+                for c in remaining_chars {
+                    v.push(c);
+                    if v.len() >= 3 {
+                        break;
+                    }
+                }
+            }
+        }
+        v.truncate(3);
+        Some(v.into_iter().collect())
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn test_piano_interrato() {
+        let id_gen = IdGeneratorStanza::new();
+        let res = id_gen.format_piano("-2").unwrap();
+        assert_eq!(res, "S02");
+    }
 
     #[test]
-    fn test_generate_id() {
-        let mut id_generator = IdGeneratorStanza::new();
+    fn test_piano_terra() {
+        let id_gen = IdGeneratorStanza::new();
+        let res = id_gen.format_piano("T").unwrap();
+        assert_eq!(res, "PT");
+    }
 
-        let stanza = id_generator.generate_id(Stanza {
-            id: None,
-            chiave: "".to_string(),
-            piano: "-1".to_string(),
-            id_spazio: "".to_string(),
+    #[test]
+    fn test_piano_sopraelevato() {
+        let id_gen = IdGeneratorStanza::new();
+        let res = id_gen.format_piano("2").unwrap();
+        assert_eq!(res, "P02");
+    }
+
+    #[test]
+    fn test_uso_empty() {
+        let id_gen = IdGeneratorStanza::new();
+        let res = id_gen.format_uso("");
+        assert!(res.is_none());
+    }
+
+    #[test]
+    fn test_uso_singola_parola() {
+        let id_gen = IdGeneratorStanza::new();
+        let res = id_gen.format_uso("Ufficio").unwrap();
+        assert_eq!(res, "UFF");
+    }
+
+    #[test]
+    fn test_uso_multipla_parola() {
+        let id_gen = IdGeneratorStanza::new();
+        let res = id_gen.format_uso("Vano Scala").unwrap();
+        assert_eq!(res, "VSC");
+    }
+
+    #[test]
+    fn test_generate_id_singola_parola_piano_terra() {
+        let mut id_gen = IdGeneratorStanza::new();
+        let stanza = Stanza {
+            piano: "T".to_string(),
             cod_stanza: "_".to_string(),
-            destinazione_uso: "Archivio".to_string(),
-            altezza: None,
-            spessore_muro: None,
-            riscaldamento: None,
-            raffrescamento: None,
-            illuminazione: None,
-        });
+            destinazione_uso: "Ufficio".to_string(),
+            ..Stanza::default()
+        };
+        let id = id_gen.generate_id(stanza).unwrap();
+        assert_eq!(id.cod_stanza, "PT_UFF_01");
+    }
 
-        let stanza = id_generator.generate_id(Stanza {
-            id: None,
-            chiave: "".to_string(),
-            piano: "-1".to_string(),
-            id_spazio: "".to_string(),
+    #[test]
+    fn test_generate_id_singola_parola_piano_interrato() {
+        let mut id_gen = IdGeneratorStanza::new();
+        let stanza = Stanza {
+            piano: "-3".to_string(),
             cod_stanza: "_".to_string(),
-            destinazione_uso: "Archivio".to_string(),
-            altezza: None,
-            spessore_muro: None,
-            riscaldamento: None,
-            raffrescamento: None,
-            illuminazione: None,
-        });
+            destinazione_uso: "Ufficio".to_string(),
+            ..Stanza::default()
+        };
+        let id = id_gen.generate_id(stanza).unwrap();
+        assert_eq!(id.cod_stanza, "S03_UFF_01");
+    }
 
-        assert_eq!(stanza.cod_stanza, "-1_ARC_02");
+    #[test]
+    fn test_generate_id_singola_parola_piano_sopraelevato() {
+        let mut id_gen = IdGeneratorStanza::new();
+        let stanza = Stanza {
+            piano: "3".to_string(),
+            cod_stanza: "_".to_string(),
+            destinazione_uso: "Ufficio".to_string(),
+            ..Stanza::default()
+        };
+        let id = id_gen.generate_id(stanza).unwrap();
+        assert_eq!(id.cod_stanza, "P03_UFF_01");
+    }
+
+    #[test]
+    fn test_generate_id_multipla_parola() {
+        let mut id_gen = IdGeneratorStanza::new();
+        let stanza = Stanza {
+            piano: "3".to_string(),
+            cod_stanza: "_".to_string(),
+            destinazione_uso: "Sala Convegli".to_string(),
+            ..Stanza::default()
+        };
+        let id = id_gen.generate_id(stanza).unwrap();
+        assert_eq!(id.cod_stanza, "P03_SCO_01");
+    }
+
+    #[test]
+    fn test_generate_id_multipli() {
+        let mut id_gen = IdGeneratorStanza::new();
+        let stanza = Stanza {
+            piano: "3".to_string(),
+            cod_stanza: "_".to_string(),
+            destinazione_uso: "Sala Convegli".to_string(),
+            ..Stanza::default()
+        };
+        let _ = id_gen.generate_id(stanza);
+
+        let stanza = Stanza {
+            piano: "3".to_string(),
+            cod_stanza: "_".to_string(),
+            destinazione_uso: "Sala Convegli".to_string(),
+            ..Stanza::default()
+        };
+        let id = id_gen.generate_id(stanza).unwrap();
+        assert_eq!(id.cod_stanza, "P03_SCO_02");
+    }
+
+    #[test]
+    fn test_generate_id_error_piano() {
+        let mut id_gen = IdGeneratorStanza::new();
+        let stanza = Stanza {
+            piano: "".to_string(),
+            cod_stanza: "_".to_string(),
+            destinazione_uso: "Sala Convegli".to_string(),
+            ..Stanza::default()
+        };
+        let id = id_gen.generate_id(stanza);
+        match id {
+            Ok(_) => {}
+            Err(AppError::IdInvalid(Error::InvalidPiano)) => {
+                assert!(true);
+            }
+            _ => {}
+        }
+    }
+
+    #[test]
+    fn test_generate_id_error_uso() {
+        let mut id_gen = IdGeneratorStanza::new();
+        let stanza = Stanza {
+            piano: "2".to_string(),
+            cod_stanza: "_".to_string(),
+            destinazione_uso: "".to_string(),
+            ..Stanza::default()
+        };
+        let id = id_gen.generate_id(stanza);
+        match id {
+            Ok(_) => {}
+            Err(AppError::IdInvalid(Error::InvalidUso)) => {
+                assert!(true);
+            }
+            _ => {}
+        }
     }
 }

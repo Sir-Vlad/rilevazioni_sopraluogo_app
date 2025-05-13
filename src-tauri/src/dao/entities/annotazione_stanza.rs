@@ -5,7 +5,7 @@ pub struct AnnotazioneStanza {
     pub(crate) id: u64,
     pub(crate) id_stanza: u64,
     pub(crate) content: String,
-    pub(crate) data: Option<String>,
+    pub(crate) _data: Option<String>,
 }
 
 impl From<AnnotazioneStanzaDTO> for AnnotazioneStanza {
@@ -14,7 +14,7 @@ impl From<AnnotazioneStanzaDTO> for AnnotazioneStanza {
             id: value.id,
             id_stanza: value.id_stanza,
             content: value.content,
-            data: None,
+            _data: None,
         }
     }
 }

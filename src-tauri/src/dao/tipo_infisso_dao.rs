@@ -42,7 +42,7 @@ impl GetAll<TipoInfisso> for TipoInfissoDAO {
         let results = stmt
             .query_map([], |row| {
                 Ok(TipoInfisso {
-                    id: row.get("ID")?,
+                    _id: row.get("ID")?,
                     nome: row.get("NOME")?,
                 })
             })?
@@ -60,6 +60,6 @@ impl Insert<TipoInfisso> for TipoInfissoDAO {
         let mut stmt = conn.prepare(query.as_str())?;
         let mut res = stmt.query_map(params![item.nome], |row| row.get::<_, u64>(0))?;
         let id = res.next().unwrap()?;
-        Ok(TipoInfisso { id, ..item })
+        Ok(TipoInfisso { _id: id, ..item })
     }
 }

@@ -20,6 +20,8 @@ pub enum AppError {
     CalamineError(#[from] calamine::Error),
     #[error("")]
     GenericError(String),
+    #[error("")]
+    IdInvalid(#[from] crate::service::import::Error),
 }
 
 impl From<rusqlite::Error> for AppError {
@@ -36,6 +38,6 @@ impl From<AppError> for String {
 
 impl From<InvokeError> for AppError {
     fn from(value: InvokeError) -> Self {
-        AppError::GenericError(format!("{:?}", value))   
+        AppError::GenericError(format!("{:?}", value))
     }
 }

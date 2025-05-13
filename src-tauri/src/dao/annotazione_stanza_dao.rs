@@ -4,7 +4,6 @@ use crate::dao::utils::schema_operations::CreateTable;
 use crate::dao::utils::{convert_timestamp_to_local, DAO};
 use crate::database::{convert_param, DatabaseConnection, QueryBuilder, SqlQueryBuilder};
 use crate::utils::AppError;
-use chrono::TimeZone;
 use rusqlite::{params, Error};
 
 pub struct AnnotazioneStanzaDAO;
@@ -45,7 +44,7 @@ impl GetAll<AnnotazioneStanza> for AnnotazioneStanzaDAO {
                     id: row.get("ID")?,
                     id_stanza: row.get("ID_STANZA")?,
                     content: row.get("CONTENT")?,
-                    data: row.get("DATA")?,
+                    _data: row.get("DATA")?,
                 })
             })?
             .collect();
@@ -72,7 +71,7 @@ impl Insert<AnnotazioneStanza> for AnnotazioneStanzaDAO {
 
         Ok(AnnotazioneStanza {
             id,
-            data: Some(convert_timestamp_to_local(timestamp)?),
+            _data: Some(convert_timestamp_to_local(timestamp)?),
             ..item
         })
     }
@@ -102,7 +101,7 @@ mod test {
             id: 0,
             id_stanza: 1,
             content: "test".to_string(),
-            data: Option::from("".to_string()),
+            _data: Option::from("".to_string()),
         };
         let res = AnnotazioneStanzaDAO::insert(&conn, item.clone());
 
@@ -125,7 +124,7 @@ mod test {
             id: 0,
             id_stanza: 1,
             content: "".to_string(),
-            data: Option::from("".to_string()),
+            _data: Option::from("".to_string()),
         };
         let res = AnnotazioneStanzaDAO::insert(&conn, item.clone());
 

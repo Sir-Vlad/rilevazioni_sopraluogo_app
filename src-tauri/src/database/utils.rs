@@ -74,7 +74,7 @@ pub fn init_database(app_handle: AppHandle, tx: &Transaction) -> Result<(), Stri
     .into_iter()
     {
         let tipo_infisso = TipoInfisso {
-            id: 0,
+            _id: 0,
             nome: tipo.to_string(),
         };
         TipoInfissoDAO::insert(tx, tipo_infisso)?;

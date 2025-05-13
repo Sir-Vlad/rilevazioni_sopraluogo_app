@@ -44,7 +44,7 @@ impl GetAll<AnnotazioneInfisso> for AnnotazioneInfissoDAO {
                     id: row.get("ID")?,
                     id_infisso: row.get("ID_STANZA")?,
                     content: row.get("CONTENT")?,
-                    data: row.get("DATA")?,
+                    _data: row.get("DATA")?,
                 })
             })?
             .collect();
@@ -74,7 +74,7 @@ impl Insert<AnnotazioneInfisso> for AnnotazioneInfissoDAO {
 
         Ok(AnnotazioneInfisso {
             id,
-            data: Some(convert_timestamp_to_local(timestamp)?),
+            _data: Some(convert_timestamp_to_local(timestamp)?),
             ..item
         })
     }
