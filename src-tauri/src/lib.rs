@@ -40,6 +40,7 @@ pub fn run() {
             get_all_name_database,
             // tipi
             get_all_tipi,
+            insert_tipo,
             // stanza
             get_stanze,
             insert_stanza,

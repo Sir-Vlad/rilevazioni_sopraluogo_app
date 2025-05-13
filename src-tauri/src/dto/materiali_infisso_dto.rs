@@ -1,5 +1,6 @@
 use crate::dto::DTO;
 use serde::{Deserialize, Serialize};
+use crate::dao::entity::MaterialeInfisso;
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct MaterialeInfissoDTO {
@@ -8,3 +9,12 @@ pub struct MaterialeInfissoDTO {
 }
 
 impl DTO for MaterialeInfissoDTO {}
+
+impl From<MaterialeInfisso> for MaterialeInfissoDTO {
+    fn from(materiali_infisso: MaterialeInfisso) -> Self {
+        Self {
+            materiale: materiali_infisso.materiale,
+            efficienza_energetica: materiali_infisso.efficienza_energetica,
+        }
+    }
+}
