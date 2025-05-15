@@ -33,6 +33,20 @@ const FotovoltaicoProvider = ({ children }: { children: React.ReactNode }) => {
 
     }, [ errorContext ]);
 
+    const insertFotovoltaico = useCallback(async (fotovoltaico: IFotovoltaico) => {
+        try {
+            setLoading(true);
+            const inserted_fotovoltaico: IFotovoltaico = await invoke("insert_fotovoltaico", { fotovoltaico });
+            setFotovoltaico((prev) => {
+                return [ ...prev.filter(value => value.id !== inserted_fotovoltaico.id), inserted_fotovoltaico ];
+            })
+        } catch (e) {
+            errorContext.addError(e as string);
+        } finally {
+            setLoading(false);
+        }
+    }, [ errorContext ])
+
     useEffect(() => {
         if (needReload) {
             loadFotovoltaico().then(() => {
@@ -46,9 +60,10 @@ const FotovoltaicoProvider = ({ children }: { children: React.ReactNode }) => {
     }, [ loadFotovoltaico ]);
 
     const obj = useMemo(() => ({
-        data     : fotovoltaico,
-        isLoading: loading
-    } as FotovoltaicoContextType), [ loading, fotovoltaico ]);
+        data              : fotovoltaico,
+        isLoading         : loading,
+        insertFotovoltaico: insertFotovoltaico,
+    } as FotovoltaicoContextType), [ fotovoltaico, loading, insertFotovoltaico ]);
 
     return <FotovoltaicoContext.Provider value={ obj }>
         { children }

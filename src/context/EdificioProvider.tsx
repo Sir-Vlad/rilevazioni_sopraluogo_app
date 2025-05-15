@@ -35,6 +35,34 @@ const EdificioProvider = ({ children }: { children: React.ReactNode }) => {
         }
     }, [ errorContext ]);
 
+    const modifyEdificio = useCallback(async (edificio: IEdificio) => {
+        try {
+            setIsLoading(true);
+            console.log(edificio);
+            const newEdificio: IEdificio = await invoke("update_edificio", { edificio });
+            console.log(newEdificio);
+            setEdifici((prev) => {
+                const oldEdificio = prev.find(value => value.chiave === edificio.chiave);
+                if (oldEdificio) {
+                    const mergeObj: IEdificio = {
+                        ...oldEdificio,
+                        anno_costruzione: newEdificio.anno_costruzione ?? oldEdificio.anno_costruzione,
+                        anno_riqualificazione: newEdificio.anno_riqualificazione ?? oldEdificio.anno_riqualificazione,
+                        note_riqualificazione: newEdificio.note_riqualificazione ?? oldEdificio.note_riqualificazione,
+                        cappotto: newEdificio.cappotto ?? oldEdificio.cappotto,
+                        isolamento_tetto: newEdificio.isolamento_tetto ?? oldEdificio.isolamento_tetto,
+                    }
+                    return [ ...prev.filter(value => value.chiave !== edificio.chiave), mergeObj ];
+                }
+                return prev;
+            })
+        } catch (e) {
+            errorContext.addError(e as string);
+        } finally {
+            setIsLoading(false);
+        }
+    }, [ errorContext ])
+
     // Ricarica i dati quando il database cambia
     useEffect(() => {
         if (needReload) {
@@ -55,9 +83,10 @@ const EdificioProvider = ({ children }: { children: React.ReactNode }) => {
             data               : edifici,
             selectedEdificio   : selectedEdificio,
             setSelectedEdificio: setSelectedEdificio,
-            isLoading          : isLoading
+            isLoading          : isLoading,
+            modifyEdificio     : modifyEdificio
         } as EdificioContextType;
-    }, [ edifici, isLoading, selectedEdificio ]);
+    }, [ edifici, isLoading, modifyEdificio, selectedEdificio ]);
 
     return <EdificioContext.Provider value={ obj }>
         { children }

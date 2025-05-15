@@ -23,7 +23,7 @@ impl CreateTable for UtenzeDAO {
             (
                 ID                  INTEGER PRIMARY KEY AUTOINCREMENT,
                 ID_EDIFICIO         TEXT NOT NULL REFERENCES EDIFICIO (CHIAVE),
-                TIPO                TEXT NOT NULL CHECK ( TIPO IN ('acqua', 'calore', 'elettricità') ),
+                TIPO                TEXT NOT NULL CHECK ( TIPO IN ('idrica', 'termica', 'elettrica') ),
                 COD_CONTATORE       TEXT NOT NULL,
                 INDIRIZZO_CONTATORE TEXT
             ) STRICT;", Self::table_name()).as_str(),

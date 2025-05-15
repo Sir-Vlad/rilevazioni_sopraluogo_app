@@ -33,6 +33,20 @@ const UtenzeProvider = ({ children }: { children: React.ReactNode }) => {
 
     }, [ errorContext ]);
 
+    const insertUtenza = useCallback(async (utenza: IUtenza) => {
+        try {
+            setLoading(true);
+            const newUtenza: IUtenza = await invoke("insert_utenza", { utenza });
+            setUtenze((prev) => {
+                return [ ...prev.filter(value => value.id !== newUtenza.id), newUtenza ];
+            })
+        } catch (e) {
+            errorContext.addError(e as string);
+        } finally {
+            setLoading(false);
+        }
+    }, [ errorContext ])
+
     useEffect(() => {
         if (needReload) {
             loadUtenze().then(() => {
@@ -46,9 +60,10 @@ const UtenzeProvider = ({ children }: { children: React.ReactNode }) => {
     }, [ loadUtenze ]);
 
     const obj = useMemo(() => ({
-        data     : utenze,
-        isLoading: loading,
-    } as UtenzeContextType), [ loading, utenze ]);
+        data        : utenze,
+        isLoading   : loading,
+        insertUtenza: insertUtenza,
+    } as UtenzeContextType), [ insertUtenza, loading, utenze ]);
 
     return <UtenzeContext.Provider value={ obj }>
         { children }

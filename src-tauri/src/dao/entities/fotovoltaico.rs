@@ -7,12 +7,12 @@ use std::any::Any;
 pub struct Fotovoltaico {
     pub(crate) id: u64,
     pub(crate) id_edificio: String,
-    pub(crate) potenza: u16,
+    pub(crate) potenza: f32,
     pub(crate) proprietario: String,
 }
 
 impl Fotovoltaico {
-    pub fn new(id_edificio: &str, potenza: u16, proprietario: &str) -> Self {
+    pub fn new(id_edificio: &str, potenza: f32, proprietario: &str) -> Self {
         Self {
             id: 0,
             id_edificio: id_edificio.to_string(),
@@ -45,7 +45,7 @@ impl From<FotovoltaicoDTO> for Fotovoltaico {
 impl ToList for Fotovoltaico {
     fn to_list(&self) -> Vec<Box<dyn Any>> {
         vec![
-            Box::new(self.id.clone()),
+            Box::new(self.id),
             Box::new(self.id_edificio.clone()),
             Box::new(self.potenza),
             Box::new(self.proprietario.clone()),

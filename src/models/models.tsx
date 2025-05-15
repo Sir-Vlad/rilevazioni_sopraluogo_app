@@ -26,10 +26,11 @@ export interface IEdificio {
     chiave: string,
     fascicolo: string,
     indirizzo: string,
-    anno_costruzione: string,
-    anno_riqualificazione: string,
-    isolamento_tetto: boolean,
-    cappotto: boolean,
+    anno_costruzione?: string,
+    anno_riqualificazione?: string,
+    note_riqualificazione?: string,
+    isolamento_tetto?: boolean,
+    cappotto?: boolean,
 }
 
 export interface IStanzaConInfissi {

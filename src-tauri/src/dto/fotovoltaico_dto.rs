@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 pub struct FotovoltaicoDTO {
     pub(crate) id: Option<u64>,
     pub(crate) id_edificio: String,
-    pub(crate) potenza: u16,
+    pub(crate) potenza: f32,
     pub(crate) proprietario: String,
 }
 
