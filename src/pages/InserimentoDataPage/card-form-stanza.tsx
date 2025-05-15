@@ -9,7 +9,6 @@ import DynamicSelect from "@/components/dynamic-select.tsx";
 import { Input } from "@/components/ui/input.tsx";
 import { Pencil, PlusIcon, Trash } from "lucide-react";
 import AnnotazioneButton from "@/components/annotazione-button.tsx";
-import HelpBadge from "@/components/help-badge.tsx";
 import { useDatabase, useEdifici, useStanze, useTypes } from "@/context/UseProvider.tsx";
 import { handleInputNumericChange } from "@/helpers/helpers";
 import { IAnnotazione, IStanza, NuovoTipo, TipoKey } from "@/models/models.tsx";
@@ -30,6 +29,7 @@ import { Label } from "@/components/ui/label";
 import { useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { useErrorContext } from "@/context/ErrorProvider.tsx";
+import InputWithMeasureUnit from "@/components/input-with-measure-unit.tsx";
 
 
 const FormSchema = z.object({
@@ -262,11 +262,12 @@ const CardFormStanza = () => {
                                             <FormItem>
                                                 <FormLabel className="flex items-center">
                                                     <p>Altezza</p>
-                                                    <HelpBadge message="Il valore va inserito in cm"/>
                                                 </FormLabel>
-                                                <Input value={ field.value }
-                                                       onChange={ e => handleInputNumericChange(e, field.onChange) }
-                                                       disabled={ databaseName === null }
+                                                <InputWithMeasureUnit
+                                                    value={ field.value }
+                                                    onChange={ e => handleInputNumericChange(e, field.onChange) }
+                                                    disabled={ databaseName === null }
+                                                    unitLabel="cm"
                                                 />
                                                 <FormMessage/>
                                             </FormItem>
@@ -279,11 +280,12 @@ const CardFormStanza = () => {
                                             <FormItem>
                                                 <FormLabel className="flex items-center">
                                                     <p>Spessore Muro</p>
-                                                    <HelpBadge message="Il valore va inserito in cm"/>
                                                 </FormLabel>
-                                                <Input value={ field.value }
-                                                       onChange={ e => handleInputNumericChange(e, field.onChange) }
-                                                       disabled={ databaseName === null }
+                                                <InputWithMeasureUnit
+                                                    value={ field.value }
+                                                    onChange={ e => handleInputNumericChange(e, field.onChange) }
+                                                    disabled={ databaseName === null }
+                                                    unitLabel="cm"
                                                 />
                                                 <FormMessage/>
                                             </FormItem>

@@ -3,7 +3,6 @@ import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Form, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form.tsx";
-import { Input } from "@/components/ui/input.tsx";
 import { ChangeEvent, useState } from "react";
 import { Button } from "@/components/ui/button.tsx";
 import { PlusIcon, Trash } from "lucide-react";
@@ -11,10 +10,10 @@ import { useDatabase, useInfissi, useTypes } from "@/context/UseProvider.tsx";
 import CommentsButton from "@/components/annotazione-button.tsx";
 import { toast } from "sonner";
 import { IAnnotazione, IInfisso } from "@/models/models.tsx";
-import HelpBadge from "@/components/help-badge.tsx";
 import TitleCard from "@/components/title-card.tsx";
 import ClearableSelect from "@/components/clearable-select.tsx";
 import { invoke } from "@tauri-apps/api/core";
+import InputWithMeasureUnit from "@/components/input-with-measure-unit.tsx";
 
 const nextAlphabeticalID = (prevID: string | null) => {
     if (!prevID || prevID === "") return "A";
@@ -213,11 +212,12 @@ const CardFormInfisso = () => {
                                             <FormItem>
                                                 <FormLabel className="flex items-center">
                                                     <p>Altezza</p>
-                                                    <HelpBadge message="Il valore va inserito in cm"/>
                                                 </FormLabel>
-                                                <Input value={ field.value }
-                                                       onChange={ e => handleInputNumericChange(e, field) }
-                                                       disabled={ databaseName === null }
+                                                <InputWithMeasureUnit
+                                                    value={ field.value }
+                                                    onChange={ e => handleInputNumericChange(e, field) }
+                                                    disabled={ databaseName === null }
+                                                    unitLabel="cm"
                                                 />
                                                 <FormMessage/>
                                             </FormItem>
@@ -230,11 +230,12 @@ const CardFormInfisso = () => {
                                             <FormItem>
                                                 <FormLabel className="flex items-center">
                                                     <p>Larghezza</p>
-                                                    <HelpBadge message="Il valore va inserito in cm"/>
                                                 </FormLabel>
-                                                <Input value={ field.value }
-                                                       onChange={ e => handleInputNumericChange(e, field) }
-                                                       disabled={ databaseName === null }
+                                                <InputWithMeasureUnit
+                                                    value={ field.value }
+                                                    onChange={ e => handleInputNumericChange(e, field) }
+                                                    disabled={ databaseName === null }
+                                                    unitLabel="cm"
                                                 />
                                                 <FormMessage/>
                                             </FormItem>
