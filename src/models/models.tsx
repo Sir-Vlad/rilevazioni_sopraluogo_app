@@ -1,5 +1,6 @@
 export interface IInfisso {
     id?: string;
+    id_edificio: string;
     tipo: string;
     altezza: number;
     larghezza: number;

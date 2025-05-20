@@ -11,12 +11,11 @@ export function FilterDataGrid({ column }: Readonly<{ column: Column<any, unknow
     const columnFilterValue = column.getFilterValue();
 
     const sortedUniqueValues: string[] = useMemo(() => {
-        console.log("recomputing unique values")
         if (filterVariant === "range") return [] as string[]
         return Array.from(column.getFacetedUniqueValues().keys())
             .filter(value => value !== undefined && value !== null)
             .slice(0, 1000) as string[]
-    }, [column, filterVariant]);
+    }, [ filterVariant ]);
 
     if (filterVariant === "range") {
         const minValue = column.getFacetedMinMaxValues()?.[0]

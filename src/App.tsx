@@ -12,7 +12,6 @@ import { invoke } from "@tauri-apps/api/core";
 import { useErrorContext } from "@/context/ErrorProvider.tsx";
 import { toast } from "sonner";
 
-
 function App() {
     const errorContext = useErrorContext();
 
@@ -22,6 +21,17 @@ function App() {
             toast.error(value.message)
         })
     }, [ errorContext.errors ]);
+
+    useEffect(() => {
+        localStorage.clear();
+        sessionStorage.clear();
+
+        indexedDB.databases?.().then((databases) => {
+            databases?.forEach((db) => {
+                if (db.name) indexedDB.deleteDatabase(db.name);
+            });
+        }).catch(console.error);
+    }, []);
 
     useEffect(() => {
         const handleBeforeUnload = async () => {

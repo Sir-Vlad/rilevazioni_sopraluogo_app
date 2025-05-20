@@ -1,7 +1,7 @@
 import * as React from "react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { IInfisso } from "../models/models.tsx";
-import { useDatabase } from "./UseProvider.tsx";
+import { useDatabase, useEdifici } from "./UseProvider.tsx";
 import { invoke } from "@tauri-apps/api/core";
 import { InfissiContext, InfissiContextType } from "./Context.tsx";
 import { useErrorContext } from "./ErrorProvider.tsx";
@@ -15,6 +15,7 @@ const InfissiProvider = ({ children }: { children: React.ReactNode }) => {
     const providerRef = useRef<{ notifyReloadComplete: () => void; } | null>(null);
     const [ loading, setLoading ] = useState(true);
     const errorContext = useErrorContext();
+    const { selectedEdificio } = useEdifici();
 
     useEffect(() => {
         providerRef.current = registerProvider("infissi");
@@ -67,12 +68,12 @@ const InfissiProvider = ({ children }: { children: React.ReactNode }) => {
 
     const obj = useMemo(() => {
         return {
-            data         : infissi,
+            data         : selectedEdificio === undefined ? [] : infissi.filter(value => value.id_edificio === selectedEdificio),
             insertInfisso: insertInfisso,
             modifyInfisso: modifyInfisso,
             isLoading    : loading
         } as InfissiContextType;
-    }, [ infissi, insertInfisso, loading, modifyInfisso ]);
+    }, [ infissi, insertInfisso, loading, modifyInfisso, selectedEdificio ]);
 
     return <InfissiContext.Provider value={ obj }>
         { children }

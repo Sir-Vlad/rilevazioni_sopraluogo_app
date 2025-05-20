@@ -6,7 +6,7 @@ import { Form, FormField, FormItem, FormLabel, FormMessage } from "@/components/
 import { ChangeEvent, useState } from "react";
 import { Button } from "@/components/ui/button.tsx";
 import { PlusIcon, Trash } from "lucide-react";
-import { useDatabase, useInfissi, useTypes } from "@/context/UseProvider.tsx";
+import { useDatabase, useEdifici, useInfissi, useTypes } from "@/context/UseProvider.tsx";
 import CommentsButton from "@/components/annotazione-button.tsx";
 import { toast } from "sonner";
 import { IAnnotazione, IInfisso } from "@/models/models.tsx";
@@ -58,6 +58,7 @@ const CardFormInfisso = () => {
         error,
         databaseName
     } = useDatabase();
+    const { selectedEdificio } = useEdifici();
 
     const form = useForm<z.infer<typeof FormInfisso>>({
         resolver     : zodResolver(FormInfisso),
@@ -92,7 +93,7 @@ const CardFormInfisso = () => {
     };
 
     async function onSubmit(data: z.infer<typeof FormInfisso>) {
-        if (error === "Database non impostato") {
+        if (error === "Database non impostato" || selectedEdificio === undefined || selectedEdificio === null) {
             toast.warning("File non selezionato");
             return;
         }
@@ -100,7 +101,8 @@ const CardFormInfisso = () => {
         if (data.altezza === 0 && data.larghezza === 0 && data.materiale === "" && data.vetro === "") {
             return;
         }
-        const lastInfisso = infissi.data.at(-1);
+        const lastInfisso = infissi.data.filter(value => value.id_edificio === selectedEdificio).at(-1);
+        console.log(lastInfisso)
         let lastInfissoId = "";
         if (lastInfisso) {
             if (lastInfisso.id) {
@@ -109,9 +111,11 @@ const CardFormInfisso = () => {
                 throw new Error("Infisso non ha un id");
             }
         }
+
         const newInfisso: IInfisso = {
             ...data,
-            id: nextAlphabeticalID(lastInfissoId)
+            id         : nextAlphabeticalID(lastInfissoId),
+            id_edificio: selectedEdificio,
         };
         try {
             await infissi.insertInfisso(newInfisso);

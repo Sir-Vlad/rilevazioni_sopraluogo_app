@@ -3,7 +3,7 @@ import { Fragment, ReactNode } from "react";
 import { useDatabase, useEdifici } from "@/context/UseProvider.tsx";
 import { CheckIcon, Pencil, PlusIcon, XIcon } from "lucide-react";
 import TitleCard from "@/components/title-card.tsx";
-import { capitalize, handleInputNumericChange } from "@/helpers/helpers.ts";
+import { capitalize, handleInputNumericChange, sanitizeString } from "@/helpers/helpers.ts";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -75,7 +75,7 @@ const CardDataEdificio = () => {
                             .map(([ key, value ]) => {
                                 return <Fragment key={ key }>
                                     <div>
-                                        <p className="font-medium">{ capitalize(key) }</p>
+                                        <p className="font-medium">{ capitalize(sanitizeString(key)) }</p>
                                     </div>
                                     <div className="flex items-center justify-center">
                                         { valueElement(value) }

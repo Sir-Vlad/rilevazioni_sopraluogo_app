@@ -72,7 +72,7 @@ const CardTableInfissi = () => {
         accessorKey: "id",
         header     : "ID",
         meta       : {
-            editable: false,
+            editable     : false,
             filterVariant: "text"
         }
     }, {
