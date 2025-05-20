@@ -72,10 +72,10 @@ impl Insert<MaterialeInfisso> for MaterialeInfissoDAO {
             row.get::<_, u64>(0)
         })?;
         let id = res.next().unwrap()?;
+        info!("Inserito materiale infisso con id {}", item.materiale);
         Ok(MaterialeInfisso {
             _id: Some(id),
-            materiale: item.materiale,
-            efficienza_energetica: item.efficienza_energetica,
+            ..item
         })
     }
 }

@@ -5,6 +5,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct InfissoDTO {
     pub id: String,
+    pub id_edificio: String,
     pub tipo: String,
     pub altezza: u16,
     pub larghezza: u16,
@@ -18,6 +19,7 @@ impl From<&Infisso> for InfissoDTO {
     fn from(infisso: &Infisso) -> Self {
         InfissoDTO {
             id: infisso.id.clone(),
+            id_edificio: infisso.edificio_id.clone(),
             tipo: infisso.tipo.clone(),
             altezza: infisso.altezza,
             larghezza: infisso.larghezza,

@@ -82,7 +82,7 @@ impl Insert<Edificio> for EdificioDAO {
             rusqlite::params_from_iter(convert_param(params)),
         ) {
             Ok(_) => {
-                info!("Edificio inserito con successo");
+                info!("Edificio {} inserito con successo", item.chiave);
                 Ok(item)
             }
             Err(e) => {

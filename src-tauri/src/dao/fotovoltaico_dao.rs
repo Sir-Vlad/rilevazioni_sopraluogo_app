@@ -7,7 +7,7 @@ use crate::{
     dao::schema_operations::CreateTable,
     database::{convert_param, DatabaseConnection, QueryBuilder, SqlQueryBuilder},
 };
-use log::info;
+use log::{error, info};
 use rusqlite::Error;
 
 pub struct FotovoltaicoDAO;
@@ -78,6 +78,7 @@ impl Insert<Fotovoltaico> for FotovoltaicoDAO {
                 row.get::<_, u64>(0)
             })?;
         let id = results.next().unwrap()?;
+        info!("Fotovoltaico {} inserito con successo", id);
         Ok(Fotovoltaico { id, ..item })
     }
 }
@@ -97,8 +98,14 @@ impl Update<Fotovoltaico> for FotovoltaicoDAO {
             row.get::<_, u64>(0)
         });
         match results {
-            Ok(_) => Ok(item),
-            Err(e) => Err(AppError::from(e)),
+            Ok(_) => {
+                info!("Fotovoltaico {} aggiornato con successo", item.id);
+                Ok(item)
+            }
+            Err(e) => {
+                error!("Fotovoltaico {} non aggiornato: {e}", item.id);
+                Err(AppError::from(e))
+            }
         }
     }
 }

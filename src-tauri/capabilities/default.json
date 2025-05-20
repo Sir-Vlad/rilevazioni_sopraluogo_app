@@ -10,6 +10,14 @@
     "dialog:default",
     "core:resources:default",
     "core:app:default",
-    "log:default"
+    "log:default",
+    {
+      "identifier": "fs:allow-remove",
+      "allow": [
+        {
+          "path": "$APPDATA"
+        }
+      ]
+    }
   ]
 }

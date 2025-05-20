@@ -91,14 +91,22 @@ impl Insert<Stanza> for StanzaDAO {
                 item.riscaldamento.clone().into(),
                 item.raffrescamento.clone().into(),
                 item.illuminazione.clone().into(),
-            ]);
+            ])
+            .returning("ID");
         let (query, param) = builder.build()?;
 
         let mut stmt = conn.prepare(query.as_str())?;
-        match stmt.execute(rusqlite::params_from_iter(convert_param(param))) {
-            Ok(_) => {
-                info!("Stanza inserita con successo");
-                Ok(item)
+        let res = stmt.query_map(rusqlite::params_from_iter(convert_param(param)), |row| {
+            row.get::<_, i64>(0)
+        });
+        match res {
+            Ok(mut id) => {
+                let id = id.next().unwrap()?;
+                info!("Stanza {} inserita con successo", id);
+                Ok(Stanza {
+                    id: Some(id as u64),
+                    ..item
+                })
             }
             Err(e) => {
                 error!("Errore durante l'inserimento {{ stanza }}: {e}");
@@ -125,12 +133,12 @@ impl Update<Stanza> for StanzaDAO {
             rusqlite::params_from_iter(convert_param(param)),
         ) {
             Ok(_) => {
-                info!("Stanza aggiornata con successo");
+                info!("Stanza {} aggiornata con successo", item.id.unwrap());
                 Ok(item)
             }
             Err(e) => {
-                error!("Errore durante l'aggiornamento {{ stanza }}: {e}");
-                Err(AppError::from(e))
+                error!("Stanza {} non aggiornata: {e}", item.id.unwrap());
+                Err(e)
             }
         }
     }

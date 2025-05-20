@@ -73,10 +73,10 @@ impl Insert<Illuminazione> for IlluminazioneDAO {
             row.get::<_, u64>(0)
         })?;
         let id = res.next().unwrap()?;
+        info!("Illuminazione inserita con ID {}", item.lampadina);
         Ok(Illuminazione {
             _id: Some(id),
-            lampadina: item.lampadina,
-            efficienza_energetica: item.efficienza_energetica,
+            ..item
         })
     }
 }

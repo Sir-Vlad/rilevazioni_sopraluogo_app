@@ -36,13 +36,13 @@ impl Infisso {
 impl From<InfissoDTO> for Infisso {
     fn from(infisso: InfissoDTO) -> Self {
         Infisso {
-            id: infisso.id.clone(),
-            edificio_id: "".to_string(),
-            tipo: infisso.tipo.clone(),
+            id: infisso.id,
+            edificio_id: infisso.id_edificio,
+            tipo: infisso.tipo,
             altezza: infisso.altezza,
             larghezza: infisso.larghezza,
-            materiale: infisso.materiale.clone(),
-            vetro: infisso.vetro.clone(),
+            materiale: infisso.materiale,
+            vetro: infisso.vetro,
         }
     }
 }

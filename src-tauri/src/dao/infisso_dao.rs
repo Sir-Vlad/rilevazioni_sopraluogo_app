@@ -31,7 +31,7 @@ impl CreateTable for InfissoDAO {
                     VETRO     TEXT    NOT NULL REFERENCES VETRO_INFISSO (VETRO),
                     MQ        REAL GENERATED ALWAYS AS ((ALTEZZA * LARGHEZZA) / 10000.0) VIRTUAL,
                     PRIMARY KEY (ID, EDIFICIO),
-                    UNIQUE (TIPO, ALTEZZA, LARGHEZZA, MATERIALE, VETRO)
+                    UNIQUE (ID, EDIFICIO, TIPO, ALTEZZA, LARGHEZZA, MATERIALE, VETRO)
                 ) STRICT;",
                 Self::table_name()
             )

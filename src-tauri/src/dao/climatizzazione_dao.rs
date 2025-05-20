@@ -72,10 +72,13 @@ impl Insert<Climatizzazione> for ClimatizzazioneDAO {
             row.get::<_, u64>(0)
         })?;
         let id = res.next().unwrap()?;
+        info!(
+            "Nuovo tipo di climatizzazione inserito con ID: {}",
+            item.climatizzazione
+        );
         Ok(Climatizzazione {
             _id: Some(id),
-            climatizzazione: item.climatizzazione,
-            efficienza_energetica: item.efficienza_energetica,
+            ..item
         })
     }
 }

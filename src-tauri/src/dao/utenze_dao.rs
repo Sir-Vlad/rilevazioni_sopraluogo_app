@@ -77,6 +77,7 @@ impl Insert<Utenza> for UtenzeDAO {
                 row.get::<_, u64>(0)
             })?;
         let id = result.next().unwrap()?;
+        info!("Utenza inserita con id {}", id);
         Ok(Utenza { id, ..item })
     }
 }

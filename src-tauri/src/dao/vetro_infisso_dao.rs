@@ -72,10 +72,10 @@ impl Insert<VetroInfisso> for VetroInfissoDAO {
             row.get::<_, u64>(0)
         })?;
         let id = res.next().unwrap()?;
+        info!("VetroInfisso inserito con ID {}", item.vetro);
         Ok(VetroInfisso {
             _id: Some(id),
-            vetro: item.vetro,
-            efficienza_energetica: item.efficienza_energetica,
+            ..item
         })
     }
 }
