@@ -1,6 +1,6 @@
 1. Controllare se c'è la riga totale nell'excel e nel caso toglierla
 
-2. `Modifica stanza` non è modulare, quando inserisco un dato cancella tutto il resto
+2. `Modifica stanza` non è modulare, quando inserisco un dato cancella tutto il resto [FATTO]
 
 3. Tutte le notifiche farle gestire tutte da un componente e gli altri componenti le invia a quel componente
    1. Al momento ci sono duplicazione di notifiche

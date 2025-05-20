@@ -12,7 +12,7 @@ import {
     useReactTable
 } from "@tanstack/react-table";
 import { IStanza } from "@/models/models.tsx";
-import { useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import TitlePage from "@/components/title-page.tsx";
 import { CardDataGrid } from "@/components/card-data-grid.tsx";
 import {
@@ -36,17 +36,17 @@ const Panoramica = () => {
 
     // fixme: Quando vengono aperti i filtri i dati vengono cancellati dalla tabella
     const columns: ColumnDef<IStanza>[] = [ {
-        accessorKey: "stanza",
-        header     : "Stanza",
+        accessorKey       : "stanza",
+        header            : "Stanza",
         enableColumnFilter: false,
-        meta       : {
+        meta              : {
             filterVariant: "select"
         }
     }, {
-        accessorKey: "chiave",
-        header     : "Chiave",
+        accessorKey       : "chiave",
+        header            : "Chiave",
         enableColumnFilter: false,
-        meta       : {
+        meta              : {
             filterVariant: "select"
         }
     }, {
@@ -58,10 +58,10 @@ const Panoramica = () => {
         header            : "Piano",
         enableColumnFilter: false
     }, {
-        accessorKey: "altezza",
-        header     : "Altezza",
+        accessorKey       : "altezza",
+        header            : "Altezza",
         enableColumnFilter: false,
-        meta       : {
+        meta              : {
             filterVariant: "range"
         }
     }, {
@@ -69,24 +69,24 @@ const Panoramica = () => {
         header            : "Spessore Muro",
         enableColumnFilter: false
     }, {
-        accessorKey: "riscaldamento",
-        header     : "Riscaldamento",
+        accessorKey       : "riscaldamento",
+        header            : "Riscaldamento",
         enableColumnFilter: false,
-        meta       : {
+        meta              : {
             filterVariant: "select"
         }
     }, {
-        accessorKey: "raffrescamento",
-        header     : "Raffrescamento",
+        accessorKey       : "raffrescamento",
+        header            : "Raffrescamento",
         enableColumnFilter: false,
-        meta       : {
+        meta              : {
             filterVariant: "select"
         }
     }, {
-        accessorKey: "illuminazione",
-        header     : "Illuminazione",
+        accessorKey       : "illuminazione",
+        header            : "Illuminazione",
         enableColumnFilter: false,
-        meta       : {
+        meta              : {
             filterVariant: "select"
         }
     }, {
@@ -118,8 +118,31 @@ const Panoramica = () => {
         enableColumnFilter: false
     } ];
 
+    const orderingStanze = useCallback((stanze: IStanza[]) => {
+        const parsePiano = (piano: string): number => {
+            if (piano === "T") return 0; // Assegna "T" a una posizione definita
+            const parsed = parseInt(piano, 10);
+            return isNaN(parsed) ? Number.MAX_SAFE_INTEGER : parsed; // Gestisce valori non numerici
+        };
+
+        return [ ...stanze ].sort((a, b) => {
+            const pianoA = parsePiano(a.piano);
+            const pianoB = parsePiano(b.piano);
+            if (pianoA !== pianoB) {
+                return pianoA - pianoB;
+            }
+
+            const codStanzaA = a.stanza;
+            const codStanzaB = b.stanza;
+            return codStanzaA.localeCompare(codStanzaB);
+        });
+    }, []);
+    const stanzeOrdinate = useMemo(() => {
+        return orderingStanze(stanzeContext.data);
+    }, [ orderingStanze, stanzeContext.data ]);
+
     const table = useReactTable({
-        data                  : stanzeContext.data,
+        data                  : stanzeOrdinate,
         columns               : columns,
         getCoreRowModel       : getCoreRowModel(),
         getPaginationRowModel : getPaginationRowModel(),

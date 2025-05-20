@@ -118,6 +118,15 @@ impl Insert<Stanza> for StanzaDAO {
 
 impl Update<Stanza> for StanzaDAO {
     fn update<C: DatabaseConnection>(conn: &C, item: Stanza) -> Result<Stanza, AppError> {
+        if item.altezza.is_none()
+            && item.spessore_muro.is_none()
+            && item.riscaldamento.is_none()
+            && item.raffrescamento.is_none()
+            && item.illuminazione.is_none()
+        {
+            return Ok(item);
+        }
+
         let builder = QueryBuilder::update()
             .table(Self::table_name())
             .set_if("ALTEZZA", item.altezza)
@@ -127,6 +136,9 @@ impl Update<Stanza> for StanzaDAO {
             .set_if("ILLUMINAZIONE", item.illuminazione.clone())
             .where_eq("ID", item.id.unwrap());
         let (query, param) = builder.build()?;
+
+        println!("{:?}", item);
+        println!("{}", query);
 
         match conn.execute(
             query.as_str(),

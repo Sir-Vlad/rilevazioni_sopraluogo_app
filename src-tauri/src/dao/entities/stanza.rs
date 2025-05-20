@@ -1,7 +1,7 @@
 use crate::dto::StanzaDTO;
 
-#[derive(Clone)]
-#[cfg_attr(test, derive(Debug, PartialEq))]
+#[derive(Clone, Debug)]
+#[cfg_attr(test, derive(PartialEq))]
 pub struct Stanza {
     pub(crate) id: Option<u64>,
     pub(crate) chiave: String,

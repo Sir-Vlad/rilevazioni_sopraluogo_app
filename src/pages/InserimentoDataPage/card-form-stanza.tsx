@@ -119,8 +119,8 @@ const CardFormStanza = () => {
         for (const stanza of stanze) {
             const newStanza: IStanza = {
                 ...stanza,
-                altezza       : data.altezza,
-                spessore_muro : data.spessore_muro,
+                altezza       : data.altezza == 0 ? undefined : data.altezza,
+                spessore_muro : data.spessore_muro == 0 ? undefined : data.spessore_muro,
                 riscaldamento : data.riscaldamento,
                 raffrescamento: data.raffrescamento,
                 illuminazione : data.illuminazione,
@@ -128,14 +128,7 @@ const CardFormStanza = () => {
                     return infisso !== null && infisso !== undefined && infisso !== "";
                 })
             };
-            console.log(newStanza);
-            try {
-                stanzaContext.updateStanza(newStanza);
-                toast.success(`Stanza ${ data.stanza } modificata`);
-            } catch (e) {
-                toast.error(`Errore durante la modifica della stanza ${ data.stanza }`);
-                console.log(e);
-            }
+            stanzaContext.updateStanza(newStanza);
             if (annotazioni.length > 0) onSubmitAnnotazioni(stanza).then().catch(console.error);
         }
     }
