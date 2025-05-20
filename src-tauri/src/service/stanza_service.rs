@@ -53,7 +53,11 @@ impl UpdateService<StanzaDTO> for StanzaService {
             if let Some(infissi) = &stanza.infissi {
                 StanzaConInfissiDao::update(
                     tx,
-                    StanzaConInfissi::new_with_infissi_expanse(stanza.id, infissi.clone()),
+                    StanzaConInfissi::new_with_infissi_expanse(
+                        stanza.id,
+                        infissi.clone(),
+                        stanza.chiave,
+                    ),
                 )?;
             }
             Ok(StanzaDTO::from(result))

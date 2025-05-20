@@ -6,6 +6,7 @@ pub struct VetroInfisso {
 }
 
 impl VetroInfisso {
+    #[cfg(test)]
     pub(crate) fn new(vetro: &str, efficienza_energetica: u8) -> Self {
         Self {
             _id: None,

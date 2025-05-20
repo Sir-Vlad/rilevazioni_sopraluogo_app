@@ -24,10 +24,12 @@ impl CreateTable for StanzaConInfissiDao {
             format!(
                 "CREATE TABLE IF NOT EXISTS {}
                 (
-                    ID_STANZA   INTEGER NOT NULL REFERENCES STANZA (ID),
-                    ID_INFISSO  TEXT    NOT NULL REFERENCES INFISSO (ID),
-                    NUM_INFISSI INTEGER NOT NULL DEFAULT 1 CHECK ( NUM_INFISSI > 0 ),
-                    PRIMARY KEY (ID_INFISSO, ID_STANZA)
+                    ID_STANZA      INTEGER NOT NULL REFERENCES STANZA (ID),
+                    ID_INFISSO     TEXT    NOT NULL,
+                    ID_EDIFICIO    TEXT    NOT NULL,
+                    NUM_INFISSI    INTEGER NOT NULL DEFAULT 1 CHECK ( NUM_INFISSI > 0 ),
+                    PRIMARY KEY (ID_INFISSO, ID_STANZA, ID_EDIFICIO),
+                    FOREIGN KEY (ID_INFISSO, ID_EDIFICIO) REFERENCES INFISSO (ID, EDIFICIO)
                 ) STRICT;",
                 Self::table_name()
             )
@@ -39,15 +41,21 @@ impl CreateTable for StanzaConInfissiDao {
     }
 }
 
-impl Get<StanzaConInfissi, u64> for StanzaConInfissiDao {
-    fn get<C: DatabaseConnection>(conn: &C, id: u64) -> Result<StanzaConInfissi, AppError> {
+impl Get<StanzaConInfissi, (u64, String)> for StanzaConInfissiDao {
+    fn get<C: DatabaseConnection>(
+        conn: &C,
+        id: (u64, String),
+    ) -> Result<StanzaConInfissi, AppError> {
+        let (id, edificio) = id;
         let builder = QueryBuilder::select()
             .table(Self::table_name())
-            .where_eq("ID_STANZA", id);
+            .where_eq("ID_STANZA", id)
+            .where_eq("ID_EDIFICIO", edificio.clone());
         let (query, _) = builder.build()?;
+
         let mut stmt = conn.prepare(query.as_str())?;
         let result: Result<Vec<(String, u64)>, Error> = stmt
-            .query_map(params![id], |row| {
+            .query_map(params![id, edificio], |row| {
                 let id_infisso = row.get("ID_INFISSO")?;
                 let ripetizioni = row.get("NUM_INFISSI")?;
                 Ok((id_infisso, ripetizioni))
@@ -62,10 +70,10 @@ impl Get<StanzaConInfissi, u64> for StanzaConInfissiDao {
                         id
                     )))
                 } else {
-                    Ok(StanzaConInfissi::new(id, infissi))
+                    Ok(StanzaConInfissi::new(id, infissi, edificio))
                 }
             }
-            Err(e) => return Err(AppError::from(e)),
+            Err(e) => Err(AppError::from(e)),
         }
     }
 }
@@ -75,15 +83,18 @@ impl GetAll<StanzaConInfissi> for StanzaConInfissiDao {
         let (query, _) = QueryBuilder::select().table("STANZA_CON_INFISSI").build()?;
         let mut stmt = conn.prepare(query.as_str())?;
 
-        let mut infissi: HashMap<String, Vec<(String, u64)>> = HashMap::new();
+        let mut infissi: HashMap<(String, String), Vec<(String, u64)>> = HashMap::new();
         let mut rows = stmt.query([])?;
 
         while let Some(row) = rows.next()? {
             let id_stanza: u64 = row.get("ID_STANZA")?;
             let id_infisso: String = row.get("ID_INFISSO")?;
+            let id_edificio: String = row.get("ID_EDIFICIO")?;
             let num_infissi: u64 = row.get("NUM_INFISSI")?;
 
-            let stanza_infissi = infissi.entry(id_stanza.to_string()).or_default();
+            let stanza_infissi = infissi
+                .entry((id_stanza.to_string(), id_edificio))
+                .or_default();
 
             stanza_infissi.push((id_infisso, num_infissi));
         }
@@ -91,8 +102,9 @@ impl GetAll<StanzaConInfissi> for StanzaConInfissiDao {
         let mut result = Vec::new();
         for entry in infissi.into_iter() {
             result.push(StanzaConInfissi::new(
-                entry.0.parse::<u64>().unwrap(),
+                entry.0 .0.parse::<u64>().unwrap(),
                 entry.1,
+                entry.0 .1,
             ));
         }
         result.reverse();
@@ -107,13 +119,23 @@ impl Insert<StanzaConInfissi> for StanzaConInfissiDao {
     ) -> Result<StanzaConInfissi, AppError> {
         let builder = QueryBuilder::insert()
             .table(Self::table_name())
-            .columns(vec!["ID_STANZA", "ID_INFISSO", "NUM_INFISSI"])
-            .values(vec![0.into(), "A".into(), 0.into()]); // param fake
+            .columns(vec![
+                "ID_STANZA",
+                "ID_INFISSO",
+                "ID_EDIFICIO",
+                "NUM_INFISSI",
+            ])
+            .values(vec![0.into(), "A".into(), "".into(), 0.into()]); // param fake
         let (query, _) = builder.build()?;
 
         let mut stmt = conn.prepare(query.as_str())?;
         for (id_infisso, num_infisso) in item.id_infissi.clone() {
-            stmt.execute(params![item.id_stanza, id_infisso, num_infisso])?;
+            stmt.execute(params![
+                item.id_stanza,
+                id_infisso,
+                item.id_edificio,
+                num_infisso
+            ])?;
         }
 
         Ok(item)
@@ -126,7 +148,7 @@ impl Update<StanzaConInfissi> for StanzaConInfissiDao {
         item: StanzaConInfissi,
     ) -> Result<StanzaConInfissi, AppError> {
         // Recupero l'elemento esistente per confrontarlo con quello nuovo
-        let existing = match Self::get(conn, item.id_stanza) {
+        let existing = match Self::get(conn, (item.id_stanza, item.id_edificio.clone())) {
             Ok(existing) => existing,
             Err(AppError::NotFound(_)) => {
                 // Se non esiste, facciamo direttamente l'insert
@@ -178,7 +200,7 @@ impl Update<StanzaConInfissi> for StanzaConInfissiDao {
                 .cloned()
                 .collect();
 
-            let infisso = StanzaConInfissi::new(item.id_stanza, infissi);
+            let infisso = StanzaConInfissi::new(item.id_stanza, infissi, item.id_edificio.clone());
 
             Self::insert(conn, infisso)?;
         }
@@ -211,9 +233,13 @@ fn find_common_and_unique(
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::dao::entity::{Edificio, Infisso, MaterialeInfisso, Stanza, VetroInfisso};
+    use crate::dao::entity::{
+        Edificio, Infisso, MaterialeInfisso, Stanza, TipoInfisso, VetroInfisso,
+    };
     use crate::dao::utils::create_types_tables;
-    use crate::dao::{EdificioDAO, InfissoDAO, MaterialeInfissoDAO, StanzaDAO, VetroInfissoDAO};
+    use crate::dao::{
+        EdificioDAO, InfissoDAO, MaterialeInfissoDAO, StanzaDAO, TipoInfissoDAO, VetroInfissoDAO,
+    };
     use once_cell::sync::Lazy;
     use rusqlite::Connection;
     use serial_test::serial;
@@ -221,6 +247,7 @@ mod test {
     use std::sync::Mutex;
 
     static DATABASE: Lazy<Mutex<Connection>> = Lazy::new(|| Mutex::new(setup()));
+    static ID_EDIFICIO: &str = "PR01-25";
 
     fn setup() -> Connection {
         let conn = Connection::open_in_memory().unwrap();
@@ -233,33 +260,46 @@ mod test {
         MaterialeInfissoDAO::insert(&conn, materiale)
             .expect("Errore nella creazione del materiale");
 
-        // pretty_sqlite::print_table(&conn, MaterialeInfissoDAO::table_name()).unwrap();
-
         let vetro = VetroInfisso::new("Singolo", 1);
         VetroInfissoDAO::insert(&conn, vetro).expect("Errore nella creazione del materiale");
         let vetro = VetroInfisso::new("Doppio", 2);
         VetroInfissoDAO::insert(&conn, vetro).expect("Errore nella creazione del materiale");
 
-        // pretty_sqlite::print_table(&conn, VetroInfissoDAO::table_name()).unwrap();
+        let tipo_infisso = TipoInfisso {
+            _id: 0,
+            nome: "PORTA".to_string(),
+        };
+        TipoInfissoDAO::insert(&conn, tipo_infisso).expect("Errore nella creazione del tipo");
+        let tipo_infisso = TipoInfisso {
+            _id: 0,
+            nome: "FINESTRA".to_string(),
+        };
+        TipoInfissoDAO::insert(&conn, tipo_infisso).expect("Errore nella creazione del tipo");
 
         EdificioDAO::create_table(&conn).unwrap();
         StanzaDAO::create_table(&conn).unwrap();
         InfissoDAO::create_table(&conn).unwrap();
         StanzaConInfissiDao::create_table(&conn).unwrap();
 
-        let edificio = Edificio::new("PR01-25", "00008545", "Via Pallone");
-        EdificioDAO::insert(&conn, edificio).expect("Errore nella creazione dell'edificio");
+        let edificio = Edificio::new(ID_EDIFICIO, "00008545", "Via Pallone");
+        EdificioDAO::insert(&conn, edificio.clone()).expect("Errore nella creazione dell'edificio");
+
+        pretty_sqlite::print_table(&conn, EdificioDAO::table_name()).unwrap();
 
         let stanza = Stanza::new("PR01-25", "T", "1250", "045", "Ufficio");
         StanzaDAO::insert(&conn, stanza).expect("Errore nella creazione della stanza");
         let stanza = Stanza::new("PR01-25", "T", "1250", "047", "Ufficio");
         StanzaDAO::insert(&conn, stanza).expect("Errore nella creazione della stanza");
 
-        let infisso_a = Infisso::new("A", "PORTA", 350, 450, "Legno", "Singolo");
+        pretty_sqlite::print_table(&conn, StanzaDAO::table_name()).unwrap();
+
+        let infisso_a = Infisso::new("A", ID_EDIFICIO, "PORTA", 350, 450, "Legno", "Singolo");
         InfissoDAO::insert(&conn, infisso_a).expect("Errore nella creazione dell'infisso");
 
-        let infisso_b = Infisso::new("B", "FINESTRA", 350, 450, "PVC", "Doppio");
+        let infisso_b = Infisso::new("B", ID_EDIFICIO, "FINESTRA", 350, 450, "PVC", "Doppio");
         InfissoDAO::insert(&conn, infisso_b).expect("Errore nella creazione dell'infisso");
+
+        pretty_sqlite::print_table(&conn, InfissoDAO::table_name()).unwrap();
 
         conn
     }
@@ -278,6 +318,7 @@ mod test {
         let stanza_con_infissi = StanzaConInfissi {
             id_stanza: 1,
             id_infissi: vec![("A".to_string(), 5), ("B".to_string(), 8)],
+            id_edificio: ID_EDIFICIO.to_string(),
         };
 
         let res = StanzaConInfissiDao::insert(conn.deref(), stanza_con_infissi.clone());
@@ -295,7 +336,7 @@ mod test {
     fn get_stanza_con_infissi() {
         let conn = DATABASE.lock().unwrap();
 
-        let res = StanzaConInfissiDao::get(conn.deref(), 1);
+        let res = StanzaConInfissiDao::get(conn.deref(), (1, ID_EDIFICIO.to_string()));
         match res {
             Ok(r) => {
                 pretty_sqlite::print_table(&conn, StanzaConInfissiDao::table_name()).unwrap();
@@ -304,6 +345,7 @@ mod test {
                     StanzaConInfissi {
                         id_stanza: 1,
                         id_infissi: vec![("A".to_string(), 5), ("B".to_string(), 8)],
+                        id_edificio: ID_EDIFICIO.to_string()
                     }
                 );
             }
@@ -317,12 +359,20 @@ mod test {
 
         StanzaConInfissiDao::insert(
             &conn,
-            StanzaConInfissi::new(1, vec![("A".to_string(), 5), ("B".to_string(), 8)]),
+            StanzaConInfissi::new(
+                1,
+                vec![("A".to_string(), 5), ("B".to_string(), 2)],
+                ID_EDIFICIO.to_string(),
+            ),
         )
         .unwrap();
         StanzaConInfissiDao::insert(
             &conn,
-            StanzaConInfissi::new(2, vec![("A".to_string(), 2), ("B".to_string(), 1)]),
+            StanzaConInfissi::new(
+                2,
+                vec![("A".to_string(), 2), ("B".to_string(), 1)],
+                ID_EDIFICIO.to_string(),
+            ),
         )
         .unwrap();
 
@@ -345,17 +395,28 @@ mod test {
 
         StanzaConInfissiDao::insert(
             &conn,
-            StanzaConInfissi::new(1, vec![("A".to_string(), 5), ("B".to_string(), 8)]),
+            StanzaConInfissi::new(
+                1,
+                vec![("A".to_string(), 5), ("B".to_string(), 8)],
+                ID_EDIFICIO.to_string(),
+            ),
         )
         .unwrap();
-        StanzaConInfissiDao::insert(&conn, StanzaConInfissi::new(2, vec![("A".to_string(), 2)]))
-            .unwrap();
+        StanzaConInfissiDao::insert(
+            &conn,
+            StanzaConInfissi::new(2, vec![("A".to_string(), 2)], ID_EDIFICIO.to_string()),
+        )
+        .unwrap();
 
         pretty_sqlite::print_table(&conn, StanzaConInfissiDao::table_name()).unwrap();
 
         let res = StanzaConInfissiDao::update(
             &conn,
-            StanzaConInfissi::new(2, vec![("A".to_string(), 1), ("B".to_string(), 2)]),
+            StanzaConInfissi::new(
+                2,
+                vec![("A".to_string(), 1), ("B".to_string(), 2)],
+                ID_EDIFICIO.to_string(),
+            ),
         );
         match res {
             Ok(r) => {

@@ -37,6 +37,10 @@
   ],
   "climatizzazione": [
     {
+      "value": "No climatizzata",
+      "efficienza_energetica": 0
+    },
+    {
       "value": "Radiatori",
       "efficienza_energetica": 1
     },
@@ -62,6 +66,10 @@
     }
   ],
   "illuminazione": [
+    {
+      "value": "No illuminata",
+      "efficienza_energetica": 0
+    },
     {
       "value": "Alogene",
       "efficienza_energetica": 1

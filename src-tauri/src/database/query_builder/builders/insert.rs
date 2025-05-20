@@ -41,6 +41,7 @@ impl InsertQueryBuilder {
         self
     }
 
+    #[allow(unused_must_use, dead_code, unused_variables, unused_mut)]
     pub fn set(mut self, column: &str, values: Vec<QueryParam>) -> Self {
         todo!()
     }

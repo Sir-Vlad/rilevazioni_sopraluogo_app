@@ -1,6 +1,6 @@
-use crate::dto::{VetroInfissoDTO, DTO};
+use crate::dao::entity::Climatizzazione;
+use crate::dto::DTO;
 use serde::{Deserialize, Serialize};
-use crate::dao::entity::{Climatizzazione, VetroInfisso};
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct ClimatizzazioneDTO {

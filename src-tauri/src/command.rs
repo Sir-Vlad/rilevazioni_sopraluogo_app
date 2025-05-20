@@ -5,7 +5,7 @@ pub mod command_tauri {
     };
     use crate::service::{
         import::ImportData, import::ImportDatiStanzaToExcel, AnnotazioneService, CreateService,
-        FotovoltaicoService, RetrieveManyService, TypeDTO, UpdateService, UtenzeService,
+        FotovoltaicoService, RetrieveManyService, UpdateService, UtenzeService,
     };
     use crate::utils::AppError;
     use crate::{

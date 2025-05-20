@@ -13,6 +13,7 @@ pub struct TipoDTO {
 impl DTO for TipoDTO {}
 
 impl TipoDTO {
+    #[cfg(test)]
     pub fn new(tipo: String, name: String, efficienza_energetica: u8) -> Self {
         Self {
             tipo: TypeDTO::try_from(tipo).ok().unwrap(),

@@ -12,6 +12,7 @@ pub struct Fotovoltaico {
 }
 
 impl Fotovoltaico {
+    #[cfg(test)]
     pub fn new(id_edificio: &str, potenza: f32, proprietario: &str) -> Self {
         Self {
             id: 0,

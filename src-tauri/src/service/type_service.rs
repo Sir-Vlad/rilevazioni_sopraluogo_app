@@ -9,7 +9,7 @@ use crate::dto::{
 };
 use crate::service::utils::RetrieveManyService;
 use crate::utils::AppError;
-use serde::{Deserialize, Deserializer, Serialize, Serializer};
+use serde::{Deserialize, Deserializer, Serialize};
 use serde_json::Value;
 use std::collections::HashMap;
 use tauri::State;

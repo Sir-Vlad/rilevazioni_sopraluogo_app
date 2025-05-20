@@ -52,6 +52,7 @@ pub mod crud_operations {
         fn update<C: DatabaseConnection>(conn: &C, item: T) -> Result<T, AppError>;
     }
 
+    #[allow(dead_code)]
     pub trait Delete<T, K>: DAO {
         fn delete<C: DatabaseConnection>(conn: &C, item: K) -> Result<bool, AppError>;
     }

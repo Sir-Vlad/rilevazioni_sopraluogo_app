@@ -22,13 +22,15 @@ impl CreateTable for InfissoDAO {
             format!(
                 "CREATE TABLE IF NOT EXISTS {}
                 (
-                    ID        TEXT PRIMARY KEY,
+                    ID        TEXT,
+                    EDIFICIO  TEXT    NOT NULL REFERENCES EDIFICIO (CHIAVE),
                     TIPO      TEXT    NOT NULL REFERENCES TIPO_INFISSO (NOME),
                     ALTEZZA   INTEGER NOT NULL CHECK ( ALTEZZA >= 0 ),
                     LARGHEZZA INTEGER NOT NULL CHECK ( LARGHEZZA >= 0 ),
                     MATERIALE TEXT    NOT NULL REFERENCES MATERIALE_INFISSO (MATERIALE),
                     VETRO     TEXT    NOT NULL REFERENCES VETRO_INFISSO (VETRO),
                     MQ        REAL GENERATED ALWAYS AS ((ALTEZZA * LARGHEZZA) / 10000.0) VIRTUAL,
+                    PRIMARY KEY (ID, EDIFICIO),
                     UNIQUE (TIPO, ALTEZZA, LARGHEZZA, MATERIALE, VETRO)
                 ) STRICT;",
                 Self::table_name()
@@ -50,6 +52,7 @@ impl GetAll<Infisso> for InfissoDAO {
             .query_map([], |row| {
                 Ok(Infisso {
                     id: row.get::<_, String>("ID")?,
+                    edificio_id: row.get::<_, String>("EDIFICIO")?,
                     tipo: row.get::<_, String>("TIPO")?,
                     altezza: row.get::<_, u16>("ALTEZZA")?,
                     larghezza: row.get::<_, u16>("LARGHEZZA")?,
@@ -72,6 +75,7 @@ impl Insert<Infisso> for InfissoDAO {
             .table(Self::table_name())
             .columns(vec![
                 "ID",
+                "EDIFICIO",
                 "TIPO",
                 "ALTEZZA",
                 "LARGHEZZA",
@@ -80,6 +84,7 @@ impl Insert<Infisso> for InfissoDAO {
             ])
             .values(vec![
                 item.id.clone().into(),
+                item.edificio_id.clone().into(),
                 item.tipo.clone().into(),
                 item.altezza.into(),
                 item.larghezza.into(),
@@ -93,11 +98,14 @@ impl Insert<Infisso> for InfissoDAO {
             rusqlite::params_from_iter(convert_param(params)),
         ) {
             Ok(_) => {
-                info!("Infisso inserito con successo");
+                info!("Infisso {} inserito con successo", item.id);
                 Ok(item)
             }
             Err(e) => {
-                error!("Errore durante l'inserimento {{ infisso }}: {}", e);
+                error!(
+                    "Errore durante l'inserimento dell'infisso {}: {}",
+                    item.id, e
+                );
                 Err(e)
             }
         }
@@ -112,7 +120,8 @@ impl Update<Infisso> for InfissoDAO {
             .set("LARGHEZZA", item.larghezza)
             .set("MATERIALE", item.materiale.clone())
             .set("VETRO", item.vetro.clone())
-            .where_eq("ID", item.id.clone());
+            .where_eq("ID", item.id.clone())
+            .where_eq("EDIFICIO", item.edificio_id.clone());
         let (query, params) = builder.build()?;
 
         match conn.execute(
@@ -120,11 +129,14 @@ impl Update<Infisso> for InfissoDAO {
             rusqlite::params_from_iter(convert_param(params)),
         ) {
             Ok(_) => {
-                info!("Infisso aggiornato con successo");
+                info!("Infisso {} aggiornato con successo", item.id);
                 Ok(item)
             }
             Err(e) => {
-                error!("Errore durante l'aggiornamento {{ infisso }}: {}", e);
+                error!(
+                    "Errore durante l'aggiornamento dell'infisso {}: {}",
+                    item.id, e
+                );
                 Err(e)
             }
         }

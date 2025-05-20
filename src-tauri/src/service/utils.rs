@@ -9,6 +9,8 @@ where
 {
     fn create(db: State<'_, Database>, item: T) -> Result<T, AppError>;
 }
+
+#[allow(dead_code)]
 pub trait RetrieveOneService<T, K>
 where
     T: DTO,
@@ -30,6 +32,7 @@ where
     fn update(db: State<'_, Database>, item: T) -> Result<T, AppError>;
 }
 
+#[allow(dead_code)]
 pub trait DeleteService<T, K>
 where
     T: DTO,

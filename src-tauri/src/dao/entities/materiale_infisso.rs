@@ -6,6 +6,7 @@ pub struct MaterialeInfisso {
 }
 
 impl MaterialeInfisso {
+    #[cfg(test)]
     pub(crate) fn new(materiale: &str, efficienza_energetica: u8) -> Self {
         Self {
             _id: None,

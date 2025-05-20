@@ -1,6 +1,6 @@
 use crate::utils::AppError;
 use log::info;
-use rusqlite::{Connection, ToSql};
+use rusqlite::Connection;
 use serde::Serialize;
 use std::sync::{Mutex, MutexGuard};
 
@@ -43,6 +43,7 @@ impl Database {
         }
     }
 
+    #[cfg(test)] // serve solo per i test
     pub fn open_in_memory() -> Self {
         Self {
             conn: Mutex::new(Connection::open_in_memory().ok()),
