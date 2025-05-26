@@ -21,9 +21,11 @@ impl CreateTable for AnnotazioneInfissoDAO {
                 "CREATE TABLE IF NOT EXISTS {}
                 (
                     ID         INTEGER PRIMARY KEY AUTOINCREMENT,
-                    ID_INFISSO TEXT NOT NULL REFERENCES INFISSO (ID),
+                    ID_INFISSO TEXT NOT NULL,
+                    EDIFICIO   TEXT NOT NULL,
                     CONTENT    TEXT NOT NULL CHECK ( length(CONTENT) > 0 ),
-                    DATA       TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+                    DATA       TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY (ID_INFISSO, EDIFICIO) REFERENCES INFISSO (ID, EDIFICIO)
                 ) STRICT;",
                 Self::table_name()
             )
@@ -42,7 +44,8 @@ impl GetAll<AnnotazioneInfisso> for AnnotazioneInfissoDAO {
             .query_map(params![], |row| {
                 Ok(AnnotazioneInfisso {
                     id: row.get("ID")?,
-                    id_infisso: row.get("ID_STANZA")?,
+                    id_infisso: row.get("ID_INFISSO")?,
+                    edificio: row.get("EDIFICIO")?,
                     content: row.get("CONTENT")?,
                     _data: row.get("DATA")?,
                 })
@@ -59,9 +62,10 @@ impl Insert<AnnotazioneInfisso> for AnnotazioneInfissoDAO {
     ) -> Result<AnnotazioneInfisso, AppError> {
         let builder = QueryBuilder::insert()
             .table(Self::table_name())
-            .columns(vec!["ID_INFISSO", "CONTENT"])
+            .columns(vec!["ID_INFISSO", "EDIFICIO", "CONTENT"])
             .values(vec![
                 item.id_infisso.clone().into(),
+                item.edificio.clone().into(),
                 item.content.clone().into(),
             ])
             .returning("ID, DATA");

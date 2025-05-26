@@ -124,6 +124,9 @@ impl Update<Infisso> for InfissoDAO {
             .where_eq("EDIFICIO", item.edificio_id.clone());
         let (query, params) = builder.build()?;
 
+        println!("{}", query);
+        println!("{:?}", params);
+
         match conn.execute(
             query.as_str(),
             rusqlite::params_from_iter(convert_param(params)),

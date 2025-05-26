@@ -26,8 +26,10 @@
   },
   "bundle": {
     "active": true,
-    "category": "Utility",
+    "publisher": "Mattia Frigiola",
     "copyright": "",
+    "category": "Utility",
+    "longDescription": "App per l'inserimento dati dei sopralluoghi",
     "targets": [
       "app"
     ],
