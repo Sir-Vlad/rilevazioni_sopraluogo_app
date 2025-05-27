@@ -87,9 +87,11 @@ export interface IFotovoltaico {
     proprietario: string,
 }
 
+type PrimaryKey = | { Edificio: string } | { Stanza: number } | { Infisso: [ string, string ] }
+
 export interface IAnnotazione {
     id: number,
     ref_table: "edificio" | "stanza" | "infisso",
-    id_ref_table: string,
+    id_ref_table: PrimaryKey,
     content: string,
 }

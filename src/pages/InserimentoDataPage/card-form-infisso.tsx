@@ -14,6 +14,7 @@ import TitleCard from "@/components/title-card.tsx";
 import ClearableSelect from "@/components/clearable-select.tsx";
 import { invoke } from "@tauri-apps/api/core";
 import InputWithMeasureUnit from "@/components/input-with-measure-unit.tsx";
+import { useNotification } from "@/context/NotificationProvider.tsx";
 
 const nextAlphabeticalID = (prevID: string | null) => {
     if (!prevID || prevID === "") return "A";
@@ -71,6 +72,7 @@ const CardFormInfisso = () => {
         }
     });
     const [ annotazioni, setAnnotazioni ] = useState<string[]>([]);
+    const { addNotification } = useNotification();
 
     const handleInputNumericChange = (event: ChangeEvent<HTMLInputElement>, field: {
         onChange: (value: number) => void
@@ -102,7 +104,6 @@ const CardFormInfisso = () => {
             return;
         }
         const lastInfisso = infissi.data.filter(value => value.id_edificio === selectedEdificio).at(-1);
-        console.log(lastInfisso)
         let lastInfissoId = "";
         if (lastInfisso) {
             if (lastInfisso.id) {
@@ -117,13 +118,7 @@ const CardFormInfisso = () => {
             id         : nextAlphabeticalID(lastInfissoId),
             id_edificio: selectedEdificio,
         };
-        try {
-            await infissi.insertInfisso(newInfisso);
-            toast.success("Infisso inserito con successo");
-        } catch (e) {
-            toast.error("Errore durante l'inserimento del nuovo infisso");
-            console.error(e);
-        }
+        await infissi.insertInfisso(newInfisso);
         if (annotazioni.length > 0) onSubmitAnnotazioni(newInfisso).then().catch(console.error);
     }
 
@@ -133,7 +128,7 @@ const CardFormInfisso = () => {
                 const annotazione = {
                     id          : 0,
                     ref_table   : "infisso",
-                    id_ref_table: infisso.id!.toString(),
+                    id_ref_table: { Infisso: [ infisso.id, selectedEdificio ], },
                     content     : content,
                 } as IAnnotazione;
 
@@ -141,12 +136,11 @@ const CardFormInfisso = () => {
                     annotazione: annotazione,
                 })
             } catch (e) {
-                toast.error("Errore durante l'inserimento delle annotazioni");
-                console.error(e)
+                addNotification(e as string, "error");
             }
         }
         setAnnotazioni([]);
-        toast.success("Annotazioni inserite con successo");
+        addNotification("Annotazioni inserite con successo", "success");
     }
 
     function clearForm() {
@@ -198,9 +192,7 @@ const CardFormInfisso = () => {
                                                                         value={ field.value }
                                                                         options={ tipoInfissi }
                                                                         onClear={ () => {
-                                                                            form.reset({
-                                                                                "tipo": tipoInfissi.find(value => value === "FINESTRA") ?? ""
-                                                                            });
+                                                                            form.resetField("tipo");
                                                                         } }
                                                        />
                                                    </FormItem>
@@ -259,9 +251,7 @@ const CardFormInfisso = () => {
                                                 <ClearableSelect onChange={ field.onChange }
                                                                  options={ materialiInfissiType } value={ field.value }
                                                                  onClear={ () => {
-                                                                     form.reset({
-                                                                         "materiale": ""
-                                                                     });
+                                                                     form.resetField("materiale")
                                                                  } }/>
                                                 <FormMessage/>
                                             </FormItem>
@@ -276,9 +266,7 @@ const CardFormInfisso = () => {
                                                 <ClearableSelect onChange={ field.onChange }
                                                                  options={ vetroInfissiType } value={ field.value }
                                                                  onClear={ () => {
-                                                                     form.reset({
-                                                                         "vetro": ""
-                                                                     });
+                                                                     form.resetField("vetro")
                                                                  } }/>
                                                 <FormMessage/>
                                             </FormItem>

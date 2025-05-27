@@ -28,7 +28,7 @@ import {
 import { Label } from "@/components/ui/label";
 import { useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
-import { useErrorContext } from "@/context/ErrorProvider.tsx";
+import { useNotification } from "@/context/NotificationProvider.tsx";
 import InputWithMeasureUnit from "@/components/input-with-measure-unit.tsx";
 
 
@@ -72,6 +72,8 @@ const CardFormStanza = () => {
         databaseName
     } = useDatabase();
     const { selectedEdificio } = useEdifici();
+    const {addNotification} = useNotification();
+
 
     const stanzeOptions = [ ...[ ...new Set(stanzaContext.data
         .filter(value => value.chiave === selectedEdificio)
@@ -139,7 +141,7 @@ const CardFormStanza = () => {
                 const annotazione = {
                     id          : 0,
                     ref_table   : "stanza",
-                    id_ref_table: stanza.id.toString(),
+                    id_ref_table: { Stanza: stanza.id },
                     content     : content,
                 } as IAnnotazione;
 
@@ -147,9 +149,11 @@ const CardFormStanza = () => {
                     annotazione: annotazione,
                 })
             } catch (e) {
-                console.error(e)
+                addNotification(e as string, "error");
             }
         }
+        setAnnotazioni([]);
+        addNotification("Annotazioni inserite", "success")
     }
 
     function clearForm() {
@@ -370,11 +374,7 @@ const SelectWithOtherField = <TFormValues extends Record<string, unknown>>({
                                  value={ field.value as string }
                                  disabled={ disabled }
                                  onClear={ () => {
-                                     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-                                     // @ts-expect-error
-                                     form.reset({
-                                         [field.name]: ""
-                                     });
+                                     form.resetField(field.name);
                                  } }/>
                 <FormMessage/>
             </FormItem>
@@ -386,7 +386,7 @@ const SheetAddNewTipo = ({ tipo }: { tipo: TipoKey }) => {
     const [ newNameTipo, setNewNameTipo ] = useState("");
     const [ effEnergetica, setEffEnergetica ] = useState(0);
     const { insertType } = useTypes();
-    const { addError } = useErrorContext();
+    const { addNotification } = useNotification();
     const { databaseName } = useDatabase();
 
     const handleSubmit = async () => {
@@ -397,9 +397,9 @@ const SheetAddNewTipo = ({ tipo }: { tipo: TipoKey }) => {
                 efficienza_energetica: effEnergetica,
             };
             await insertType(insertTipo);
-            toast.success(`Tipo ${ newNameTipo } inserito`);
+            addNotification(`Tipo ${ newNameTipo } inserito`, "success");
         } catch (e) {
-            addError(e as string);
+            addNotification(e as string, "error");
         } finally {
             setNewNameTipo("");
             setEffEnergetica(0);

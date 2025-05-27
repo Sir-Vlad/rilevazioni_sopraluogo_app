@@ -4,7 +4,7 @@ import { UtenzeContext, UtenzeContextType } from "@/context/Context.tsx";
 import { IUtenza } from "@/models/models.tsx";
 import { useDatabase } from "@/context/UseProvider.tsx";
 import { invoke } from "@tauri-apps/api/core";
-import { useErrorContext } from "@/context/ErrorProvider.tsx";
+import { useNotification } from "@/context/NotificationProvider.tsx";
 
 const UtenzeProvider = ({ children }: { children: React.ReactNode }) => {
     const {
@@ -14,7 +14,7 @@ const UtenzeProvider = ({ children }: { children: React.ReactNode }) => {
     const providerRef = useRef<{ notifyReloadComplete: () => void; } | null>(null);
     const [ utenze, setUtenze ] = useState<IUtenza[]>([]);
     const [ loading, setLoading ] = useState(true);
-    const errorContext = useErrorContext();
+    const { addNotification } = useNotification();
 
     useEffect(() => {
         providerRef.current = registerProvider("utenze");
@@ -25,13 +25,14 @@ const UtenzeProvider = ({ children }: { children: React.ReactNode }) => {
             setLoading(true);
             const utenze: IUtenza[] = await invoke("get_utenze");
             setUtenze(utenze);
+            addNotification("Utenze caricate correttamente", "success");
         } catch (e) {
-            errorContext.addError(e as string);
+            addNotification(e as string, "error");
         } finally {
             setLoading(false);
         }
 
-    }, [ errorContext ]);
+    }, [ addNotification ]);
 
     const insertUtenza = useCallback(async (utenza: IUtenza) => {
         try {
@@ -40,12 +41,13 @@ const UtenzeProvider = ({ children }: { children: React.ReactNode }) => {
             setUtenze((prev) => {
                 return [ ...prev.filter(value => value.id !== newUtenza.id), newUtenza ];
             })
+            addNotification("Utenza inserita correttamente", "success");
         } catch (e) {
-            errorContext.addError(e as string);
+            addNotification(e as string, "error");
         } finally {
             setLoading(false);
         }
-    }, [ errorContext ])
+    }, [ addNotification ])
 
     useEffect(() => {
         if (needReload) {
