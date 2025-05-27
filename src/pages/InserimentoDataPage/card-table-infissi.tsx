@@ -15,7 +15,7 @@ import {
 } from "@tanstack/react-table";
 import { IInfisso } from "@/models/models.tsx";
 import { Button } from "@/components/ui/button.tsx";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { CheckIcon, PencilIcon, XIcon } from "lucide-react";
 import { CardDataGrid, InsertCell, SelectCell } from "@/components/card-data-grid.tsx";
 import { useSkipper } from "@/hooks/use-skipper.tsx";
@@ -183,7 +183,10 @@ const CardTableInfissi = () => {
         getFacetedUniqueValues: getFacetedUniqueValues(),
         getFacetedMinMaxValues: getFacetedMinMaxValues(),
         initialState          : {
-            pagination: { pageSize: 5 }
+            pagination: {
+                pageIndex: Number.parseInt(localStorage.getItem("infissiTable") ?? "0"),
+                pageSize : 5,
+            }
         },
         state                 : {
             sorting      : sorting,
@@ -192,11 +195,15 @@ const CardTableInfissi = () => {
         autoResetPageIndex    : autoResetPageIndex,
     });
 
+    useEffect(() => {
+        localStorage.setItem("infissiTable", table.getState().pagination.pageIndex.toString());
+    }, [ table.getState().pagination.pageIndex ]);
+
     return <div className="*:data-[slot=card]:shadow-xs grid grid-cols-1 gap-0
             px-4 *:data-[slot=card]:bg-gradient-to-t *:data-[slot=card]:from-primary/5 *:data-[slot=card]:to-card
             dark:*:data-[slot=card]:bg-card lg:px-5 h-full">
         <CardDataGrid table={ table } title={ "Visualizzazione Infissi" }/>
     </div>;
-};
+}
 
 export default CardTableInfissi;

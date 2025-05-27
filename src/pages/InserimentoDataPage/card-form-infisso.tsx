@@ -15,6 +15,7 @@ import ClearableSelect from "@/components/clearable-select.tsx";
 import { invoke } from "@tauri-apps/api/core";
 import InputWithMeasureUnit from "@/components/input-with-measure-unit.tsx";
 import { useNotification } from "@/context/NotificationProvider.tsx";
+import { getSavedFormData, useLocalStorageForm } from "@/hooks/useLocalStorageForm.ts";
 
 const nextAlphabeticalID = (prevID: string | null) => {
     if (!prevID || prevID === "") return "A";
@@ -60,10 +61,14 @@ const CardFormInfisso = () => {
         databaseName
     } = useDatabase();
     const { selectedEdificio } = useEdifici();
+    const [ annotazioni, setAnnotazioni ] = useState<string[]>([]);
+    const { addNotification } = useNotification();
+
+    const savedValues = getSavedFormData<typeof FormInfisso>("infissoFormData");
 
     const form = useForm<z.infer<typeof FormInfisso>>({
         resolver     : zodResolver(FormInfisso),
-        defaultValues: {
+        defaultValues: savedValues ?? {
             tipo     : tipoInfissi.find(value => value === "FINESTRA") ?? "",
             altezza  : 0,
             larghezza: 0,
@@ -71,8 +76,8 @@ const CardFormInfisso = () => {
             vetro    : ""
         }
     });
-    const [ annotazioni, setAnnotazioni ] = useState<string[]>([]);
-    const { addNotification } = useNotification();
+
+    useLocalStorageForm(form, "infissoFormData")
 
     const handleInputNumericChange = (event: ChangeEvent<HTMLInputElement>, field: {
         onChange: (value: number) => void

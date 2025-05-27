@@ -9,7 +9,7 @@
 
 5. Eseguire un ordinamento dei dati in `Panoramica` [FATTO]
 
-6. Se cambia pagina, i dati non devono essere cancellati dai form
+6. Se cambia pagina, i dati non devono essere cancellati dai form [FATTO]
 
 7. Nei log, mettere la stanza che è stata modificata [FATTO]
 

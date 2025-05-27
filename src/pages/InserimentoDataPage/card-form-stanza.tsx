@@ -30,6 +30,7 @@ import { useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { useNotification } from "@/context/NotificationProvider.tsx";
 import InputWithMeasureUnit from "@/components/input-with-measure-unit.tsx";
+import { getSavedFormData, useLocalStorageForm } from "@/hooks/useLocalStorageForm.ts";
 
 
 const FormSchema = z.object({
@@ -52,14 +53,6 @@ const FormSchema = z.object({
 
 
 const CardFormStanza = () => {
-    const form = useForm<z.infer<typeof FormSchema>>({
-        resolver     : zodResolver(FormSchema),
-        defaultValues: {
-            altezza      : 0,
-            spessore_muro: 0,
-            infissi      : []
-        }
-    });
     const [ annotazioni, setAnnotazioni ] = useState<string[]>([]);
 
     const stanzaContext = useStanze();
@@ -73,7 +66,17 @@ const CardFormStanza = () => {
     } = useDatabase();
     const { selectedEdificio } = useEdifici();
     const {addNotification} = useNotification();
+    const savedValues = getSavedFormData<typeof FormSchema>("stanzaFormData");
 
+    const form = useForm<z.infer<typeof FormSchema>>({
+        resolver     : zodResolver(FormSchema),
+        defaultValues: savedValues || {
+            altezza      : 0,
+            spessore_muro: 0,
+            infissi      : []
+        }
+    });
+    useLocalStorageForm(form, "stanzaFormData");
 
     const stanzeOptions = [ ...[ ...new Set(stanzaContext.data
         .filter(value => value.chiave === selectedEdificio)
