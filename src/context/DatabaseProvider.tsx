@@ -4,6 +4,7 @@ import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { DatabaseContext, DatabaseContextType } from "./Context.tsx";
 import { getFileName } from "../helpers/helpers.ts";
+import { useNotification } from "@/context/NotificationProvider.tsx";
 
 interface DatabaseEventPayload {
     type_event: string;
@@ -17,43 +18,21 @@ const DatabaseProvider = ({ children }: { children: React.ReactNode }) => {
     const [ error, setError ] = useState<string | null>(null);
     const [ needReload, setNeedReload ] = useState(false);
     const [ pendingProviders, setPendingProviders ] = useState(new Set());
-
-    // Inizializzazione iniziale
-    // useEffect(() => {
-    //     const set_database = async () => {
-    //         try {
-    //             setIsLoading(true);
-    //             const dbName = localStorage.getItem("databaseName");
-    //             if (dbName === null && databaseName === null) {
-    //                 setError("Database non settato");
-    //                 return;
-    //             }
-    //
-    //             const dbPath: string = await invoke("set_database", {dbName: dbName ?? databaseName});
-    //             setDatabasePath(dbPath);
-    //             setDatabaseName(getFileName(dbPath) ?? "");
-    //             setError(null);
-    //         } catch (e) {
-    //             setError("Errore durante l'inizializzazione del database");
-    //             console.error(e);
-    //         } finally {
-    //             setIsLoading(false);
-    //         }
-    //     };
-    //     set_database().catch(console.error);
-    // }, []);
+    const { addNotification } = useNotification();
 
     const switchDatabase = useCallback(async (dbName: string) => {
         try {
             setIsLoading(true);
             setError(null);
             await invoke("switch_database", { dbName });
+            addNotification("Cambio file avvenuto con successo", "success");
         } catch (e) {
             setError(e as string);
+            addNotification(e as string, "error")
         } finally {
             setIsLoading(false);
         }
-    }, []);
+    }, [ addNotification ]);
 
 
     useEffect(() => {

@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { IEdificio } from "@/models/models.tsx";
 import { useDatabase } from "@/context/UseProvider.tsx";
 import { invoke } from "@tauri-apps/api/core";
-import { useErrorContext } from "@/context/ErrorProvider.tsx";
+import { useNotification } from "@/context/NotificationProvider.tsx";
 
 
 const EdificioProvider = ({ children }: { children: React.ReactNode }) => {
@@ -16,7 +16,7 @@ const EdificioProvider = ({ children }: { children: React.ReactNode }) => {
     const providerRef = useRef<{ notifyReloadComplete: () => void; } | null>(null);
     const [ isLoading, setIsLoading ] = useState(true);
     const [ selectedEdificio, setSelectedEdificio ] = useState<string | undefined>(undefined);
-    const errorContext = useErrorContext();
+    const { addNotification } = useNotification();
 
     useEffect(() => {
         providerRef.current = registerProvider("edificio");
@@ -28,40 +28,40 @@ const EdificioProvider = ({ children }: { children: React.ReactNode }) => {
             const edifici: IEdificio[] = await invoke("get_edifici");
             setEdifici(edifici);
             setSelectedEdificio([ ...edifici.map(value => value.chiave) ][0]);
+            addNotification("Edifici caricarti correttamente", "success");
         } catch (e) {
-            errorContext.addError(e as string);
+            addNotification(e as string, "error");
         } finally {
             setIsLoading(false);
         }
-    }, [ errorContext ]);
+    }, [ addNotification ]);
 
     const modifyEdificio = useCallback(async (edificio: IEdificio) => {
         try {
             setIsLoading(true);
-            console.log(edificio);
             const newEdificio: IEdificio = await invoke("update_edificio", { edificio });
-            console.log(newEdificio);
             setEdifici((prev) => {
                 const oldEdificio = prev.find(value => value.chiave === edificio.chiave);
                 if (oldEdificio) {
                     const mergeObj: IEdificio = {
                         ...oldEdificio,
-                        anno_costruzione: newEdificio.anno_costruzione ?? oldEdificio.anno_costruzione,
+                        anno_costruzione     : newEdificio.anno_costruzione ?? oldEdificio.anno_costruzione,
                         anno_riqualificazione: newEdificio.anno_riqualificazione ?? oldEdificio.anno_riqualificazione,
                         note_riqualificazione: newEdificio.note_riqualificazione ?? oldEdificio.note_riqualificazione,
-                        cappotto: newEdificio.cappotto ?? oldEdificio.cappotto,
-                        isolamento_tetto: newEdificio.isolamento_tetto ?? oldEdificio.isolamento_tetto,
+                        cappotto             : newEdificio.cappotto ?? oldEdificio.cappotto,
+                        isolamento_tetto     : newEdificio.isolamento_tetto ?? oldEdificio.isolamento_tetto,
                     }
                     return [ ...prev.filter(value => value.chiave !== edificio.chiave), mergeObj ];
                 }
                 return prev;
             })
+            addNotification("Edificio modificato correttamente", "success");
         } catch (e) {
-            errorContext.addError(e as string);
+            addNotification(e as string, "error");
         } finally {
             setIsLoading(false);
         }
-    }, [ errorContext ])
+    }, [ addNotification ])
 
     // Ricarica i dati quando il database cambia
     useEffect(() => {

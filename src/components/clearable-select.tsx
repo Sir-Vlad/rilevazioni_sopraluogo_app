@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/select.tsx";
 import { Button } from "@/components/ui/button.tsx";
 
-interface InfissiSelectProps {
+interface ClearableSelectProps {
     options: string[]; // Lista delle opzioni da visualizzare
     value: string; // Valore selezionato
     onChange: (value: string) => void; // Funzione callback per gestione selezione
@@ -28,10 +28,10 @@ const ClearableSelect = ({
                              onClear,
                              className,
                              disabled = false,
-                         }: Readonly<InfissiSelectProps>) => {
+                         }: Readonly<ClearableSelectProps>) => {
     const [ open, setOpen ] = useState(false);
 
-    return (<Select onValueChange={ onChange } value={ value } onOpenChange={ setOpen } open={ open }
+    return (<Select onValueChange={ onChange } value={ value || "" } onOpenChange={ setOpen } open={ open }
                     disabled={ options.length === 0 || disabled }>
         <SelectTrigger className={ `w-full ${ className ?? "" }` }>
             <SelectValue placeholder={ placeholder }/>
@@ -39,6 +39,7 @@ const ClearableSelect = ({
         <SelectContent className={ "max-h-96" }>
             { onClear && (<>
                 <Button
+                    type="button"
                     className="w-full px-2"
                     variant="secondary"
                     size="sm"

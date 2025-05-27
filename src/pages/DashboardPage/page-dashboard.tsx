@@ -21,7 +21,7 @@ const PageDashboard = () => {
                     <Separator orientation={ "vertical" }/>
                     <div>
                         { edifici.length == 1 ? <p className="text-sm">{ edificioContext.selectedEdificio }</p> :
-                            <Select value={ edificioContext.selectedEdificio }
+                            <Select value={ edificioContext.selectedEdificio } disabled={ edifici.length < 2 }
                                     onValueChange={ edificioContext.setSelectedEdificio }
                             >
                                 <SelectTrigger className="w-[10em] border-none dark:bg-transparent">

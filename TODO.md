@@ -5,7 +5,7 @@
 3. Tutte le notifiche farle gestire tutte da un componente e gli altri componenti le invia a quel componente
    1. Al momento ci sono duplicazione di notifiche
 
-4. Il clear dei select in `Modifica Stanza` resetta alcuni campi del form
+4. Il clear dei select in `Modifica Stanza` resetta alcuni campi del form [FATTO]
 
 5. Eseguire un ordinamento dei dati in `Panoramica` [FATTO]
 
@@ -13,7 +13,7 @@
 
 7. Nei log, mettere la stanza che è stata modificata [FATTO]
 
-8. In modifica infissi, non modifica
+8. In modifica infissi, non modifica [FATTO]
 
 9. Gli infissi sono per edificio [!IMPORTANTE] (FATTO)
 

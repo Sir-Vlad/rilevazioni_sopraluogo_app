@@ -4,7 +4,7 @@ import { FotovoltaicoContext, FotovoltaicoContextType } from "@/context/Context.
 import { IFotovoltaico } from "@/models/models.tsx";
 import { useDatabase } from "@/context/UseProvider.tsx";
 import { invoke } from "@tauri-apps/api/core";
-import { useErrorContext } from "@/context/ErrorProvider.tsx";
+import { useNotification } from "@/context/NotificationProvider.tsx";
 
 const FotovoltaicoProvider = ({ children }: { children: React.ReactNode }) => {
     const {
@@ -14,7 +14,7 @@ const FotovoltaicoProvider = ({ children }: { children: React.ReactNode }) => {
     const providerRef = useRef<{ notifyReloadComplete: () => void; } | null>(null);
     const [ fotovoltaico, setFotovoltaico ] = useState<IFotovoltaico[]>([]);
     const [ loading, setLoading ] = useState(true);
-    const errorContext = useErrorContext();
+    const { addNotification } = useNotification();
 
     useEffect(() => {
         providerRef.current = registerProvider("fotovoltaico");
@@ -25,13 +25,14 @@ const FotovoltaicoProvider = ({ children }: { children: React.ReactNode }) => {
             setLoading(true);
             const fotovoltaico: IFotovoltaico[] = await invoke("get_fotovoltaico");
             setFotovoltaico(fotovoltaico);
+            addNotification("Fotovoltaico caricato correttamente", "success");
         } catch (e) {
-            errorContext.addError(e as string);
+            addNotification(e as string, "error");
         } finally {
             setLoading(false);
         }
 
-    }, [ errorContext ]);
+    }, [ addNotification ]);
 
     const insertFotovoltaico = useCallback(async (fotovoltaico: IFotovoltaico) => {
         try {
@@ -40,12 +41,13 @@ const FotovoltaicoProvider = ({ children }: { children: React.ReactNode }) => {
             setFotovoltaico((prev) => {
                 return [ ...prev.filter(value => value.id !== inserted_fotovoltaico.id), inserted_fotovoltaico ];
             })
+            addNotification("Fotovoltaico inserito correttamente", "success");
         } catch (e) {
-            errorContext.addError(e as string);
+            addNotification(e as string, "error");
         } finally {
             setLoading(false);
         }
-    }, [ errorContext ])
+    }, [ addNotification ])
 
     useEffect(() => {
         if (needReload) {

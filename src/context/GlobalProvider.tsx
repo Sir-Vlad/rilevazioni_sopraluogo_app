@@ -6,10 +6,10 @@ import StanzeProvider from "./StanzeProvider.tsx";
 import EdificioProvider from "@/context/EdificioProvider.tsx";
 import UtenzeProvider from "./UtenzeProvider.tsx";
 import FotovoltaicoProvider from "@/context/FotovoltaicoProvider.tsx";
-import { ErrorProvider } from "@/context/ErrorProvider.tsx";
+import { NotificationProvider } from "@/context/NotificationProvider.tsx";
 
 const GlobalProvider = ({ children }: { children: React.ReactNode }) => {
-    return <ErrorProvider>
+    return <NotificationProvider>
         <DatabaseProvider>
             <TypesProvider>
                 <EdificioProvider>
@@ -25,7 +25,7 @@ const GlobalProvider = ({ children }: { children: React.ReactNode }) => {
                 </EdificioProvider>
             </TypesProvider>
         </DatabaseProvider>
-    </ErrorProvider>;
+    </NotificationProvider>;
 };
 
 export default GlobalProvider;

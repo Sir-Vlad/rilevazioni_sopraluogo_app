@@ -13,6 +13,7 @@ import { useDatabase } from "@/context/UseProvider.tsx";
 import { Separator } from "@/components/ui/separator.tsx";
 import { ModeToggle } from "@/components/mode-toggle.tsx";
 import { ReactNode, useMemo } from "react";
+import NotificationSidebar from "@/components/notification-sidebar.tsx";
 
 export default function SiteHeader() {
     const { toggleSidebar } = useSidebar();
@@ -69,8 +70,9 @@ export default function SiteHeader() {
                     </NavigationMenuList>
                 </NavigationMenu>
             </div>
-            <Separator orientation="vertical" className="mx-2"/>
+            <Separator orientation="vertical" className="mx-1"/>
             <ModeToggle/>
+            <NotificationSidebar/>
         </div>
     </header>);
 }

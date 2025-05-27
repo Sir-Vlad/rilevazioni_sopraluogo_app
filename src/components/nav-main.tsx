@@ -22,11 +22,11 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
-import { useErrorContext } from "@/context/ErrorProvider.tsx";
+import { useNotification } from "@/context/NotificationProvider.tsx";
 
 export function NavMain({ valueSearch }: Readonly<{ valueSearch: string | null }>) {
     const database = useDatabase();
-    const { addError } = useErrorContext();
+    const { addNotification } = useNotification();
     const [ databasesNameFiles, setDatabasesNameFiles ] = useState<string[]>([]);
     const [ selectedDatabase, setSelectedDatabase ] = useState<string>(database.databaseName);
     const [ filteredDatabases, setFilteredDatabases ] = useState<string[]>([]);
@@ -77,10 +77,9 @@ export function NavMain({ valueSearch }: Readonly<{ valueSearch: string | null }
             });
             const name_db: string = getFileNameWithExtension(path_db);
             setDatabasesNameFiles((prev) => [ ...prev, name_db ]);
-            toast.success("Inserimento avvenuto con successo");
+            addNotification("Inserimento avvenuto con successo", "success");
         } catch (e) {
-            addError(e as string);
-            toast.error("Errore durante il cambio di database");
+            addNotification(e as string, "error");
         }
     };
 
