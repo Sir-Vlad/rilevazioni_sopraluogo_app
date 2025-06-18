@@ -43,7 +43,7 @@ impl GetAll<Illuminazione> for IlluminazioneDAO {
         let result: Result<Vec<Illuminazione>, rusqlite::Error> = stmt
             .query_map([], |row| {
                 Ok(Illuminazione {
-                    id: row.get::<_, u64>("ID")?,
+                    _id: Some(row.get::<_, u64>("ID")?),
                     lampadina: row.get::<_, String>("LAMPADINA")?,
                     efficienza_energetica: row.get::<_, u8>("EFFICIENZA_ENERGETICA")?,
                 })
@@ -73,10 +73,10 @@ impl Insert<Illuminazione> for IlluminazioneDAO {
             row.get::<_, u64>(0)
         })?;
         let id = res.next().unwrap()?;
+        info!("Illuminazione inserita con ID {}", item.lampadina);
         Ok(Illuminazione {
-            id,
-            lampadina: item.lampadina,
-            efficienza_energetica: item.efficienza_energetica,
+            _id: Some(id),
+            ..item
         })
     }
 }

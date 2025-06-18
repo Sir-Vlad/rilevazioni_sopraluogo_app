@@ -10,7 +10,8 @@ use crate::database::*;
 use database::NAME_DIR_DATABASE;
 use dirs_next::document_dir;
 use log::{error, info};
-use tauri::{App, Manager};
+use tauri::path::BaseDirectory;
+use tauri::{App, AppHandle, Manager};
 use tauri_plugin_log::{RotationStrategy, Target, TargetKind};
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -40,6 +41,7 @@ pub fn run() {
             get_all_name_database,
             // tipi
             get_all_tipi,
+            insert_tipo,
             // stanza
             get_stanze,
             insert_stanza,
@@ -73,6 +75,7 @@ fn handle_window_events(windows: &tauri::Window, event: &tauri::WindowEvent) {
             Ok(..) => info!("Database chiuso correttamente"),
             Err(e) => error!("Errore durante la chiusura del database: {}", e),
         }
+        clear_app_data(windows.app_handle()).unwrap_or_default();
     }
 }
 
@@ -93,4 +96,15 @@ fn setup_logger(app: &mut App) -> Result<(), Box<dyn std::error::Error>> {
             .build(),
     )?;
     Ok(())
+}
+
+/// Rimuove la directory dei dati del frontend dell'applicazione.
+fn clear_app_data(app: &AppHandle) -> Result<(), Box<dyn std::error::Error>> {
+    match app.path().resolve("", BaseDirectory::AppData) {
+        Ok(path) => {
+            std::fs::remove_dir_all(path)?;
+            Ok(())
+        }
+        Err(e) => Err(e.into()),
+    }
 }

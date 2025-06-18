@@ -2,6 +2,7 @@ use crate::dto::InfissoDTO;
 #[cfg_attr(test, derive(Debug, PartialEq))]
 pub struct Infisso {
     pub(crate) id: String,
+    pub(crate) edificio_id: String,
     pub(crate) tipo: String,
     pub(crate) altezza: u16,
     pub(crate) larghezza: u16,
@@ -10,9 +11,19 @@ pub struct Infisso {
 }
 
 impl Infisso {
-    pub fn new(id: &str, tipo: &str, altezza: u16, larghezza: u16, materiale: &str, vetro: &str) -> Self {
+    #[cfg(test)]
+    pub fn new(
+        id: &str,
+        edificio_id: &str,
+        tipo: &str,
+        altezza: u16,
+        larghezza: u16,
+        materiale: &str,
+        vetro: &str,
+    ) -> Self {
         Self {
             id: id.to_string(),
+            edificio_id: edificio_id.to_string(),
             tipo: tipo.to_string(),
             altezza,
             larghezza,
@@ -22,16 +33,16 @@ impl Infisso {
     }
 }
 
-
 impl From<InfissoDTO> for Infisso {
     fn from(infisso: InfissoDTO) -> Self {
         Infisso {
-            id: infisso.id.clone(),
-            tipo: infisso.tipo.clone(),
+            id: infisso.id,
+            edificio_id: infisso.id_edificio,
+            tipo: infisso.tipo,
             altezza: infisso.altezza,
             larghezza: infisso.larghezza,
-            materiale: infisso.materiale.clone(),
-            vetro: infisso.vetro.clone(),
+            materiale: infisso.materiale,
+            vetro: infisso.vetro,
         }
     }
 }

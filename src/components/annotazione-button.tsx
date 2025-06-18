@@ -16,11 +16,13 @@ import { Dispatch, SetStateAction, useState } from "react";
 
 interface AnnotazioneButtonProps {
     setAnnotazione: Dispatch<SetStateAction<string[]>>
+    disabled?: boolean;
 }
 
 
 const AnnotazioneButton = ({
-                               setAnnotazione
+                               setAnnotazione,
+                               disabled
                            }: AnnotazioneButtonProps) => {
     const [ content, setContent ] = useState<string | null>(null);
 
@@ -29,7 +31,7 @@ const AnnotazioneButton = ({
             <Dialog>
                 <TooltipTrigger asChild>
                     <DialogTrigger asChild>
-                        <Button variant="outline" size="icon" type="button">
+                        <Button variant="outline" size="icon" type="button" disabled={ disabled }>
                             <PlusIcon/>
                         </Button>
                     </DialogTrigger>

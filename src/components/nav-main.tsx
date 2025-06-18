@@ -22,13 +22,15 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
-import { useErrorContext } from "@/context/ErrorProvider.tsx";
+import { useNotification } from "@/context/NotificationProvider.tsx";
 
-export function NavMain() {
+export function NavMain({ valueSearch }: Readonly<{ valueSearch: string | null }>) {
     const database = useDatabase();
-    const { addError } = useErrorContext();
+    const { addNotification } = useNotification();
     const [ databasesNameFiles, setDatabasesNameFiles ] = useState<string[]>([]);
     const [ selectedDatabase, setSelectedDatabase ] = useState<string>(database.databaseName);
+    const [ filteredDatabases, setFilteredDatabases ] = useState<string[]>([]);
+
 
     const retrieveNameDatabases = useCallback(async () => {
         const dbs: string[] = await invoke("get_all_name_database");
@@ -42,6 +44,17 @@ export function NavMain() {
     useEffect(() => {
         setSelectedDatabase(database.databaseName);
     }, [ database.databaseName ]);
+
+    useEffect(() => {
+        if (valueSearch) {
+            const filtered = databasesNameFiles.filter((file) => {
+                return Number(getFileName(file).toLowerCase()).toString().startsWith(valueSearch.toLowerCase());
+            });
+            setFilteredDatabases(filtered);
+        } else {
+            setFilteredDatabases([]);
+        }
+    }, [ valueSearch, databasesNameFiles ])
 
     const addNewFascicolo = async () => {
         const file = await open({
@@ -64,10 +77,9 @@ export function NavMain() {
             });
             const name_db: string = getFileNameWithExtension(path_db);
             setDatabasesNameFiles((prev) => [ ...prev, name_db ]);
-            toast.success("Inserimento avvenuto con successo");
+            addNotification("Inserimento avvenuto con successo", "success");
         } catch (e) {
-            addError(e as string);
-            toast.error("Errore durante il cambio di database");
+            addNotification(e as string, "error");
         }
     };
 
@@ -88,7 +100,7 @@ export function NavMain() {
             <Plus/> <span className="sr-only">Aggiungi Fascicolo</span>
         </SidebarGroupAction>
         <SidebarMenu>
-            { databasesNameFiles.map((file) => {
+            { (valueSearch === null ? databasesNameFiles : filteredDatabases).map((file) => {
                 const nameDatabase = getFileName(file);
                 return <SidebarMenuItem key={ file }>
                     <div className="flex grow-1">

@@ -2,9 +2,16 @@ import * as React from "react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { TypeContextType, TypesContext } from "./Context.tsx";
-import { Climatizzazione, Illuminazione, MaterialeInfisso, TipoInfisso, VetroInfisso } from "../models/models.tsx";
+import {
+    Climatizzazione,
+    Illuminazione,
+    MaterialeInfisso,
+    NuovoTipo,
+    TipoInfisso,
+    VetroInfisso
+} from "../models/models.tsx";
 import { useDatabase } from "@/context/UseProvider.tsx";
-import { useErrorContext } from "@/context/ErrorProvider.tsx";
+import { useNotification } from "@/context/NotificationProvider.tsx";
 
 interface TypePayload {
     "materiale_infissi": MaterialeInfisso[],
@@ -26,7 +33,15 @@ const TypesProvider = ({ children }: { children: React.ReactNode }) => {
     const [ illuminazioneType, setIlluminazioneType ] = useState<string[]>([]);
     const [ tipoInfissi, setTipoInfissi ] = useState<string[]>([]);
     const [ isLoading, setIsLoading ] = useState(true);
-    const errorContext = useErrorContext();
+    const { addNotification } = useNotification();
+
+    const typeSetters: Record<string, React.Dispatch<React.SetStateAction<string[]>>> = useMemo(() => ({
+        climatizzazione: setClimatizzazioneType,
+        riscaldamento  : setClimatizzazioneType,
+        raffrescamento : setClimatizzazioneType,
+        illuminazione  : setIlluminazioneType
+    }), []);
+
 
     useEffect(() => {
         providerRef.current = registerProvider("tipi");
@@ -41,12 +56,13 @@ const TypesProvider = ({ children }: { children: React.ReactNode }) => {
             setClimatizzazioneType(data["climatizzazione"].map(value => value.climatizzazione));
             setIlluminazioneType(data["illuminazione"].map(value => value.lampadina));
             setTipoInfissi(data["tipo_infissi"].map(value => value.nome));
+            addNotification("Tipi caricati correttamente", "success");
         } catch (e) {
-            errorContext.addError(e as string);
+            addNotification(e as string, "error");
         } finally {
             setIsLoading(false);
         }
-    }, [ errorContext ]);
+    }, [ addNotification ]);
 
     useEffect(() => {
         if (needReload) {
@@ -60,6 +76,24 @@ const TypesProvider = ({ children }: { children: React.ReactNode }) => {
         loadTypes().catch(console.error);
     }, [ loadTypes ]);
 
+    const addTypeToState = useCallback((tipo: string, name: string) => {
+        const setter = typeSetters[tipo.toLowerCase()];
+        if (setter) {
+            setter((prev) => [ ...prev, name ]);
+        }
+    }, [ typeSetters ]);
+
+    const insertType = useCallback(async (newType: NuovoTipo) => {
+        try {
+            const inserted_type: NuovoTipo = await invoke("insert_tipo", { tipo: newType });
+            addTypeToState(inserted_type.tipo, inserted_type.name);
+            addNotification(`Tipo ${ inserted_type.name } inserito correttamente`, "success");
+        } catch (e) {
+            addNotification(e as string, "error");
+        }
+    }, [ addTypeToState, addNotification ])
+
+
     const obj = useMemo(() => {
         return {
             materialiInfissiType,
@@ -67,9 +101,10 @@ const TypesProvider = ({ children }: { children: React.ReactNode }) => {
             climatizzazioneType,
             illuminazioneType,
             tipoInfissi,
-            isLoading
+            isLoading,
+            insertType: insertType,
         } as TypeContextType;
-    }, [ materialiInfissiType, vetroInfissiType, climatizzazioneType, illuminazioneType, isLoading ]);
+    }, [ materialiInfissiType, vetroInfissiType, climatizzazioneType, illuminazioneType, tipoInfissi, isLoading, insertType ]);
 
     return <TypesContext.Provider value={ obj }>
         { children }

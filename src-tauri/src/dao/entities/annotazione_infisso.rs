@@ -4,6 +4,7 @@ use crate::dto::AnnotazioneInfissoDTO;
 pub struct AnnotazioneInfisso {
     pub(crate) id: u64,
     pub(crate) id_infisso: String,
+    pub(crate) edificio: String,
     pub(crate) content: String,
     pub(crate) _data: Option<String>,
 }
@@ -13,6 +14,7 @@ impl From<AnnotazioneInfissoDTO> for AnnotazioneInfisso {
         Self {
             id: value.id,
             id_infisso: value.id_infisso,
+            edificio: value.edificio,
             content: value.content,
             _data: None,
         }

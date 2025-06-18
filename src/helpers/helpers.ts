@@ -4,6 +4,10 @@ export const capitalize = (str: string) => {
     return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
 };
 
+export const sanitizeString = (str: string) => {
+    return str.replace(/_/g, " ");
+};
+
 export const getFileNameWithExtension = (filePath: string) => {
     return filePath.split(/[/\\]/).pop() ?? "";
 };

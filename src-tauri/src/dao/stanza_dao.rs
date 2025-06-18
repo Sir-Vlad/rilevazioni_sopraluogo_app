@@ -91,14 +91,22 @@ impl Insert<Stanza> for StanzaDAO {
                 item.riscaldamento.clone().into(),
                 item.raffrescamento.clone().into(),
                 item.illuminazione.clone().into(),
-            ]);
+            ])
+            .returning("ID");
         let (query, param) = builder.build()?;
 
         let mut stmt = conn.prepare(query.as_str())?;
-        match stmt.execute(rusqlite::params_from_iter(convert_param(param))) {
-            Ok(_) => {
-                info!("Stanza inserita con successo");
-                Ok(item)
+        let res = stmt.query_map(rusqlite::params_from_iter(convert_param(param)), |row| {
+            row.get::<_, i64>(0)
+        });
+        match res {
+            Ok(mut id) => {
+                let id = id.next().unwrap()?;
+                info!("Stanza {} inserita con successo", id);
+                Ok(Stanza {
+                    id: Some(id as u64),
+                    ..item
+                })
             }
             Err(e) => {
                 error!("Errore durante l'inserimento {{ stanza }}: {e}");
@@ -110,6 +118,15 @@ impl Insert<Stanza> for StanzaDAO {
 
 impl Update<Stanza> for StanzaDAO {
     fn update<C: DatabaseConnection>(conn: &C, item: Stanza) -> Result<Stanza, AppError> {
+        if item.altezza.is_none()
+            && item.spessore_muro.is_none()
+            && item.riscaldamento.is_none()
+            && item.raffrescamento.is_none()
+            && item.illuminazione.is_none()
+        {
+            return Ok(item);
+        }
+
         let builder = QueryBuilder::update()
             .table(Self::table_name())
             .set_if("ALTEZZA", item.altezza)
@@ -120,17 +137,20 @@ impl Update<Stanza> for StanzaDAO {
             .where_eq("ID", item.id.unwrap());
         let (query, param) = builder.build()?;
 
+        println!("{:?}", item);
+        println!("{}", query);
+
         match conn.execute(
             query.as_str(),
             rusqlite::params_from_iter(convert_param(param)),
         ) {
             Ok(_) => {
-                info!("Stanza aggiornata con successo");
+                info!("Stanza {} aggiornata con successo", item.id.unwrap());
                 Ok(item)
             }
             Err(e) => {
-                error!("Errore durante l'aggiornamento {{ stanza }}: {e}");
-                Err(AppError::from(e))
+                error!("Stanza {} non aggiornata: {e}", item.id.unwrap());
+                Err(e)
             }
         }
     }

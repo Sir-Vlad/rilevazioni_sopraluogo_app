@@ -1,4 +1,5 @@
 import * as React from "react";
+import { useState } from "react";
 import { Command, LifeBuoy, Send } from "lucide-react";
 
 import { NavMain } from "@/components/nav-main";
@@ -21,52 +22,49 @@ const data = {
         email : "m@example.com",
         avatar: "/avatars/shadcn.jpg"
     },
-    navSecondary: [
-        {
-            title: "Support",
-            url  : "#",
-            icon : LifeBuoy
-        },
-        {
-            title: "Feedback",
-            url  : "#",
-            icon : Send
-        }
-    ]
+    navSecondary: [ {
+        title: "Support",
+        url  : "#",
+        icon : LifeBuoy
+    }, {
+        title: "Feedback",
+        url  : "#",
+        icon : Send
+    } ]
 };
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-    return (
-        <Sidebar
-            className="top-(--header-height) h-[calc(100svh-var(--header-height))]!"
-            { ...props }
-        >
-            <SidebarHeader>
-                <SidebarMenu>
-                    <SidebarMenuItem>
-                        <SidebarMenuButton size="lg" asChild>
-                            <a href="/">
-                                <div
-                                    className="bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg">
-                                    <Command className="size-4 dark:text-white"/>
-                                </div>
-                                <div className="grid flex-1 text-left text-sm leading-tight">
-                                    <span className="truncate font-medium">Comune di Verona</span>
-                                    <span className="truncate text-xs">Settore Ambiente</span>
-                                </div>
-                            </a>
-                        </SidebarMenuButton>
-                    </SidebarMenuItem>
-                </SidebarMenu>
-            </SidebarHeader>
-            <SidebarContent>
-                <SearchForm/>
-                <NavMain/>
-                <NavSecondary items={ data.navSecondary } className="mt-auto"/>
-            </SidebarContent>
-            <SidebarFooter>
-                <NavUser user={ data.user }/>
-            </SidebarFooter>
-        </Sidebar>
-    );
+    const [ searchEntry, setSearchEntry ] = useState<string | null>(null);
+
+    return (<Sidebar
+        className="top-(--header-height) h-[calc(100svh-var(--header-height))]!"
+        { ...props }
+    >
+        <SidebarHeader>
+            <SidebarMenu>
+                <SidebarMenuItem>
+                    <SidebarMenuButton size="lg" asChild>
+                        <a href="/">
+                            <div
+                                className="bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg">
+                                <Command className="size-4 dark:text-white"/>
+                            </div>
+                            <div className="grid flex-1 text-left text-sm leading-tight">
+                                <span className="truncate font-medium">Comune di Verona</span>
+                                <span className="truncate text-xs">Settore Ambiente</span>
+                            </div>
+                        </a>
+                    </SidebarMenuButton>
+                </SidebarMenuItem>
+            </SidebarMenu>
+        </SidebarHeader>
+        <SidebarContent>
+            <SearchForm onSearch={ setSearchEntry }/>
+            <NavMain valueSearch={ searchEntry }/>
+            <NavSecondary items={ data.navSecondary } className="mt-auto"/>
+        </SidebarContent>
+        <SidebarFooter>
+            <NavUser user={ data.user }/>
+        </SidebarFooter>
+    </Sidebar>);
 }

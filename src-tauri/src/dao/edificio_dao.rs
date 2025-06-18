@@ -82,7 +82,7 @@ impl Insert<Edificio> for EdificioDAO {
             rusqlite::params_from_iter(convert_param(params)),
         ) {
             Ok(_) => {
-                info!("Edificio inserito con successo");
+                info!("Edificio {} inserito con successo", item.chiave);
                 Ok(item)
             }
             Err(e) => {
@@ -97,10 +97,11 @@ impl Update<Edificio> for EdificioDAO {
     fn update<C: DatabaseConnection>(conn: &C, item: Edificio) -> Result<Edificio, AppError> {
         let builder = QueryBuilder::update()
             .table(Self::table_name())
-            .set("ANNO_COSTRUZIONE", item.anno_costruzione.clone())
-            .set("ANNO_RIQUALIFICAZIONE", item.anno_riqualificazione.clone())
-            .set("ISOLAMENTO_TETTO", item.isolamento_tetto)
-            .set("CAPPOTTO", item.cappotto)
+            .set_if("ANNO_COSTRUZIONE", item.anno_costruzione.clone())
+            .set_if("ANNO_RIQUALIFICAZIONE", item.anno_riqualificazione.clone())
+            .set_if("NOTE_RIQUALIFICAZIONE", item.note_riqualificazione.clone())
+            .set_if("ISOLAMENTO_TETTO", item.isolamento_tetto)
+            .set_if("CAPPOTTO", item.cappotto)
             .where_eq("CHIAVE", item.chiave.clone());
 
         let (query, param) = builder.build()?;

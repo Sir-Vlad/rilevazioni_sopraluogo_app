@@ -1,7 +1,7 @@
 pub mod command_tauri {
     use crate::dto::{
         AnnotazioneDTO, AnnotazioneEdificioDTO, AnnotazioneInfissoDTO, AnnotazioneStanzaDTO,
-        FotovoltaicoDTO, UtenzaDTO,
+        FotovoltaicoDTO, TipoDTO, UtenzaDTO,
     };
     use crate::service::{
         import::ImportData, import::ImportDatiStanzaToExcel, AnnotazioneService, CreateService,
@@ -213,6 +213,11 @@ pub mod command_tauri {
     #[tauri::command]
     pub fn get_all_tipi(db: State<'_, Database>) -> ResultCommand<HashMap<String, Vec<Value>>> {
         TypeServiceImpl::retrieve_all(db).map_err(|e| e.to_string())
+    }
+
+    #[tauri::command]
+    pub fn insert_tipo(db: State<'_, Database>, tipo: TipoDTO) -> ResultCommand<TipoDTO> {
+        TypeServiceImpl::insert_type(db, tipo).map_err(|e| e.to_string())
     }
 
     /**************************************************************************************************/

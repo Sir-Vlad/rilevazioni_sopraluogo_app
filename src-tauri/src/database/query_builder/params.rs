@@ -56,6 +56,11 @@ impl From<u8> for QueryParam {
         Self::Integer(value as i64)
     }
 }
+impl From<f32> for QueryParam {
+    fn from(value: f32) -> Self {
+        Self::Float(value as f64)
+    }
+}
 impl From<f64> for QueryParam {
     fn from(value: f64) -> Self {
         Self::Float(value)

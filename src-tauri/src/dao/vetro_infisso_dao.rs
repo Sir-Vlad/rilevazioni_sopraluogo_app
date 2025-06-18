@@ -43,7 +43,7 @@ impl GetAll<VetroInfisso> for VetroInfissoDAO {
         let result: Result<Vec<VetroInfisso>, rusqlite::Error> = stmt
             .query_map([], |row| {
                 Ok(VetroInfisso {
-                    id: row.get::<_, u64>("ID")?,
+                    _id: Some(row.get::<_, u64>("ID")?),
                     vetro: row.get::<_, String>("VETRO")?,
                     efficienza_energetica: row.get::<_, u8>("EFFICIENZA_ENERGETICA")?,
                 })
@@ -72,10 +72,10 @@ impl Insert<VetroInfisso> for VetroInfissoDAO {
             row.get::<_, u64>(0)
         })?;
         let id = res.next().unwrap()?;
+        info!("VetroInfisso inserito con ID {}", item.vetro);
         Ok(VetroInfisso {
-            id,
-            vetro: item.vetro,
-            efficienza_energetica: item.efficienza_energetica,
+            _id: Some(id),
+            ..item
         })
     }
 }

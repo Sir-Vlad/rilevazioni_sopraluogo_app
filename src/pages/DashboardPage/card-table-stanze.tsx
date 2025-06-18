@@ -18,7 +18,7 @@ const CardTableStanze = () => {
                 .filter(value => value.chiave === selectedEdificio)
                 .filter(stanza => stanza.piano === piano);
             const stanzeVisitate = stanzaPerPiano.filter(stanza => {
-                if (stanza.altezza === undefined) return false; else return stanza.altezza > 0;
+                if (stanza.altezza === undefined) return false; else return stanza.altezza >= 0;
             }).length;
 
             return {

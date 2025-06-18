@@ -124,8 +124,11 @@ fn insert_values_into_table<C: DatabaseConnection>(
         .prepare(&query)
         .map_err(|_e| "Errore nella preparazione della query per inserire i dati nel database")?;
     for value in values {
-        stmt.execute(params![value.value, value.efficienza_energetica])
-            .map_err(|_e| "Errore nell'inserimento dei dati nel database")?;
+        stmt.execute(params![
+            value.value.to_ascii_uppercase(),
+            value.efficienza_energetica
+        ])
+        .map_err(|_e| "Errore nell'inserimento dei dati nel database")?;
     }
     info!("Tabella {} popolata con successo", table_name);
     Ok(())

@@ -48,16 +48,25 @@ impl CreateService<StanzaDTO> for StanzaService {
 
 impl UpdateService<StanzaDTO> for StanzaService {
     fn update(db: State<'_, Database>, stanza: StanzaDTO) -> Result<StanzaDTO, AppError> {
-        let res = db.with_transaction(|tx| {
-            let result = StanzaDAO::update(tx, stanza.clone().into())?;
-            if let Some(infissi) = &stanza.infissi {
-                StanzaConInfissiDao::update(
-                    tx,
-                    StanzaConInfissi::new_with_infissi_expanse(stanza.id, infissi.clone()),
-                )?;
-            }
-            Ok(StanzaDTO::from(result))
-        })?;
-        Ok(res)
+        db.with_transaction(|tx| {
+            let stanza_aggiornata = StanzaDAO::update(tx, stanza.clone().into())?;
+            let stanza_dto = match &stanza.infissi {
+                Some(infissi) => {
+                    let stanza_con_infissi = StanzaConInfissi::new_with_infissi_expanse(
+                        stanza.id,
+                        infissi.clone(),
+                        stanza.chiave,
+                    );
+
+                    let infissi_aggiornati = StanzaConInfissiDao::update(tx, stanza_con_infissi)?;
+
+                    let mut stanza_risultato = StanzaDTO::from(stanza_aggiornata);
+                    stanza_risultato.infissi = Some(infissi_aggiornati.expanse_infissi());
+                    stanza_risultato
+                }
+                None => StanzaDTO::from(stanza_aggiornata),
+            };
+            Ok(stanza_dto)
+        })
     }
 }

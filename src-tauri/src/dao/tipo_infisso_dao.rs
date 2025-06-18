@@ -60,6 +60,7 @@ impl Insert<TipoInfisso> for TipoInfissoDAO {
         let mut stmt = conn.prepare(query.as_str())?;
         let mut res = stmt.query_map(params![item.nome], |row| row.get::<_, u64>(0))?;
         let id = res.next().unwrap()?;
+        info!("TipoInfisso inserito con ID {}", item.nome);
         Ok(TipoInfisso { _id: id, ..item })
     }
 }

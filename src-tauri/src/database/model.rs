@@ -1,8 +1,8 @@
+use crate::utils::AppError;
 use log::info;
 use rusqlite::Connection;
 use serde::Serialize;
 use std::sync::{Mutex, MutexGuard};
-use crate::utils::AppError;
 
 pub struct Database {
     conn: Mutex<Option<Connection>>,
@@ -40,6 +40,14 @@ impl Database {
             Ok(result)
         } else {
             Err(AppError::DatabaseNotInitialized)
+        }
+    }
+
+    #[cfg(test)] // serve solo per i test
+    pub fn open_in_memory() -> Self {
+        Self {
+            conn: Mutex::new(Connection::open_in_memory().ok()),
+            path_to_database: Mutex::new(Some(":memory:".to_string())),
         }
     }
 }

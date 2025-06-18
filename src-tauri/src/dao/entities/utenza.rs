@@ -1,6 +1,6 @@
 use crate::dto::UtenzaDTO;
-use std::fmt::Display;
 use serde::{Deserialize, Serialize};
+use std::fmt::Display;
 
 #[derive(Debug, Clone)]
 #[cfg_attr(test, derive(PartialEq))]
@@ -13,6 +13,7 @@ pub struct Utenza {
 }
 
 impl Utenza {
+    #[cfg(test)]
     pub fn new(
         id_edificio: &str,
         tipo: &str,
@@ -51,9 +52,9 @@ pub enum TipoUtenza {
 impl From<&str> for TipoUtenza {
     fn from(s: &str) -> Self {
         match s.to_ascii_lowercase().as_str() {
-            "idrica" | "acqua" => Self::Idrica,
-            "elettrica" | "elettricità" => Self::Elettrica,
-            "termica" | "calore" => Self::Termica,
+            "idrica" => Self::Idrica,
+            "elettrica" => Self::Elettrica,
+            "termica" => Self::Termica,
             _ => panic!("TipoUtenza non valido"),
         }
     }
@@ -68,9 +69,9 @@ impl From<String> for TipoUtenza {
 impl Display for TipoUtenza {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let str = match self {
-            Self::Idrica => "acqua",
-            Self::Elettrica => "elettricità",
-            Self::Termica => "calore",
+            Self::Idrica => "idrica",
+            Self::Elettrica => "elettrica",
+            Self::Termica => "termica",
         }
         .to_string();
         write!(f, "{}", str)

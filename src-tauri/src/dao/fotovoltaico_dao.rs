@@ -7,7 +7,7 @@ use crate::{
     dao::schema_operations::CreateTable,
     database::{convert_param, DatabaseConnection, QueryBuilder, SqlQueryBuilder},
 };
-use log::info;
+use log::{error, info};
 use rusqlite::Error;
 
 pub struct FotovoltaicoDAO;
@@ -53,7 +53,7 @@ impl GetAll<Fotovoltaico> for FotovoltaicoDAO {
                 })
             })?
             .collect();
-        results.map_err(|e| AppError::from(e))
+        results.map_err(AppError::from)
     }
 }
 
@@ -78,6 +78,7 @@ impl Insert<Fotovoltaico> for FotovoltaicoDAO {
                 row.get::<_, u64>(0)
             })?;
         let id = results.next().unwrap()?;
+        info!("Fotovoltaico {} inserito con successo", id);
         Ok(Fotovoltaico { id, ..item })
     }
 }
@@ -97,8 +98,14 @@ impl Update<Fotovoltaico> for FotovoltaicoDAO {
             row.get::<_, u64>(0)
         });
         match results {
-            Ok(_) => Ok(item),
-            Err(e) => Err(AppError::from(e)),
+            Ok(_) => {
+                info!("Fotovoltaico {} aggiornato con successo", item.id);
+                Ok(item)
+            }
+            Err(e) => {
+                error!("Fotovoltaico {} non aggiornato: {e}", item.id);
+                Err(AppError::from(e))
+            }
         }
     }
 }
@@ -141,7 +148,7 @@ mod test {
     fn test_insert_data() {
         let conn = DATABASE.lock().unwrap();
 
-        let insert_data = Fotovoltaico::new("PR01-25", 55, "Ugo Ugolini");
+        let insert_data = Fotovoltaico::new("PR01-25", 55f32, "Ugo Ugolini");
         let result = FotovoltaicoDAO::insert(conn.deref(), insert_data);
         match result {
             Ok(res) => {
@@ -151,7 +158,7 @@ mod test {
                     Fotovoltaico {
                         id: 1,
                         id_edificio: "PR01-25".to_string(),
-                        potenza: 55,
+                        potenza: 55f32,
                         proprietario: "Ugo Ugolini".to_string(),
                     }
                 )
@@ -169,7 +176,7 @@ mod test {
         let update_data = Fotovoltaico {
             id: 1,
             id_edificio: "PR01-25".to_string(),
-            potenza: 85,
+            potenza: 85f32,
             proprietario: "Ugo Ugolini".to_string(),
         };
         pretty_sqlite::print_table(&conn, "fotovoltaico").expect("errore");

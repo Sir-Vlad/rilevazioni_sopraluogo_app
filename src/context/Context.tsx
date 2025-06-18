@@ -1,5 +1,5 @@
 import { createContext } from "react";
-import { IEdificio, IFotovoltaico, IInfisso, IStanza, IUtenza } from "../models/models.tsx";
+import { IEdificio, IFotovoltaico, IInfisso, IStanza, IUtenza, NuovoTipo } from "../models/models.tsx";
 
 export interface DatabaseContextType {
     databasePath: string;
@@ -36,6 +36,7 @@ export interface TypeContextType {
     illuminazioneType: string[];
     tipoInfissi: string[];
     isLoading: boolean;
+    insertType: (newType: NuovoTipo) => Promise<void>;
 }
 
 export const TypesContext = createContext<TypeContextType | null>(null);
@@ -46,6 +47,7 @@ export interface EdificioContextType {
     setSelectedEdificio: (chiave: string) => void;
     error: string | null;
     isLoading: boolean;
+    modifyEdificio: (edificio: IEdificio) => Promise<void>;
 }
 
 export const EdificioContext = createContext<EdificioContextType | null>(null);
@@ -54,6 +56,7 @@ export interface UtenzeContextType {
     data: IUtenza[];
     error: string | null;
     isLoading: boolean;
+    insertUtenza: (value: IUtenza) => Promise<void>;
 }
 
 export const UtenzeContext = createContext<UtenzeContextType | null>(null);
@@ -62,6 +65,7 @@ export interface FotovoltaicoContextType {
     data: IFotovoltaico[];
     error: string | null;
     isLoading: boolean;
+    insertFotovoltaico: (value: IFotovoltaico) => Promise<void>;
 }
 
 export const FotovoltaicoContext = createContext<FotovoltaicoContextType | null>(null);

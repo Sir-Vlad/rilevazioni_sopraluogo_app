@@ -2,6 +2,9 @@ import {
     ColumnDef,
     ColumnFiltersState,
     getCoreRowModel,
+    getFacetedMinMaxValues,
+    getFacetedRowModel,
+    getFacetedUniqueValues,
     getFilteredRowModel,
     getPaginationRowModel,
     getSortedRowModel,
@@ -9,10 +12,9 @@ import {
     useReactTable
 } from "@tanstack/react-table";
 import { IStanza } from "@/models/models.tsx";
-import { StanzeContext } from "@/context/Context.tsx";
-import { useContext, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import TitlePage from "@/components/title-page.tsx";
-import CardDataGrid from "@/components/card-data-grid.tsx";
+import { CardDataGrid } from "@/components/card-data-grid.tsx";
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -21,43 +23,72 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { ChevronDown } from "lucide-react";
+import { useStanze } from "@/context/UseProvider.tsx";
+import { useSkipper } from "@/hooks/use-skipper.tsx";
 
-const columns: ColumnDef<IStanza>[] = [
-    {
-        accessorKey: "stanza",
-        header     : "Stanza",
-        filterFn   : "includesString"
+const Panoramica = () => {
+    const stanzeContext = useStanze();
+    const [ sorting, setSorting ] = useState<SortingState>([]);
+    const [ columnFilters, setColumnFilters ] = useState<ColumnFiltersState>([]);
+
+    // @ts-ignore
+    const [ autoResetPageIndex, skipAutoResetPageIndex ] = useSkipper();
+
+    // fixme: Quando vengono aperti i filtri i dati vengono cancellati dalla tabella
+    const columns: ColumnDef<IStanza>[] = [ {
+        accessorKey       : "stanza",
+        header            : "Stanza",
+        enableColumnFilter: false,
+        meta              : {
+            filterVariant: "select"
+        }
     }, {
-        accessorKey: "chiave",
-        header     : "Chiave",
-        filterFn   : "includesString"
+        accessorKey       : "chiave",
+        header            : "Chiave",
+        enableColumnFilter: false,
+        meta              : {
+            filterVariant: "select"
+        }
     }, {
         accessorKey       : "destinazione_uso",
         header            : "Destinazione Uso",
-        enableColumnFilter: false
+        enableColumnFilter: false,
     }, {
         accessorKey       : "piano",
         header            : "Piano",
         enableColumnFilter: false
     }, {
-        accessorKey: "altezza",
-        header     : "Altezza",
-        filterFn   : "includesString"
+        accessorKey       : "altezza",
+        header            : "Altezza",
+        enableColumnFilter: false,
+        meta              : {
+            filterVariant: "range"
+        }
     }, {
         accessorKey       : "spessore_muro",
         header            : "Spessore Muro",
         enableColumnFilter: false
     }, {
-        accessorKey: "riscaldamento",
-        header     : "Riscaldamento"
+        accessorKey       : "riscaldamento",
+        header            : "Riscaldamento",
+        enableColumnFilter: false,
+        meta              : {
+            filterVariant: "select"
+        }
     }, {
-        accessorKey: "raffrescamento",
-        header     : "Raffrescamento",
-        filterFn   : "includesString"
+        accessorKey       : "raffrescamento",
+        header            : "Raffrescamento",
+        enableColumnFilter: false,
+        meta              : {
+            filterVariant: "select"
+        }
     }, {
-        accessorKey: "illuminazione",
-        header     : "Illuminazione",
-        filterFn   : "includesString"
+        accessorKey       : "illuminazione",
+        header            : "Illuminazione",
+        enableColumnFilter: false,
+        meta              : {
+            filterVariant: "select"
+        }
     }, {
         accessorKey       : "infissi",
         header            : "Infissi",
@@ -85,30 +116,51 @@ const columns: ColumnDef<IStanza>[] = [
             </DropdownMenu>);
         },
         enableColumnFilter: false
-    }
-];
+    } ];
 
-const Panoramica = () => {
-    const stanzeContext = useContext(StanzeContext);
-    const [ sorting, setSorting ] = useState<SortingState>([]);
-    const [ columnFilters, setColumnFilters ] = useState<ColumnFiltersState>([]);
+    const orderingStanze = useCallback((stanze: IStanza[]) => {
+        const parsePiano = (piano: string): number => {
+            if (piano === "T") return 0; // Assegna "T" a una posizione definita
+            const parsed = parseInt(piano, 10);
+            return isNaN(parsed) ? Number.MAX_SAFE_INTEGER : parsed; // Gestisce valori non numerici
+        };
+
+        return [ ...stanze ].sort((a, b) => {
+            const pianoA = parsePiano(a.piano);
+            const pianoB = parsePiano(b.piano);
+            if (pianoA !== pianoB) {
+                return pianoA - pianoB;
+            }
+
+            const codStanzaA = a.stanza;
+            const codStanzaB = b.stanza;
+            return codStanzaA.localeCompare(codStanzaB);
+        });
+    }, []);
+    const stanzeOrdinate = useMemo(() => {
+        return orderingStanze(stanzeContext.data);
+    }, [ orderingStanze, stanzeContext.data ]);
 
     const table = useReactTable({
-        data                 : stanzeContext!.data,
-        columns              : columns,
-        getCoreRowModel      : getCoreRowModel(),
-        getPaginationRowModel: getPaginationRowModel(),
-        onSortingChange      : setSorting,
-        getSortedRowModel    : getSortedRowModel(),
-        onColumnFiltersChange: setColumnFilters,
-        getFilteredRowModel  : getFilteredRowModel(),
-        initialState         : {
+        data                  : stanzeOrdinate,
+        columns               : columns,
+        getCoreRowModel       : getCoreRowModel(),
+        getPaginationRowModel : getPaginationRowModel(),
+        onSortingChange       : setSorting,
+        getSortedRowModel     : getSortedRowModel(),
+        onColumnFiltersChange : setColumnFilters,
+        getFilteredRowModel   : getFilteredRowModel(),
+        getFacetedRowModel    : getFacetedRowModel(),
+        getFacetedUniqueValues: getFacetedUniqueValues(),
+        getFacetedMinMaxValues: getFacetedMinMaxValues(),
+        initialState          : {
             pagination: { pageSize: 17 }
         },
-        state                : {
+        state                 : {
             sorting      : sorting,
             columnFilters: columnFilters
-        }
+        },
+        autoResetPageIndex    : autoResetPageIndex,
     });
 
     return <div className="flex flex-1 flex-col">

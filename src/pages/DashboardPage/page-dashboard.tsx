@@ -2,9 +2,10 @@ import { SectionCards } from "@/pages/DashboardPage/section-cards.tsx";
 import SectionData from "@/pages/DashboardPage/section-data.tsx";
 import SectionProgressGraph from "@/pages/DashboardPage/section-progress-graph.tsx";
 import SectionDataEdificio from "@/pages/DashboardPage/section-data-edificio.tsx";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select.tsx";
 import TitlePage from "@/components/title-page.tsx";
 import { useEdifici } from "@/context/UseProvider.tsx";
+import { Separator } from "@/components/ui/separator.tsx";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const PageDashboard = () => {
     const edificioContext = useEdifici();
@@ -17,19 +18,21 @@ const PageDashboard = () => {
                     <div>
                         <TitlePage title={ "Dashboard" }/>
                     </div>
+                    <Separator orientation={ "vertical" }/>
                     <div>
-                        <Select disabled={ edifici.length < 2 } value={ edificioContext.selectedEdificio }
-                                onValueChange={ edificioContext.setSelectedEdificio }
-                        >
-                            <SelectTrigger className="w-[10em] border-none dark:bg-transparent">
-                                <SelectValue placeholder="" defaultValue={ edifici[0] }/>
-                            </SelectTrigger>
-                            <SelectContent>
-                                { edifici.map(value => {
-                                    return <SelectItem value={ value } key={ value }>{ value }</SelectItem>;
-                                }) }
-                            </SelectContent>
-                        </Select>
+                        { edifici.length == 1 ? <p className="text-sm">{ edificioContext.selectedEdificio }</p> :
+                            <Select value={ edificioContext.selectedEdificio } disabled={ edifici.length < 2 }
+                                    onValueChange={ edificioContext.setSelectedEdificio }
+                            >
+                                <SelectTrigger className="w-[10em] border-none dark:bg-transparent">
+                                    <SelectValue placeholder="" defaultValue={ edifici[0] }/>
+                                </SelectTrigger>
+                                <SelectContent>
+                                    { edifici.map(value => {
+                                        return <SelectItem value={ value } key={ value }>{ value }</SelectItem>;
+                                    }) }
+                                </SelectContent>
+                            </Select> }
                     </div>
                 </div>
                 <SectionCards/>

@@ -1,6 +1,5 @@
 import { useInfissi, useTypes } from "@/context/UseProvider.tsx";
 import {
-    CellContext,
     ColumnDef,
     ColumnFiltersState,
     getCoreRowModel,
@@ -16,13 +15,10 @@ import {
 } from "@tanstack/react-table";
 import { IInfisso } from "@/models/models.tsx";
 import { Button } from "@/components/ui/button.tsx";
-import { Dispatch, SetStateAction, useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { CheckIcon, PencilIcon, XIcon } from "lucide-react";
-import CardDataGrid from "@/components/card-data-grid.tsx";
-import { Input } from "@/components/ui/input.tsx";
-import { debounce } from "lodash";
-import ClearableSelect from "@/components/clearable-select.tsx";
-import { handleInputNumericChange } from "@/helpers/helpers.ts";
+import { CardDataGrid, InsertCell, SelectCell } from "@/components/card-data-grid.tsx";
+import { useSkipper } from "@/hooks/use-skipper.tsx";
 
 declare module "@tanstack/react-table" {
     interface TableMeta<TData extends RowData> {
@@ -33,22 +29,6 @@ declare module "@tanstack/react-table" {
         editable?: boolean;
         filterVariant?: "text" | "range" | "select";
     }
-}
-
-function useSkipper() {
-    const shouldSkipRef = useRef(true);
-    const shouldSkip = shouldSkipRef.current;
-
-    // Wrap a function with this to skip a pagination reset temporarily
-    const skip = useCallback(() => {
-        shouldSkipRef.current = false;
-    }, []);
-
-    useEffect(() => {
-        shouldSkipRef.current = true;
-    });
-
-    return [ shouldSkip, skip ] as const;
 }
 
 const CardTableInfissi = () => {
@@ -63,7 +43,8 @@ const CardTableInfissi = () => {
     const infissi = useInfissi();
     const {
         materialiInfissiType,
-        vetroInfissiType
+        vetroInfissiType,
+        tipoInfissi
     } = useTypes();
 
 
@@ -91,7 +72,8 @@ const CardTableInfissi = () => {
         accessorKey: "id",
         header     : "ID",
         meta       : {
-            editable: false
+            editable     : false,
+            filterVariant: "text"
         }
     }, {
         accessorKey: "altezza",
@@ -155,7 +137,7 @@ const CardTableInfissi = () => {
             editingRow,
             editedData,
             setEditedData,
-            options: [ "PORTA", "FINESTRA" ]
+            options: tipoInfissi
         }),
         meta       : {
             filterVariant: "select"
@@ -185,7 +167,6 @@ const CardTableInfissi = () => {
                             } }>
                 <PencilIcon/>
             </Button>);
-
         }
     } ];
 
@@ -202,7 +183,10 @@ const CardTableInfissi = () => {
         getFacetedUniqueValues: getFacetedUniqueValues(),
         getFacetedMinMaxValues: getFacetedMinMaxValues(),
         initialState          : {
-            pagination: { pageSize: 5 }
+            pagination: {
+                pageIndex: Number.parseInt(localStorage.getItem("infissiTable") ?? "0"),
+                pageSize : 5,
+            }
         },
         state                 : {
             sorting      : sorting,
@@ -211,110 +195,15 @@ const CardTableInfissi = () => {
         autoResetPageIndex    : autoResetPageIndex,
     });
 
+    useEffect(() => {
+        localStorage.setItem("infissiTable", table.getState().pagination.pageIndex.toString());
+    }, [ table.getState().pagination.pageIndex ]);
+
     return <div className="*:data-[slot=card]:shadow-xs grid grid-cols-1 gap-0
             px-4 *:data-[slot=card]:bg-gradient-to-t *:data-[slot=card]:from-primary/5 *:data-[slot=card]:to-card
             dark:*:data-[slot=card]:bg-card lg:px-5 h-full">
         <CardDataGrid table={ table } title={ "Visualizzazione Infissi" }/>
     </div>;
-};
-
-const useEditingCellState = (editingRow: number | null, rowIndex: number, columnId: string, editedData: Partial<IInfisso> | null, getValue: () => unknown, setEditedData: Dispatch<SetStateAction<Partial<IInfisso> | null>>) => {
-    const isEditing = editingRow === rowIndex;
-    const [ localValue, setLocalValue ] = useState(() => {
-        return isEditing ? editedData?.[columnId as keyof IInfisso] ?? getValue() : getValue();
-    });
-
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    const updateEditingData = useCallback(debounce((newValue) => {
-        setEditedData((prevState) => ({
-            ...prevState,
-            [columnId]: newValue as IInfisso[keyof IInfisso]
-        }));
-    }, 300), [ setEditedData ]);
-
-    return {
-        isEditing,
-        localValue,
-        setLocalValue,
-        updateEditingData
-    };
-};
-
-const NonEditableCell = ({ value }: { value: string }) => <span>{ value }</span>;
-
-interface ICellProps extends CellContext<IInfisso, unknown> {
-    editingRow: number | null;
-    editedData: Partial<IInfisso> | null;
-    setEditedData: Dispatch<SetStateAction<Partial<IInfisso> | null>>;
 }
-
-const InsertCell = ({
-                        getValue,
-                        row,
-                        column,
-                        editingRow,
-                        editedData,
-                        setEditedData
-                    }: ICellProps) => {
-    const {
-        isEditing,
-        localValue,
-        setLocalValue,
-        updateEditingData
-    } = useEditingCellState(editingRow, row.index, column.id, editedData, getValue, setEditedData);
-
-
-    if (column.columnDef.meta?.editable === false) {
-        return <NonEditableCell value={ getValue() as string }/>;
-    }
-
-    return <div className="flex flex-row items-center justify-center">
-        { isEditing ? (<Input
-            key={ `${ row.index }-${ column.id }` }
-            value={ localValue as string }
-            onChange={ e => {
-                handleInputNumericChange(e, (value) => {
-                    setLocalValue(value);
-                    updateEditingData(value);
-                });
-            } }
-            className={ "text-center" }
-            style={ { "width": "4rem" } }
-        />) : (<span>{ localValue as string }</span>) }
-    </div>;
-};
-
-interface ISelectCellProps extends ICellProps {
-    options: string[];
-}
-
-const SelectCell = ({
-                        getValue,
-                        row,
-                        column,
-                        editingRow,
-                        editedData,
-                        setEditedData,
-                        options
-                    }: ISelectCellProps) => {
-    const {
-        isEditing,
-        localValue,
-        setLocalValue,
-        updateEditingData
-    } = useEditingCellState(editingRow, row.index, column.id, editedData, getValue, setEditedData);
-
-    if (column.columnDef.meta?.editable === false) {
-        return <NonEditableCell value={ getValue() as string }/>;
-    }
-
-    return <div className="flex flex-row items-center justify-center">
-        { isEditing ? (<ClearableSelect onChange={ (value) => {
-            setLocalValue(value);
-            updateEditingData(value);
-        } } options={ options } value={ localValue as string } className={ "w-30" }/>) : (
-            <span>{ localValue as string }</span>) }
-    </div>;
-};
 
 export default CardTableInfissi;

@@ -43,7 +43,7 @@ impl GetAll<Climatizzazione> for ClimatizzazioneDAO {
         let result: Result<Vec<Climatizzazione>, rusqlite::Error> = stmt
             .query_map([], |row| {
                 Ok(Climatizzazione {
-                    id: row.get::<_, u64>("ID")?,
+                    _id: Some(row.get::<_, u64>("ID")?),
                     climatizzazione: row.get::<_, String>("CLIMATIZZAZIONE")?,
                     efficienza_energetica: row.get::<_, u8>("EFFICIENZA_ENERGETICA")?,
                 })
@@ -72,10 +72,13 @@ impl Insert<Climatizzazione> for ClimatizzazioneDAO {
             row.get::<_, u64>(0)
         })?;
         let id = res.next().unwrap()?;
+        info!(
+            "Nuovo tipo di climatizzazione inserito con ID: {}",
+            item.climatizzazione
+        );
         Ok(Climatizzazione {
-            id,
-            climatizzazione: item.climatizzazione,
-            efficienza_energetica: item.efficienza_energetica,
+            _id: Some(id),
+            ..item
         })
     }
 }
@@ -114,7 +117,7 @@ mod tests {
             .unwrap();
 
             expected_results.push(Climatizzazione {
-                id,
+                _id: Some(id),
                 climatizzazione: climatizzazione.to_string(),
                 efficienza_energetica: efficienza,
             });

@@ -3,8 +3,8 @@ use crate::dao::InfissoDAO;
 use crate::database::Database;
 use crate::dto::InfissoDTO;
 use crate::service::utils::{CreateService, RetrieveManyService, UpdateService};
-use tauri::State;
 use crate::utils::AppError;
+use tauri::State;
 
 pub struct InfissoService;
 

@@ -36,9 +36,29 @@ impl ImportData for ImportDatiStanzaToExcel {
             .iter()
             .map(|cell| cell.to_string().to_ascii_lowercase().replace(" ", "_"))
             .collect();
+
+        // controllo l'ultima riga per vedere se tenerla oppure no
+        let row_to_process = sheet.rows().skip(6).take(sheet.height() - 6);
+        let rows_vec: Vec<_> = row_to_process.collect();
+        let process_last_row = if !rows_vec.is_empty() {
+            let last_row = rows_vec.last().unwrap();
+            last_row
+                .iter()
+                .any(|cell| cell.to_string().eq_ignore_ascii_case("Totale complessivo"))
+        } else {
+            false
+        };
+
+        let rows_count = if process_last_row || rows_vec.is_empty() {
+            sheet.height() - (1 + 6)
+        } else {
+            rows_vec.len()
+        };
+
         // estrapolo tutti i dati e li salvo per colonne
         let mut column_data: Vec<Vec<String>> = vec![Vec::new(); headers.len()];
-        for row in sheet.rows().skip(6).take(sheet.height() - (1 + 6)) {
+        for row_index in 0..rows_count {
+            let row = rows_vec.get(row_index).unwrap();
             for (i, cell) in row.iter().enumerate() {
                 if i < column_data.len() {
                     column_data[i].push(cell.to_string());

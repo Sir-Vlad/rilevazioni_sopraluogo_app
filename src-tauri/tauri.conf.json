@@ -1,7 +1,7 @@
 {
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
-  "productName": "rilevazioni_sopralluogo_app",
-  "version": "0.1.0",
+  "productName": "Rilevazioni Sopralluogo App",
+  "version": "1.0.0",
   "identifier": "com.sopralluoghi.comune",
   "build": {
     "frontendDist": "../dist",
@@ -14,20 +14,17 @@
       {
         "title": "Rilevazioni Sopralluogo App",
         "width": 1920,
-        "height": 1080
+        "height": 1080,
+        "theme": "Dark"
       }
     ]
   },
-  "plugins": {
-    "shell": {
-      "all": false,
-      "open": false
-    }
-  },
   "bundle": {
     "active": true,
-    "category": "Utility",
+    "publisher": "Mattia Frigiola",
     "copyright": "",
+    "category": "Utility",
+    "longDescription": "App per l'inserimento dati dei sopralluoghi",
     "targets": [
       "app"
     ],

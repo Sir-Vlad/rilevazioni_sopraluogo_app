@@ -1,5 +1,6 @@
 export interface IInfisso {
     id?: string;
+    id_edificio: string;
     tipo: string;
     altezza: number;
     larghezza: number;
@@ -26,10 +27,11 @@ export interface IEdificio {
     chiave: string,
     fascicolo: string,
     indirizzo: string,
-    anno_costruzione: string,
-    anno_riqualificazione: string,
-    isolamento_tetto: boolean,
-    cappotto: boolean,
+    anno_costruzione?: string,
+    anno_riqualificazione?: string,
+    note_riqualificazione?: string,
+    isolamento_tetto?: boolean,
+    cappotto?: boolean,
 }
 
 export interface IStanzaConInfissi {
@@ -61,6 +63,15 @@ export interface TipoInfisso {
     nome: string;
 }
 
+export interface NuovoTipo {
+    tipo: TipoKey;
+    name: string;
+    efficienza_energetica: number;
+}
+
+export type TipoKey = "riscaldamento" | "raffrescamento" | "illuminazione" | "climatizzazione";
+
+
 export interface IUtenza {
     id: number;
     id_edificio: string;
@@ -76,9 +87,11 @@ export interface IFotovoltaico {
     proprietario: string,
 }
 
+type PrimaryKey = | { Edificio: string } | { Stanza: number } | { Infisso: [ string, string ] }
+
 export interface IAnnotazione {
     id: number,
     ref_table: "edificio" | "stanza" | "infisso",
-    id_ref_table: string,
+    id_ref_table: PrimaryKey,
     content: string,
 }

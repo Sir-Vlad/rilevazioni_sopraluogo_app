@@ -1,16 +1,19 @@
 import { Card, CardContent, CardHeader } from "@/components/ui/card.tsx";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table.tsx";
-import { Column, flexRender, RowData, Table as ReactTable } from "@tanstack/react-table";
+import { CellContext, Column, flexRender, RowData, Table as ReactTable } from "@tanstack/react-table";
 import { Button } from "@/components/ui/button.tsx";
 import { ArrowDown, ArrowUp, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Funnel } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import TitleCard from "@/components/title-card.tsx";
-import { InputHTMLAttributes, useEffect, useMemo, useState } from "react";
+import { Dispatch, InputHTMLAttributes, SetStateAction, useCallback, useEffect, useState } from "react";
 import ClearableSelect from "@/components/clearable-select.tsx";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover.tsx";
 import { Label } from "@/components/ui/label.tsx";
-import { Combobox } from "./combobox";
 import { ScrollArea } from "@/components/ui/scroll-area.tsx";
+import { IInfisso } from "@/models/models.tsx";
+import { handleInputNumericChange } from "@/helpers/helpers.ts";
+import { debounce } from "lodash";
+import { FilterDataGrid } from "@/components/filter-data-grid.tsx";
 
 interface CardDataGridProps<TData> {
     table: ReactTable<TData>
@@ -54,7 +57,7 @@ function CardDataGrid<TData>({
                                                 <div className="flex flex-col gap-2">
                                                     <Label
                                                         htmlFor={ header.column.id }>{ getColumnTitle(header.column) }</Label>
-                                                    <Filter column={ header.column }/>
+                                                    <FilterDataGrid column={ header.column }/>
                                                 </div>
                                             </div>) : null)) }
                                     </div>
@@ -147,8 +150,6 @@ function CardDataGrid<TData>({
     </Card>;
 }
 
-export default CardDataGrid;
-
 function getColumnTitle<TData extends RowData, TValue>(column: Column<TData, TValue>): string {
     const header = column.columnDef.header;
 
@@ -161,58 +162,6 @@ function getColumnTitle<TData extends RowData, TValue>(column: Column<TData, TVa
         .replace(/([A-Z])/g, " $1") // Inserisce spazi prima delle lettere maiuscole
         .replace(/^./, str => str.toUpperCase()) // Rende maiuscola la prima lettera
         .trim();
-}
-
-function Filter({ column }: Readonly<{ column: Column<any, unknown> }>) {
-    const { filterVariant } = column.columnDef.meta ?? {};
-
-    const columnFilterValue = column.getFilterValue();
-
-    const sortedUniqueValues: string[] = useMemo(() => {
-        if (filterVariant === "range") return [] as string[]
-        return Array.from(column.getFacetedUniqueValues().keys())
-            .slice(0, 1000) as string[]
-    }, [ column, filterVariant ]);
-
-    if (filterVariant === "range") {
-        const minValue = column.getFacetedMinMaxValues()?.[0]
-        const maxValue = column.getFacetedMinMaxValues()?.[1]
-        return <div>
-            <div className="flex space-x-2">
-                <DebouncedInput
-                    type="number"
-                    min={ Number(minValue ?? "") }
-                    max={ Number(maxValue ?? "") }
-                    value={ (columnFilterValue as [ number, number ])?.[0] ?? "" }
-                    onChange={ value => column.setFilterValue((old: [ number, number ]) => [ value, old?.[1] ]) }
-                    placeholder={ `Min ${ minValue ? `(${ minValue })` : "" }` }
-                    className="w-full border shadow rounded"
-                />
-                <DebouncedInput
-                    type="number"
-                    min={ Number(minValue ?? "") }
-                    max={ Number(maxValue ?? "") }
-                    value={ (columnFilterValue as [ number, number ])?.[1] ?? "" }
-                    onChange={ value => column.setFilterValue((old: [ number, number ]) => [ old?.[0], value ]) }
-                    placeholder={ `Max ${ maxValue ? `(${ maxValue })` : "" }` }
-                    className="w-full border shadow rounded"
-                />
-            </div>
-        </div>;
-    } else if (filterVariant === "select") {
-        return <ClearableSelect onChange={ value => column.setFilterValue(value) }
-                                value={ columnFilterValue?.toString() ?? "" }
-                                options={ sortedUniqueValues }
-                                onClear={ () => column.setFilterValue(undefined) }
-        />;
-    } else {
-        return <>
-            {/* Autocomplete suggestions from faceted values feature */ }
-            <Combobox options={ sortedUniqueValues }
-                      value={ columnFilterValue?.toString() ?? "" }
-                      onChange={ (value) => column.setFilterValue(value) }/>
-        </>;
-    }
 }
 
 // A typical debounced input react component
@@ -242,3 +191,106 @@ function DebouncedInput({
 
     return (<Input { ...props } value={ value } onChange={ e => setValue(e.target.value) }/>);
 }
+
+const useEditingCellState = <TData, >(editingRow: number | null, rowIndex: number, columnId: string, editedData: Partial<TData> | null, getValue: () => unknown, setEditedData: Dispatch<SetStateAction<Partial<TData> | null>>) => {
+    const isEditing = editingRow === rowIndex;
+    const [ localValue, setLocalValue ] = useState(() => {
+        return isEditing ? editedData?.[columnId as keyof TData] ?? getValue() : getValue();
+    });
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    const updateEditingData = useCallback(debounce((newValue) => {
+        setEditedData((prevState) => ({
+            ...prevState,
+            [columnId]: newValue as IInfisso[keyof IInfisso]
+        }));
+    }, 300), [ setEditedData ]);
+
+    return {
+        isEditing,
+        localValue,
+        setLocalValue,
+        updateEditingData
+    };
+};
+
+const NonEditableCell = ({ value }: { value: string }) => <span>{ value }</span>;
+
+interface ICellProps<TData> extends CellContext<TData, unknown> {
+    editingRow: number | null;
+    editedData: Partial<TData> | null;
+    setEditedData: Dispatch<SetStateAction<Partial<TData> | null>>;
+}
+
+const InsertCell = <TData, >({
+                                 getValue,
+                                 row,
+                                 column,
+                                 editingRow,
+                                 editedData,
+                                 setEditedData
+                             }: ICellProps<TData>) => {
+    const {
+        isEditing,
+        localValue,
+        setLocalValue,
+        updateEditingData
+    } = useEditingCellState(editingRow, row.index, column.id, editedData, getValue, setEditedData);
+
+
+    if (column.columnDef.meta?.editable === false) {
+        return <NonEditableCell value={ getValue() as string }/>;
+    }
+
+    return <div className="flex flex-row items-center justify-center">
+        { isEditing ? (<Input
+            key={ `${ row.index }-${ column.id }` }
+            value={ localValue as string }
+            onChange={ e => {
+                handleInputNumericChange(e, (value) => {
+                    setLocalValue(value);
+                    updateEditingData(value);
+                });
+            } }
+            className={ "text-center" }
+            style={ { "width": "4rem" } }
+        />) : (<span>{ localValue as string }</span>) }
+    </div>;
+};
+
+interface ISelectCellProps<TData> extends ICellProps<TData> {
+    options: string[];
+}
+
+const SelectCell = <TData, >({
+                                 getValue,
+                                 row,
+                                 column,
+                                 editingRow,
+                                 editedData,
+                                 setEditedData,
+                                 options
+                             }: ISelectCellProps<TData>) => {
+    const {
+        isEditing,
+        localValue,
+        setLocalValue,
+        updateEditingData
+    } = useEditingCellState(editingRow, row.index, column.id, editedData, getValue, setEditedData);
+
+    if (column.columnDef.meta?.editable === false) {
+        return <NonEditableCell value={ getValue() as string }/>;
+    }
+
+    return <div className="flex flex-row items-center justify-center">
+        { isEditing ? (<ClearableSelect onChange={ (value) => {
+            setLocalValue(value);
+            updateEditingData(value);
+        } } options={ options } value={ localValue as string } className={ "w-30" }/>) : (
+            <span>{ localValue as string }</span>) }
+    </div>;
+};
+
+export {
+    CardDataGrid, SelectCell, InsertCell, DebouncedInput
+};

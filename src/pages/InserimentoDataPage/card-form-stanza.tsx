@@ -9,10 +9,9 @@ import DynamicSelect from "@/components/dynamic-select.tsx";
 import { Input } from "@/components/ui/input.tsx";
 import { Pencil, PlusIcon, Trash } from "lucide-react";
 import AnnotazioneButton from "@/components/annotazione-button.tsx";
-import HelpBadge from "@/components/help-badge.tsx";
 import { useDatabase, useEdifici, useStanze, useTypes } from "@/context/UseProvider.tsx";
 import { handleInputNumericChange } from "@/helpers/helpers";
-import { IAnnotazione, IStanza } from "@/models/models.tsx";
+import { IAnnotazione, IStanza, NuovoTipo, TipoKey } from "@/models/models.tsx";
 import { toast } from "sonner";
 import TitleCard from "@/components/title-card";
 import ClearableSelect from "@/components/clearable-select.tsx";
@@ -29,6 +28,9 @@ import {
 import { Label } from "@/components/ui/label";
 import { useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
+import { useNotification } from "@/context/NotificationProvider.tsx";
+import InputWithMeasureUnit from "@/components/input-with-measure-unit.tsx";
+import { getSavedFormData, useLocalStorageForm } from "@/hooks/useLocalStorageForm.ts";
 
 
 const FormSchema = z.object({
@@ -51,14 +53,6 @@ const FormSchema = z.object({
 
 
 const CardFormStanza = () => {
-    const form = useForm<z.infer<typeof FormSchema>>({
-        resolver     : zodResolver(FormSchema),
-        defaultValues: {
-            altezza      : 0,
-            spessore_muro: 0,
-            infissi      : []
-        }
-    });
     const [ annotazioni, setAnnotazioni ] = useState<string[]>([]);
 
     const stanzaContext = useStanze();
@@ -66,8 +60,23 @@ const CardFormStanza = () => {
         illuminazioneType,
         climatizzazioneType
     } = useTypes();
-    const { error } = useDatabase();
+    const {
+        error,
+        databaseName
+    } = useDatabase();
     const { selectedEdificio } = useEdifici();
+    const {addNotification} = useNotification();
+    const savedValues = getSavedFormData<typeof FormSchema>("stanzaFormData");
+
+    const form = useForm<z.infer<typeof FormSchema>>({
+        resolver     : zodResolver(FormSchema),
+        defaultValues: savedValues || {
+            altezza      : 0,
+            spessore_muro: 0,
+            infissi      : []
+        }
+    });
+    useLocalStorageForm(form, "stanzaFormData");
 
     const stanzeOptions = [ ...[ ...new Set(stanzaContext.data
         .filter(value => value.chiave === selectedEdificio)
@@ -115,8 +124,8 @@ const CardFormStanza = () => {
         for (const stanza of stanze) {
             const newStanza: IStanza = {
                 ...stanza,
-                altezza       : data.altezza,
-                spessore_muro : data.spessore_muro,
+                altezza       : data.altezza == 0 ? undefined : data.altezza,
+                spessore_muro : data.spessore_muro == 0 ? undefined : data.spessore_muro,
                 riscaldamento : data.riscaldamento,
                 raffrescamento: data.raffrescamento,
                 illuminazione : data.illuminazione,
@@ -124,14 +133,7 @@ const CardFormStanza = () => {
                     return infisso !== null && infisso !== undefined && infisso !== "";
                 })
             };
-            console.log(newStanza);
-            try {
-                stanzaContext.updateStanza(newStanza);
-                toast.success(`Stanza ${ data.stanza } modificata`);
-            } catch (e) {
-                toast.error(`Errore durante la modifica della stanza ${ data.stanza }`);
-                console.log(e);
-            }
+            stanzaContext.updateStanza(newStanza);
             if (annotazioni.length > 0) onSubmitAnnotazioni(stanza).then().catch(console.error);
         }
     }
@@ -142,7 +144,7 @@ const CardFormStanza = () => {
                 const annotazione = {
                     id          : 0,
                     ref_table   : "stanza",
-                    id_ref_table: stanza.id.toString(),
+                    id_ref_table: { Stanza: stanza.id },
                     content     : content,
                 } as IAnnotazione;
 
@@ -150,9 +152,11 @@ const CardFormStanza = () => {
                     annotazione: annotazione,
                 })
             } catch (e) {
-                console.error(e)
+                addNotification(e as string, "error");
             }
         }
+        setAnnotazioni([]);
+        addNotification("Annotazioni inserite", "success")
     }
 
     function clearForm() {
@@ -177,7 +181,7 @@ const CardFormStanza = () => {
                 <CardTitle>
                     <div className="flex gap-5 items-center">
                         <TitleCard title="Modifica Stanza"/>
-                        <AnnotazioneButton setAnnotazione={ setAnnotazioni }/>
+                        <AnnotazioneButton setAnnotazione={ setAnnotazioni } disabled={ databaseName === null }/>
                         <div className="flex flex-1 justify-end">
                             <Button type="button" className="dark:text-white" variant="secondary" onClick={ clearForm }>
                                 <Trash/> Pulisci Form
@@ -222,7 +226,10 @@ const CardFormStanza = () => {
                                                 <FormLabel>Destinazione Uso</FormLabel>
                                                 <ClearableSelect onChange={ field.onChange }
                                                                  options={ destinazioneUsoOptions }
-                                                                 value={ field.value }/>
+                                                                 value={ field.value }
+                                                                 disabled={ true }
+                                                                 placeholder={ "" }
+                                                />
                                                 <FormMessage/>
                                             </FormItem>
                                         </div>) }
@@ -235,7 +242,10 @@ const CardFormStanza = () => {
                                                 <FormLabel>Piano</FormLabel>
                                                 <ClearableSelect onChange={ field.onChange }
                                                                  options={ pianoOptions }
-                                                                 value={ field.value }/>
+                                                                 value={ field.value }
+                                                                 disabled={ true }
+                                                                 placeholder={ "" }
+                                                />
                                                 <FormMessage/>
                                             </FormItem>
                                         </div>) }
@@ -252,10 +262,12 @@ const CardFormStanza = () => {
                                             <FormItem>
                                                 <FormLabel className="flex items-center">
                                                     <p>Altezza</p>
-                                                    <HelpBadge message="Il valore va inserito in cm"/>
                                                 </FormLabel>
-                                                <Input value={ field.value }
-                                                       onChange={ e => handleInputNumericChange(e, field.onChange) }
+                                                <InputWithMeasureUnit
+                                                    value={ field.value }
+                                                    onChange={ e => handleInputNumericChange(e, field.onChange) }
+                                                    disabled={ databaseName === null }
+                                                    unitLabel="cm"
                                                 />
                                                 <FormMessage/>
                                             </FormItem>
@@ -268,10 +280,13 @@ const CardFormStanza = () => {
                                             <FormItem>
                                                 <FormLabel className="flex items-center">
                                                     <p>Spessore Muro</p>
-                                                    <HelpBadge message="Il valore va inserito in cm"/>
                                                 </FormLabel>
-                                                <Input value={ field.value }
-                                                       onChange={ e => handleInputNumericChange(e, field.onChange) }/>
+                                                <InputWithMeasureUnit
+                                                    value={ field.value }
+                                                    onChange={ e => handleInputNumericChange(e, field.onChange) }
+                                                    disabled={ databaseName === null }
+                                                    unitLabel="cm"
+                                                />
                                                 <FormMessage/>
                                             </FormItem>
                                         </div>) }
@@ -283,17 +298,25 @@ const CardFormStanza = () => {
                                 <div className="grid grid-cols-12 gap-5">
                                     <SelectWithOtherField form={ form } name="riscaldamento"
                                                           label="Riscaldamento"
-                                                          options={ climatizzazioneType }/>
+                                                          options={ climatizzazioneType }
+                                                          tipo={ "riscaldamento" }
+                                                          disabled={ databaseName === null }
+                                    />
                                     <SelectWithOtherField form={ form } name="raffrescamento"
                                                           label="Raffrescamento"
-                                                          options={ climatizzazioneType }/>
+                                                          options={ climatizzazioneType }
+                                                          tipo={ "raffrescamento" }
+                                                          disabled={ databaseName === null }
+                                    />
                                 </div>
                             </div>
                             {/* Illuminazione e altro */ }
                             <div className="row-start-4 col-span-6">
                                 <SelectWithOtherField form={ form } name="illuminazione"
                                                       label="Illuminazione"
-                                                      options={ illuminazioneType }/>
+                                                      options={ illuminazioneType }
+                                                      tipo={ "illuminazione" }
+                                />
                             </div>
                             {/* Infissi */ }
                             <div className="row-start-6 col-span-12">
@@ -303,7 +326,8 @@ const CardFormStanza = () => {
                                     render={ ({ field }) => (<FormItem>
                                         <FormLabel>Infissi</FormLabel>
                                         <FormControl>
-                                            <DynamicSelect onChange={ field.onChange } values={ field.value }/>
+                                            <DynamicSelect onChange={ field.onChange } values={ field.value }
+                                                           disabled={ databaseName === null }/>
                                         </FormControl>
                                         <FormMessage/>
                                     </FormItem>) }
@@ -311,7 +335,7 @@ const CardFormStanza = () => {
                             </div>
                         </div>
                         <div className="flex justify-end pt-4">
-                            <Button type="submit" className="text-white">
+                            <Button type="submit" className="text-white" disabled={ databaseName === null }>
                                 <Pencil/> <span>Modifica Stanza</span>
                             </Button>
                         </div>
@@ -327,6 +351,8 @@ interface SelectWithOtherFieldProps<TFormValues extends Record<string, unknown>>
     name: FieldPath<TFormValues>;
     label: string;
     options: string[];
+    tipo: TipoKey;
+    disabled?: boolean;
 }
 
 
@@ -334,7 +360,9 @@ const SelectWithOtherField = <TFormValues extends Record<string, unknown>>({
                                                                                form,
                                                                                name,
                                                                                label,
-                                                                               options
+                                                                               options,
+                                                                               tipo,
+                                                                               disabled
                                                                            }: SelectWithOtherFieldProps<TFormValues>) => {
     return (<FormField
         control={ form.control }
@@ -343,15 +371,13 @@ const SelectWithOtherField = <TFormValues extends Record<string, unknown>>({
             <FormItem>
                 <div className="flex justify-between">
                     <FormLabel>{ label }</FormLabel>
-                    <SheetAddNewTipo tipo={ label }></SheetAddNewTipo>
+                    <SheetAddNewTipo tipo={ tipo }></SheetAddNewTipo>
                 </div>
-                <ClearableSelect onChange={ field.onChange } options={ options } value={ field.value as string }
+                <ClearableSelect onChange={ field.onChange } options={ options }
+                                 value={ field.value as string }
+                                 disabled={ disabled }
                                  onClear={ () => {
-                                     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-                                     // @ts-expect-error
-                                     form.reset({
-                                         [field.name]: ""
-                                     });
+                                     form.resetField(field.name);
                                  } }/>
                 <FormMessage/>
             </FormItem>
@@ -359,22 +385,34 @@ const SelectWithOtherField = <TFormValues extends Record<string, unknown>>({
     />);
 };
 
-const SheetAddNewTipo = ({ tipo }: { tipo: string }) => {
-    const [ newTipo, setNewTipo ] = useState("");
+const SheetAddNewTipo = ({ tipo }: { tipo: TipoKey }) => {
+    const [ newNameTipo, setNewNameTipo ] = useState("");
     const [ effEnergetica, setEffEnergetica ] = useState(0);
+    const { insertType } = useTypes();
+    const { addNotification } = useNotification();
+    const { databaseName } = useDatabase();
 
-    const handleSubmit = () => {
-        console.log(newTipo, effEnergetica);
-        toast.warning("Funzionalità non implementata");
-        // todo: implementare l'inserimento del nuovo tipo
-        setNewTipo("");
-        setEffEnergetica(0);
+    const handleSubmit = async () => {
+        try {
+            const insertTipo: NuovoTipo = {
+                tipo                 : tipo,
+                name                 : newNameTipo,
+                efficienza_energetica: effEnergetica,
+            };
+            await insertType(insertTipo);
+            addNotification(`Tipo ${ newNameTipo } inserito`, "success");
+        } catch (e) {
+            addNotification(e as string, "error");
+        } finally {
+            setNewNameTipo("");
+            setEffEnergetica(0);
+        }
     };
 
 
     return <Sheet>
         <SheetTrigger asChild>
-            <Button variant="ghost" size={ "sm" }><PlusIcon/></Button>
+            <Button variant="ghost" size={ "sm" } disabled={ databaseName === null }><PlusIcon/></Button>
         </SheetTrigger>
         <SheetContent className="w-[400px]">
             <SheetHeader>
@@ -389,8 +427,8 @@ const SheetAddNewTipo = ({ tipo }: { tipo: string }) => {
                         Nuovo Tipo
                     </Label>
                     <Input id="name" className="col-span-3" placeholder="Inserisci il nome del nuovo tipo"
-                           onChange={ (e) => setNewTipo(e.target.value) }
-                           value={ newTipo }
+                           onChange={ (e) => setNewNameTipo(e.target.value) }
+                           value={ newNameTipo }
                     />
                 </div>
                 <div className="grid grid-cols-4 items-center gap-4">

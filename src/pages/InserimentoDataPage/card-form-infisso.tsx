@@ -3,18 +3,19 @@ import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Form, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form.tsx";
-import { Input } from "@/components/ui/input.tsx";
 import { ChangeEvent, useState } from "react";
 import { Button } from "@/components/ui/button.tsx";
 import { PlusIcon, Trash } from "lucide-react";
-import { useDatabase, useInfissi, useTypes } from "@/context/UseProvider.tsx";
+import { useDatabase, useEdifici, useInfissi, useTypes } from "@/context/UseProvider.tsx";
 import CommentsButton from "@/components/annotazione-button.tsx";
 import { toast } from "sonner";
 import { IAnnotazione, IInfisso } from "@/models/models.tsx";
-import HelpBadge from "@/components/help-badge.tsx";
 import TitleCard from "@/components/title-card.tsx";
 import ClearableSelect from "@/components/clearable-select.tsx";
 import { invoke } from "@tauri-apps/api/core";
+import InputWithMeasureUnit from "@/components/input-with-measure-unit.tsx";
+import { useNotification } from "@/context/NotificationProvider.tsx";
+import { getSavedFormData, useLocalStorageForm } from "@/hooks/useLocalStorageForm.ts";
 
 const nextAlphabeticalID = (prevID: string | null) => {
     if (!prevID || prevID === "") return "A";
@@ -55,11 +56,19 @@ const CardFormInfisso = () => {
         tipoInfissi
     } = useTypes();
     const infissi = useInfissi();
-    const { error } = useDatabase();
+    const {
+        error,
+        databaseName
+    } = useDatabase();
+    const { selectedEdificio } = useEdifici();
+    const [ annotazioni, setAnnotazioni ] = useState<string[]>([]);
+    const { addNotification } = useNotification();
+
+    const savedValues = getSavedFormData<typeof FormInfisso>("infissoFormData");
 
     const form = useForm<z.infer<typeof FormInfisso>>({
         resolver     : zodResolver(FormInfisso),
-        defaultValues: {
+        defaultValues: savedValues ?? {
             tipo     : tipoInfissi.find(value => value === "FINESTRA") ?? "",
             altezza  : 0,
             larghezza: 0,
@@ -67,7 +76,8 @@ const CardFormInfisso = () => {
             vetro    : ""
         }
     });
-    const [ annotazioni, setAnnotazioni ] = useState<string[]>([]);
+
+    useLocalStorageForm(form, "infissoFormData")
 
     const handleInputNumericChange = (event: ChangeEvent<HTMLInputElement>, field: {
         onChange: (value: number) => void
@@ -90,7 +100,7 @@ const CardFormInfisso = () => {
     };
 
     async function onSubmit(data: z.infer<typeof FormInfisso>) {
-        if (error === "Database non impostato") {
+        if (error === "Database non impostato" || selectedEdificio === undefined || selectedEdificio === null) {
             toast.warning("File non selezionato");
             return;
         }
@@ -98,7 +108,7 @@ const CardFormInfisso = () => {
         if (data.altezza === 0 && data.larghezza === 0 && data.materiale === "" && data.vetro === "") {
             return;
         }
-        const lastInfisso = infissi.data.at(-1);
+        const lastInfisso = infissi.data.filter(value => value.id_edificio === selectedEdificio).at(-1);
         let lastInfissoId = "";
         if (lastInfisso) {
             if (lastInfisso.id) {
@@ -107,17 +117,13 @@ const CardFormInfisso = () => {
                 throw new Error("Infisso non ha un id");
             }
         }
+
         const newInfisso: IInfisso = {
             ...data,
-            id: nextAlphabeticalID(lastInfissoId)
+            id         : nextAlphabeticalID(lastInfissoId),
+            id_edificio: selectedEdificio,
         };
-        try {
-            await infissi.insertInfisso(newInfisso);
-            toast.success("Infisso inserito con successo");
-        } catch (e) {
-            toast.error("Errore durante l'inserimento del nuovo infisso");
-            console.error(e);
-        }
+        await infissi.insertInfisso(newInfisso);
         if (annotazioni.length > 0) onSubmitAnnotazioni(newInfisso).then().catch(console.error);
     }
 
@@ -127,7 +133,7 @@ const CardFormInfisso = () => {
                 const annotazione = {
                     id          : 0,
                     ref_table   : "infisso",
-                    id_ref_table: infisso.id!.toString(),
+                    id_ref_table: { Infisso: [ infisso.id, selectedEdificio ], },
                     content     : content,
                 } as IAnnotazione;
 
@@ -135,12 +141,11 @@ const CardFormInfisso = () => {
                     annotazione: annotazione,
                 })
             } catch (e) {
-                toast.error("Errore durante l'inserimento delle annotazioni");
-                console.error(e)
+                addNotification(e as string, "error");
             }
         }
         setAnnotazioni([]);
-        toast.success("Annotazioni inserite con successo");
+        addNotification("Annotazioni inserite con successo", "success");
     }
 
     function clearForm() {
@@ -169,7 +174,7 @@ const CardFormInfisso = () => {
             <CardHeader>
                 <div className="flex gap-5 items-center">
                     <TitleCard title="Inserisci Infisso"/>
-                    <CommentsButton setAnnotazione={ setAnnotazioni }/>
+                    <CommentsButton setAnnotazione={ setAnnotazioni } disabled={ databaseName === null }/>
                     <div className="flex flex-1 justify-end">
                         <Button type="button" className="dark:text-white" variant="secondary" onClick={ clearForm }>
                             <Trash/> Pulisci Form
@@ -192,9 +197,7 @@ const CardFormInfisso = () => {
                                                                         value={ field.value }
                                                                         options={ tipoInfissi }
                                                                         onClear={ () => {
-                                                                            form.reset({
-                                                                                "tipo": tipoInfissi.find(value => value === "FINESTRA") ?? ""
-                                                                            });
+                                                                            form.resetField("tipo");
                                                                         } }
                                                        />
                                                    </FormItem>
@@ -210,10 +213,12 @@ const CardFormInfisso = () => {
                                             <FormItem>
                                                 <FormLabel className="flex items-center">
                                                     <p>Altezza</p>
-                                                    <HelpBadge message="Il valore va inserito in cm"/>
                                                 </FormLabel>
-                                                <Input value={ field.value }
-                                                       onChange={ e => handleInputNumericChange(e, field) }
+                                                <InputWithMeasureUnit
+                                                    value={ field.value }
+                                                    onChange={ e => handleInputNumericChange(e, field) }
+                                                    disabled={ databaseName === null }
+                                                    unitLabel="cm"
                                                 />
                                                 <FormMessage/>
                                             </FormItem>
@@ -226,10 +231,12 @@ const CardFormInfisso = () => {
                                             <FormItem>
                                                 <FormLabel className="flex items-center">
                                                     <p>Larghezza</p>
-                                                    <HelpBadge message="Il valore va inserito in cm"/>
                                                 </FormLabel>
-                                                <Input value={ field.value }
-                                                       onChange={ e => handleInputNumericChange(e, field) }
+                                                <InputWithMeasureUnit
+                                                    value={ field.value }
+                                                    onChange={ e => handleInputNumericChange(e, field) }
+                                                    disabled={ databaseName === null }
+                                                    unitLabel="cm"
                                                 />
                                                 <FormMessage/>
                                             </FormItem>
@@ -249,9 +256,7 @@ const CardFormInfisso = () => {
                                                 <ClearableSelect onChange={ field.onChange }
                                                                  options={ materialiInfissiType } value={ field.value }
                                                                  onClear={ () => {
-                                                                     form.reset({
-                                                                         "materiale": ""
-                                                                     });
+                                                                     form.resetField("materiale")
                                                                  } }/>
                                                 <FormMessage/>
                                             </FormItem>
@@ -266,9 +271,7 @@ const CardFormInfisso = () => {
                                                 <ClearableSelect onChange={ field.onChange }
                                                                  options={ vetroInfissiType } value={ field.value }
                                                                  onClear={ () => {
-                                                                     form.reset({
-                                                                         "vetro": ""
-                                                                     });
+                                                                     form.resetField("vetro")
                                                                  } }/>
                                                 <FormMessage/>
                                             </FormItem>
@@ -278,7 +281,7 @@ const CardFormInfisso = () => {
                             </div>
                         </div>
                         <div className="flex items-center justify-end pt-4">
-                            <Button type="submit" className="text-white">
+                            <Button type="submit" className="text-white" disabled={ databaseName === null }>
                                 <PlusIcon/> <span>Aggiungi Infisso</span>
                             </Button>
                         </div>

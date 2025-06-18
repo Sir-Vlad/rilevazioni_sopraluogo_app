@@ -2,7 +2,7 @@ use crate::dto::EdificioDTO;
 use crate::utils::ToList;
 use std::any::Any;
 
-#[cfg_attr(test, derive(Debug, PartialEq))]
+#[cfg_attr(test, derive(Debug, PartialEq, Clone))]
 pub struct Edificio {
     pub(crate) chiave: String,
     pub(crate) fascicolo: String,
