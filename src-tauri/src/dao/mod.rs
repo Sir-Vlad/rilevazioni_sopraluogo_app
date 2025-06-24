@@ -4,28 +4,24 @@ mod annotazione_stanza_dao;
 mod climatizzazione_dao;
 mod dati_stanze_view_dao;
 mod edificio_dao;
-mod entities;
 mod fotovoltaico_dao;
 mod illuminazione_dao;
 mod infisso_dao;
-mod mat_min_eff_stanza_view_dao;
 mod materiale_infisso_dao;
-mod mq_infissi_view_dao;
 mod stanza_dao;
 mod stanze_con_infissi_dao;
 mod tipo_infisso_dao;
 mod utenze_dao;
 mod utils;
-mod vet_min_eff_stanza_view_dao;
 mod vetro_infisso_dao;
 
+pub use crate::entities::*;
 pub use annotazione_edificio_dao::*;
 pub use annotazione_infisso_dao::*;
 pub use annotazione_stanza_dao::*;
 pub use climatizzazione_dao::*;
 pub use dati_stanze_view_dao::*;
 pub use edificio_dao::*;
-pub use entities::*;
 pub use fotovoltaico_dao::*;
 pub use illuminazione_dao::*;
 pub use infisso_dao::*;
@@ -37,4 +33,4 @@ pub use vetro_infisso_dao::*;
 
 pub(crate) use tipo_infisso_dao::*;
 
-pub(crate) use utils::{create_tables, create_views, crud_operations, schema_operations};
+pub(crate) use utils::{create_tables, crud_operations, schema_operations};

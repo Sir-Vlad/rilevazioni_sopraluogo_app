@@ -1,70 +1,23 @@
-use crate::dao::crud_operations::{GetAll, Insert, Update};
+use crate::app_traits::{CreateTable, DaoTrait, GetAll, Insert, Update};
 use crate::dao::entity::Edificio;
-use crate::dao::utils::schema_operations::CreateTable;
-use crate::dao::utils::DAO;
-use crate::database::{
-    convert_param, DatabaseConnection, QueryBuilder, SqlQueryBuilder, WhereBuilder,
-};
 use crate::utils::AppError;
-use log::{error, info};
 
 pub struct EdificioDAO;
 
-impl DAO for EdificioDAO {
-    fn table_name() -> &'static str {
-        "EDIFICIO"
-    }
+impl DaoTrait for EdificioDAO {
+    type Entity = Edificio;
+    type Error = AppError;
 }
 
-impl CreateTable for EdificioDAO {
-    fn create_table<C: DatabaseConnection>(conn: &C) -> Result<(), AppError> {
-        conn.execute(
-            format!(
-                "CREATE TABLE IF NOT EXISTS {}
-                (
-                    CHIAVE                TEXT PRIMARY KEY,
-                    FASCICOLO             TEXT NOT NULL,
-                    INDIRIZZO             TEXT NOT NULL,
-                    ANNO_COSTRUZIONE      TEXT    DEFAULT NULL,
-                    ANNO_RIQUALIFICAZIONE TEXT    DEFAULT NULL,
-                    NOTE_RIQUALIFICAZIONE TEXT    DEFAULT NULL,
-                    ISOLAMENTO_TETTO      INTEGER DEFAULT FALSE,
-                    CAPPOTTO              INTEGER DEFAULT FALSE
-                ) STRICT;",
-                Self::table_name()
-            )
-            .as_str(),
-            (),
-        )?;
-        info!("Tabella EDIFICIO creata");
-        Ok(())
-    }
-}
+impl CreateTable for EdificioDAO {}
 
-impl GetAll<Edificio> for EdificioDAO {
-    fn get_all<C: DatabaseConnection>(conn: &C) -> Result<Vec<Edificio>, AppError> {
-        let (query, _) = QueryBuilder::select().table(Self::table_name()).build()?;
+impl GetAll for EdificioDAO {}
 
-        let mut stmt = conn.prepare(query.as_str())?;
+impl Insert for EdificioDAO {}
 
-        let result: Result<Vec<Edificio>, rusqlite::Error> = stmt
-            .query_map([], |row| {
-                Ok(Edificio {
-                    chiave: row.get::<_, String>("CHIAVE")?,
-                    fascicolo: row.get::<_, String>("FASCICOLO")?,
-                    indirizzo: row.get::<_, String>("INDIRIZZO")?,
-                    anno_costruzione: row.get::<_, Option<String>>("ANNO_COSTRUZIONE")?,
-                    anno_riqualificazione: row.get::<_, Option<String>>("ANNO_RIQUALIFICAZIONE")?,
-                    note_riqualificazione: row.get::<_, Option<String>>("NOTE_RIQUALIFICAZIONE")?,
-                    isolamento_tetto: row.get::<_, Option<bool>>("ISOLAMENTO_TETTO")?,
-                    cappotto: row.get::<_, Option<bool>>("CAPPOTTO")?,
-                })
-            })?
-            .collect();
-        result.map_err(AppError::from)
-    }
-}
+impl Update for EdificioDAO {}
 
+/*
 impl Insert<Edificio> for EdificioDAO {
     fn insert<C: DatabaseConnection>(conn: &C, item: Edificio) -> Result<Edificio, AppError> {
         let builder = QueryBuilder::insert()
@@ -119,5 +72,72 @@ impl Update<Edificio> for EdificioDAO {
                 Err(e)
             }
         }
+    }
+}
+*/
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::app_traits::EntityTrait;
+    use rusqlite::Connection;
+
+    #[test]
+    fn test_insert() {
+        let conn = Connection::open_in_memory().unwrap();
+        EdificioDAO::create_table(&conn).unwrap();
+
+        let entity = Edificio {
+            chiave: "TEST01".to_string(),
+            fascicolo: "FD456".to_string(),
+            indirizzo: "Via Test, 45".to_string(),
+            anno_costruzione: None,
+            anno_riqualificazione: None,
+            note_riqualificazione: None,
+            isolamento_tetto: None,
+            cappotto: None,
+        };
+
+        match EdificioDAO::insert(&conn, entity.clone()) {
+            Ok(res) => {
+                assert_eq!(res.chiave, entity.chiave);
+            }
+            Err(err) => panic!("Errore durante l'inserimento: {}", err),
+        }
+
+        pretty_sqlite::print_table(&conn, &Edificio::table_name()).unwrap()
+    }
+
+    #[test]
+    fn test_update() {
+        let conn = Connection::open_in_memory().unwrap();
+        EdificioDAO::create_table(&conn).unwrap();
+
+        let mut entity = Edificio {
+            chiave: "TEST01".to_string(),
+            fascicolo: "FD456".to_string(),
+            indirizzo: "Via Test, 45".to_string(),
+            anno_costruzione: None,
+            anno_riqualificazione: None,
+            note_riqualificazione: None,
+            isolamento_tetto: None,
+            cappotto: None,
+        };
+
+        EdificioDAO::insert(&conn, entity.clone()).unwrap();
+
+        pretty_sqlite::print_table(&conn, &Edificio::table_name()).unwrap();
+
+        entity.anno_costruzione = Some("1955".to_string());
+        entity.isolamento_tetto = Some(true);
+
+        match EdificioDAO::update(&conn, entity.clone()) {
+            Ok(res) => {
+                assert_eq!(res.chiave, entity.chiave);
+            }
+            Err(err) => panic!("Errore durante l'aggiornamento: {}", err),
+        }
+
+        pretty_sqlite::print_table(&conn, &Edificio::table_name()).unwrap()
     }
 }

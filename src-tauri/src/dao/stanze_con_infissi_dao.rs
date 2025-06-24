@@ -1,61 +1,36 @@
-use crate::dao::crud_operations::{Get, GetAll, Insert, Update};
-use crate::dao::entity::StanzaConInfissi;
-use crate::dao::schema_operations::CreateTable;
-use crate::dao::utils::DAO;
-use crate::database::{
-    convert_param, DatabaseConnection, QueryBuilder, SqlQueryBuilder, WhereBuilder,
+use crate::app_traits::{
+    CreateTable, DaoTrait, EntityTrait, GetAll, GetById, Insert, SqlExecutor, SqlParams, ToInsert,
+    ToRetrieve, ToRetrieveAll, ToUpdate, Update,
 };
+use crate::dao::crud_operations::{
+    Get as oldG, Get, GetAll as oldGA, Insert as oldI, Update as oldU,
+};
+use crate::dao::entity::StanzaConInfissi;
+use crate::dao::schema_operations::CreateTable as OldC;
+use crate::dao::utils::DAO;
+use crate::database::{DatabaseConnection, QueryBuilderError, SqlQueryBuilder, WhereBuilder};
 use crate::utils::AppError;
-use log::info;
 use rusqlite::{params, Error};
 use std::collections::{HashMap, HashSet};
 
 pub struct StanzaConInfissiDao;
 
-impl DAO for StanzaConInfissiDao {
-    fn table_name() -> &'static str {
-        "STANZA_CON_INFISSI"
-    }
+impl DaoTrait for StanzaConInfissiDao {
+    type Entity = StanzaConInfissi;
+    type Error = AppError;
 }
-
-impl CreateTable for StanzaConInfissiDao {
-    fn create_table<C: DatabaseConnection>(conn: &C) -> Result<(), AppError> {
-        conn.execute(
-            format!(
-                "CREATE TABLE IF NOT EXISTS {}
-                (
-                    ID_STANZA      INTEGER NOT NULL REFERENCES STANZA (ID),
-                    ID_INFISSO     TEXT    NOT NULL,
-                    ID_EDIFICIO    TEXT    NOT NULL,
-                    NUM_INFISSI    INTEGER NOT NULL DEFAULT 1 CHECK ( NUM_INFISSI > 0 ),
-                    PRIMARY KEY (ID_INFISSO, ID_STANZA, ID_EDIFICIO),
-                    FOREIGN KEY (ID_INFISSO, ID_EDIFICIO) REFERENCES INFISSO (ID, EDIFICIO)
-                ) STRICT;",
-                Self::table_name()
-            )
-            .as_str(),
-            (),
-        )?;
-        info!("Tabella STANZA_CON_INFISSI creata");
-        Ok(())
-    }
-}
-
-impl Get<StanzaConInfissi, (u64, String)> for StanzaConInfissiDao {
-    fn get<C: DatabaseConnection>(
-        conn: &C,
-        id: (u64, String),
-    ) -> Result<StanzaConInfissi, AppError> {
-        let (id, edificio) = id;
-        let builder = QueryBuilder::select()
-            .table(Self::table_name())
-            .where_eq("ID_STANZA", id)
-            .where_eq("ID_EDIFICIO", edificio.clone());
-        let (query, _) = builder.build()?;
+impl CreateTable for StanzaConInfissiDao {}
+impl GetById for StanzaConInfissiDao {
+    fn get_by_id<Connection: SqlExecutor>(
+        conn: &Connection,
+        id: <Self::Entity as EntityTrait>::PrimaryKey,
+    ) -> Result<Self::Entity, Self::Error> {
+        let query = Self::Entity::to_retrieve();
+        let params = id.to_sql_params();
 
         let mut stmt = conn.prepare(query.as_str())?;
         let result: Result<Vec<(String, u64)>, Error> = stmt
-            .query_map(params![id, edificio], |row| {
+            .query_map(rusqlite::params_from_iter(params), |row| {
                 let id_infisso = row.get("ID_INFISSO")?;
                 let ripetizioni = row.get("NUM_INFISSI")?;
                 Ok((id_infisso, ripetizioni))
@@ -64,23 +39,25 @@ impl Get<StanzaConInfissi, (u64, String)> for StanzaConInfissiDao {
 
         match result {
             Ok(infissi) => {
+                let (id_stanza, id_edificio) = id;
                 if infissi.is_empty() {
                     Err(AppError::NotFound(format!(
-                        "Stanza con ID {} non trovata",
-                        id
+                        "Stanza con ID ( id_stanza: {}, id_edificio: {} ) non trovata",
+                        id_stanza, id_edificio
                     )))
                 } else {
-                    Ok(StanzaConInfissi::new(id, infissi, edificio))
+                    Ok(StanzaConInfissi::new(id_stanza, infissi, id_edificio))
                 }
             }
             Err(e) => Err(AppError::from(e)),
         }
     }
 }
-
-impl GetAll<StanzaConInfissi> for StanzaConInfissiDao {
-    fn get_all<C: DatabaseConnection>(conn: &C) -> Result<Vec<StanzaConInfissi>, AppError> {
-        let (query, _) = QueryBuilder::select().table("STANZA_CON_INFISSI").build()?;
+impl GetAll for StanzaConInfissiDao {
+    fn get_all<Connection: SqlExecutor>(
+        conn: &Connection,
+    ) -> Result<Vec<Self::Entity>, Self::Error> {
+        let query = Self::Entity::to_retrieve_all();
         let mut stmt = conn.prepare(query.as_str())?;
 
         let mut infissi: HashMap<(String, String), Vec<(String, u64)>> = HashMap::new();
@@ -102,69 +79,66 @@ impl GetAll<StanzaConInfissi> for StanzaConInfissiDao {
         let mut result = Vec::new();
         for entry in infissi.into_iter() {
             result.push(StanzaConInfissi::new(
-                entry.0 .0.parse::<u64>().unwrap(),
+                entry.0.0.parse::<u64>().unwrap(),
                 entry.1,
-                entry.0 .1,
+                entry.0.1,
             ));
         }
         result.reverse();
         Ok(result)
     }
 }
-
-impl Insert<StanzaConInfissi> for StanzaConInfissiDao {
-    fn insert<C: DatabaseConnection>(
-        conn: &C,
-        item: StanzaConInfissi,
-    ) -> Result<StanzaConInfissi, AppError> {
-        let builder = QueryBuilder::insert()
-            .table(Self::table_name())
-            .columns(vec![
-                "ID_STANZA",
-                "ID_INFISSO",
-                "ID_EDIFICIO",
-                "NUM_INFISSI",
-            ])
-            .values(vec![0.into(), "A".into(), "".into(), 0.into()]); // param fake
-        let (query, _) = builder.build()?;
+impl Insert for StanzaConInfissiDao {
+    fn insert<Connection: SqlExecutor>(
+        conn: &Connection,
+        entity: Self::Entity,
+    ) -> Result<Self::Entity, Self::Error> {
+        let query = Self::Entity::to_insert();
 
         let mut stmt = conn.prepare(query.as_str())?;
-        for (id_infisso, num_infisso) in item.id_infissi.clone() {
+        for (id_infisso, num_infisso) in entity.id_infissi.clone() {
             stmt.execute(params![
-                item.id_stanza,
+                entity.id_stanza,
                 id_infisso,
-                item.id_edificio,
+                entity.id_edificio,
                 num_infisso
             ])?;
         }
 
-        Ok(item)
+        Ok(entity)
     }
 }
-
-impl Update<StanzaConInfissi> for StanzaConInfissiDao {
-    fn update<C: DatabaseConnection>(
-        conn: &C,
-        item: StanzaConInfissi,
-    ) -> Result<StanzaConInfissi, AppError> {
+impl Update for StanzaConInfissiDao
+where
+    Self: GetById,
+{
+    fn update<Connection: SqlExecutor>(
+        conn: &Connection,
+        entity: Self::Entity,
+    ) -> Result<Self::Entity, Self::Error>
+    where
+        Self::Error: From<QueryBuilderError>,
+    {
         // Recupero l'elemento esistente per confrontarlo con quello nuovo
-        let existing = match Self::get(conn, (item.id_stanza, item.id_edificio.clone())) {
+        let existing = match Self::get_by_id(conn, (entity.id_stanza, entity.id_edificio.clone())) {
             Ok(existing) => existing,
             Err(AppError::NotFound(_)) => {
                 // Se non esiste, facciamo direttamente l'insert
-                return Self::insert(conn, item);
+                return Self::insert(conn, entity);
             }
             Err(e) => return Err(e),
         };
 
         // Troviamo i dati comuni e quelli unici
         let (common, unique) =
-            find_common_and_unique(existing.id_infissi.clone(), item.id_infissi.clone());
+            find_common_and_unique(existing.id_infissi.clone(), entity.id_infissi.clone());
+        let query = Self::Entity::to_update();
+        let mut stmt = conn.prepare(query.as_str())?;
 
         // Per ogni infisso comune, aggiorniamo la quantità
         for id_infisso in common {
             // Troviamo la nuova quantità di infissi
-            let new_quantity = item
+            let new_quantity = entity
                 .id_infissi
                 .iter()
                 .find(|(id, _)| id == &id_infisso)
@@ -178,35 +152,39 @@ impl Update<StanzaConInfissi> for StanzaConInfissiDao {
                 .map(|(_, qty)| *qty)
                 .unwrap_or(0);
             // Aggiorniamo il numero di infissi
-            let builder = QueryBuilder::update()
-                .table(Self::table_name())
-                .set("NUM_INFISSI", new_quantity + old_quantity)
-                .where_eq("ID_STANZA", item.id_stanza)
-                .where_eq("ID_INFISSO", id_infisso);
+            let new_quantity = new_quantity + old_quantity;
 
-            let (query, param) = builder.build()?;
-            conn.execute(
-                query.as_str(),
-                rusqlite::params_from_iter(convert_param(param)),
-            )?;
+            let params: Vec<Box<&dyn SqlParams>> = vec![
+                Box::new(&new_quantity),
+                Box::new(&id_infisso),
+                Box::new(&entity.id_stanza),
+                Box::new(&entity.id_edificio),
+            ];
+            let sql_params = params
+                .into_iter()
+                .flat_map(|p| p.to_sql_params())
+                .collect::<Vec<_>>();
+
+            stmt.execute(rusqlite::params_from_iter(sql_params))?;
         }
 
         // Per gli infissi unici nella nuova lista che non sono nel DB, li inseriamo
         if !unique.is_empty() {
-            let infissi: Vec<(String, u64)> = item
+            let infissi: Vec<(String, u64)> = entity
                 .id_infissi
                 .iter()
                 .filter(|x| unique.iter().any(|x1| x1.eq(&x.0)))
                 .cloned()
                 .collect();
 
-            let infisso = StanzaConInfissi::new(item.id_stanza, infissi, item.id_edificio.clone());
+            let infisso =
+                StanzaConInfissi::new(entity.id_stanza, infissi, entity.id_edificio.clone());
 
             Self::insert(conn, infisso)?;
         }
 
-        // Restituiamo l'item aggiornato
-        Ok(item)
+        // Restituiamo l'entity aggiornato
+        Ok(entity)
     }
 }
 
@@ -233,6 +211,7 @@ fn find_common_and_unique(
 #[cfg(test)]
 mod test {
     use super::*;
+    use crate::app_traits::{CreateTable, DaoTrait, Insert};
     use crate::dao::entity::{
         Edificio, Infisso, MaterialeInfisso, Stanza, TipoInfisso, VetroInfisso,
     };
@@ -240,13 +219,8 @@ mod test {
     use crate::dao::{
         EdificioDAO, InfissoDAO, MaterialeInfissoDAO, StanzaDAO, TipoInfissoDAO, VetroInfissoDAO,
     };
-    use once_cell::sync::Lazy;
     use rusqlite::Connection;
-    use serial_test::serial;
-    use std::ops::Deref;
-    use std::sync::Mutex;
 
-    static DATABASE: Lazy<Mutex<Connection>> = Lazy::new(|| Mutex::new(setup()));
     static ID_EDIFICIO: &str = "PR01-25";
 
     fn setup() -> Connection {
@@ -284,14 +258,14 @@ mod test {
         let edificio = Edificio::new(ID_EDIFICIO, "00008545", "Via Pallone");
         EdificioDAO::insert(&conn, edificio.clone()).expect("Errore nella creazione dell'edificio");
 
-        pretty_sqlite::print_table(&conn, EdificioDAO::table_name()).unwrap();
+        pretty_sqlite::print_table(&conn, &EdificioDAO::table_name()).unwrap();
 
         let stanza = Stanza::new("PR01-25", "T", "1250", "045", "Ufficio");
         StanzaDAO::insert(&conn, stanza).expect("Errore nella creazione della stanza");
         let stanza = Stanza::new("PR01-25", "T", "1250", "047", "Ufficio");
         StanzaDAO::insert(&conn, stanza).expect("Errore nella creazione della stanza");
 
-        pretty_sqlite::print_table(&conn, StanzaDAO::table_name()).unwrap();
+        pretty_sqlite::print_table(&conn, &StanzaDAO::table_name()).unwrap();
 
         let infisso_a = Infisso::new("A", ID_EDIFICIO, "PORTA", 350, 450, "Legno", "Singolo");
         InfissoDAO::insert(&conn, infisso_a).expect("Errore nella creazione dell'infisso");
@@ -299,7 +273,7 @@ mod test {
         let infisso_b = Infisso::new("B", ID_EDIFICIO, "FINESTRA", 350, 450, "PVC", "Doppio");
         InfissoDAO::insert(&conn, infisso_b).expect("Errore nella creazione dell'infisso");
 
-        pretty_sqlite::print_table(&conn, InfissoDAO::table_name()).unwrap();
+        pretty_sqlite::print_table(&conn, &InfissoDAO::table_name()).unwrap();
 
         conn
     }
@@ -312,19 +286,18 @@ mod test {
     }
 
     #[test]
-    #[serial]
     fn insert_value() {
-        let conn = DATABASE.lock().unwrap();
+        let conn = setup();
         let stanza_con_infissi = StanzaConInfissi {
             id_stanza: 1,
             id_infissi: vec![("A".to_string(), 5), ("B".to_string(), 8)],
             id_edificio: ID_EDIFICIO.to_string(),
         };
 
-        let res = StanzaConInfissiDao::insert(conn.deref(), stanza_con_infissi.clone());
+        let res = StanzaConInfissiDao::insert(&conn, stanza_con_infissi.clone());
         match res {
             Ok(r) => {
-                pretty_sqlite::print_table(&conn, StanzaConInfissiDao::table_name()).unwrap();
+                pretty_sqlite::print_table(&conn, &StanzaConInfissiDao::table_name()).unwrap();
                 assert_eq!(r, stanza_con_infissi);
             }
             Err(e) => eprintln!("Errore: {}", e),
@@ -332,14 +305,13 @@ mod test {
     }
 
     #[test]
-    #[serial]
     fn get_stanza_con_infissi() {
-        let conn = DATABASE.lock().unwrap();
+        let conn = setup();
 
-        let res = StanzaConInfissiDao::get(conn.deref(), (1, ID_EDIFICIO.to_string()));
+        let res = StanzaConInfissiDao::get_by_id(&conn, (1, ID_EDIFICIO.to_string()));
         match res {
             Ok(r) => {
-                pretty_sqlite::print_table(&conn, StanzaConInfissiDao::table_name()).unwrap();
+                pretty_sqlite::print_table(&conn, &StanzaConInfissiDao::table_name()).unwrap();
                 assert_eq!(
                     r,
                     StanzaConInfissi {
@@ -376,12 +348,12 @@ mod test {
         )
         .unwrap();
 
-        pretty_sqlite::print_table(&conn, StanzaConInfissiDao::table_name()).unwrap();
+        pretty_sqlite::print_table(&conn, &StanzaConInfissiDao::table_name()).unwrap();
 
         let res = StanzaConInfissiDao::get_all(&conn);
         match res {
             Ok(r) => {
-                pretty_sqlite::print_table(&conn, StanzaConInfissiDao::table_name()).unwrap();
+                pretty_sqlite::print_table(&conn, &StanzaConInfissiDao::table_name()).unwrap();
                 assert_eq!(r.len(), 2);
                 println!("{:?}", r);
             }
@@ -408,7 +380,7 @@ mod test {
         )
         .unwrap();
 
-        pretty_sqlite::print_table(&conn, StanzaConInfissiDao::table_name()).unwrap();
+        pretty_sqlite::print_table(&conn, &StanzaConInfissiDao::table_name()).unwrap();
 
         let res = StanzaConInfissiDao::update(
             &conn,
@@ -420,7 +392,7 @@ mod test {
         );
         match res {
             Ok(r) => {
-                pretty_sqlite::print_table(&conn, StanzaConInfissiDao::table_name()).unwrap();
+                pretty_sqlite::print_table(&conn, &StanzaConInfissiDao::table_name()).unwrap();
                 println!("{:?}", r);
             }
             Err(e) => {

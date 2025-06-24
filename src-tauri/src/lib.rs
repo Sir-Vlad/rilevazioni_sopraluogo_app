@@ -1,8 +1,11 @@
+mod app_traits;
 mod command;
 mod dao;
 mod database;
 mod dto;
+mod entities;
 mod service;
+mod test;
 mod utils;
 
 use crate::command::command_tauri::*;

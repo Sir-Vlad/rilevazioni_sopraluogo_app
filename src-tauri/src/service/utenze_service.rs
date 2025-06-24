@@ -1,4 +1,4 @@
-use crate::dao::crud_operations::{GetAll, Insert};
+use crate::app_traits::{GetAll, Insert};
 use crate::dao::UtenzeDAO;
 use crate::database::Database;
 use crate::dto::UtenzaDTO;
@@ -10,7 +10,7 @@ pub struct UtenzeService;
 
 impl RetrieveManyService<UtenzaDTO> for UtenzeService {
     fn retrieve_many(db: State<'_, Database>) -> Result<Vec<UtenzaDTO>, AppError> {
-        let conn = db.get_conn();
+        let conn = db.get_conn()?;
         if let Some(conn) = conn.as_ref() {
             let utenze = UtenzeDAO::get_all(conn)?;
             Ok(utenze.iter().map(UtenzaDTO::from).collect())
@@ -22,7 +22,7 @@ impl RetrieveManyService<UtenzaDTO> for UtenzeService {
 
 impl CreateService<UtenzaDTO> for UtenzeService {
     fn create(db: State<'_, Database>, utenza: UtenzaDTO) -> Result<UtenzaDTO, AppError> {
-        let conn = db.get_conn();
+        let conn = db.get_conn()?;
         if let Some(conn) = conn.as_ref() {
             let utenza = UtenzeDAO::insert(conn, utenza.clone().into())?;
             Ok(UtenzaDTO::from(&utenza))

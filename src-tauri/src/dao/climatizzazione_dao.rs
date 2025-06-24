@@ -1,87 +1,19 @@
-use crate::dao::crud_operations::{GetAll, Insert};
+use crate::app_traits::{CreateTable, DaoTrait, GetAll, Insert};
 use crate::dao::entity::Climatizzazione;
-use crate::dao::schema_operations::CreateTable;
-use crate::dao::utils::DAO;
-use crate::database::{convert_param, DatabaseConnection, QueryBuilder, SqlQueryBuilder};
+use crate::database::{DatabaseConnection, SqlQueryBuilder};
 use crate::utils::AppError;
-use log::info;
 
 pub struct ClimatizzazioneDAO;
 
-impl DAO for ClimatizzazioneDAO {
-    fn table_name() -> &'static str {
-        "CLIMATIZZAZIONE"
-    }
+impl DaoTrait for ClimatizzazioneDAO {
+    type Entity = Climatizzazione;
+    type Error = AppError;
 }
 
-impl CreateTable for ClimatizzazioneDAO {
-    fn create_table<C: DatabaseConnection>(conn: &C) -> Result<(), AppError> {
-        conn.execute(
-            format!(
-                "CREATE TABLE IF NOT EXISTS {}
-                (
-                    ID                    INTEGER PRIMARY KEY AUTOINCREMENT,
-                    CLIMATIZZAZIONE       TEXT    NOT NULL UNIQUE COLLATE NOCASE,
-                    EFFICIENZA_ENERGETICA INTEGER NOT NULL
-                ) STRICT;",
-                Self::table_name()
-            )
-            .as_str(),
-            (),
-        )?;
-        info!("Tabella CLIMATIZZAZIONE creata");
-        Ok(())
-    }
-}
+impl CreateTable for ClimatizzazioneDAO {}
+impl GetAll for ClimatizzazioneDAO {}
 
-impl GetAll<Climatizzazione> for ClimatizzazioneDAO {
-    fn get_all<C: DatabaseConnection>(conn: &C) -> Result<Vec<Climatizzazione>, AppError> {
-        let (query, _) = QueryBuilder::select().table(Self::table_name()).build()?;
-
-        let mut stmt = conn.prepare(query.as_str())?;
-
-        let result: Result<Vec<Climatizzazione>, rusqlite::Error> = stmt
-            .query_map([], |row| {
-                Ok(Climatizzazione {
-                    _id: Some(row.get::<_, u64>("ID")?),
-                    climatizzazione: row.get::<_, String>("CLIMATIZZAZIONE")?,
-                    efficienza_energetica: row.get::<_, u8>("EFFICIENZA_ENERGETICA")?,
-                })
-            })?
-            .collect();
-        result.map_err(AppError::from)
-    }
-}
-
-impl Insert<Climatizzazione> for ClimatizzazioneDAO {
-    fn insert<C: DatabaseConnection>(
-        conn: &C,
-        item: Climatizzazione,
-    ) -> Result<Climatizzazione, AppError> {
-        let builder = QueryBuilder::insert()
-            .table(Self::table_name())
-            .columns(vec!["CLIMATIZZAZIONE", "EFFICIENZA_ENERGETICA"])
-            .values(vec![
-                item.climatizzazione.clone().into(),
-                item.efficienza_energetica.into(),
-            ])
-            .returning("ID");
-        let (query, param) = builder.build()?;
-        let mut stmt = conn.prepare(query.as_str())?;
-        let mut res = stmt.query_map(rusqlite::params_from_iter(convert_param(param)), |row| {
-            row.get::<_, u64>(0)
-        })?;
-        let id = res.next().unwrap()?;
-        info!(
-            "Nuovo tipo di climatizzazione inserito con ID: {}",
-            item.climatizzazione
-        );
-        Ok(Climatizzazione {
-            _id: Some(id),
-            ..item
-        })
-    }
-}
+impl Insert for ClimatizzazioneDAO {}
 
 #[cfg(test)]
 mod tests {
@@ -90,16 +22,7 @@ mod tests {
 
     fn setup_db() -> Connection {
         let conn = Connection::open_in_memory().unwrap();
-        conn.execute(
-            "CREATE TABLE CLIMATIZZAZIONE (
-                ID INTEGER PRIMARY KEY,
-                CLIMATIZZAZIONE TEXT NOT NULL,
-                EFFICIENZA_ENERGETICA INTEGER NOT NULL
-            )",
-            [],
-        )
-        .unwrap();
-
+        ClimatizzazioneDAO::create_table(&conn).unwrap();
         conn
     }
 
@@ -158,5 +81,23 @@ mod tests {
         // Il metodo dovrebbe restituire un errore
         let risultato = ClimatizzazioneDAO::get_all(&conn);
         assert!(risultato.is_err());
+    }
+
+    #[test]
+    fn test_insert() {
+        let conn = setup_db();
+
+        let entity = Climatizzazione {
+            _id: None,
+            climatizzazione: "Test".to_string(),
+            efficienza_energetica: 2,
+        };
+        let result = ClimatizzazioneDAO::insert(&conn, entity.clone());
+        match result {
+            Ok(res) => {
+                assert_eq!(1, res._id.unwrap());
+            }
+            Err(err) => panic!("Insert failed: {}", err),
+        }
     }
 }

@@ -1,11 +1,11 @@
+mod database;
 mod database_connection;
-mod model;
 #[allow(dead_code)]
 mod query_builder;
 mod utils;
 
+pub use database::{Database, DatabaseEventPayload};
 pub use database_connection::DatabaseConnection;
-pub use model::{Database, DatabaseEventPayload};
 pub use query_builder::{
     QueryBuilder, QueryBuilderError, QueryParam, SqlQueryBuilder, WhereBuilder,
 };

@@ -1,11 +1,12 @@
-use crate::dao::crud_operations::{GetAll, Insert};
+use crate::app_traits::{GetAll, Insert};
+use crate::dao::crud_operations::{GetAll as GetAllNew, Insert as InsertNew};
 use crate::dao::{
     ClimatizzazioneDAO, IlluminazioneDAO, MaterialeInfissoDAO, TipoInfissoDAO, VetroInfissoDAO,
 };
 use crate::database::Database;
 use crate::dto::{
-    ClimatizzazioneDTO, IlluminazioneDTO, MaterialeInfissoDTO, TipoDTO, TipoInfissiDTO,
-    VetroInfissoDTO, DTO,
+    ClimatizzazioneDTO, IlluminazioneDTO, MaterialeInfissoDTO, TipoDTO, TipoInfissiDTO, VetroInfissoDTO,
+    DTO,
 };
 use crate::service::utils::RetrieveManyService;
 use crate::utils::AppError;
@@ -86,7 +87,7 @@ impl TypeService for TypeServiceImpl {
     }
 
     fn insert_type(db: State<'_, Database>, dto: TipoDTO) -> Result<TipoDTO, AppError> {
-        let conn = db.get_conn();
+        let conn = db.get_conn()?;
         if let Some(conn) = conn.as_ref() {
             match dto.tipo {
                 TypeDTO::Climatizzazione => {
@@ -107,7 +108,7 @@ impl TypeService for TypeServiceImpl {
 struct MaterialeInfissoService;
 impl RetrieveManyService<MaterialeInfissoDTO> for MaterialeInfissoService {
     fn retrieve_many(db: State<'_, Database>) -> Result<Vec<MaterialeInfissoDTO>, AppError> {
-        let conn = db.get_conn();
+        let conn = db.get_conn()?;
         if let Some(conn) = conn.as_ref() {
             let result = MaterialeInfissoDAO::get_all(conn)?;
 
@@ -128,7 +129,7 @@ struct VetroInfissoService;
 
 impl RetrieveManyService<VetroInfissoDTO> for VetroInfissoService {
     fn retrieve_many(db: State<'_, Database>) -> Result<Vec<VetroInfissoDTO>, AppError> {
-        let conn = db.get_conn();
+        let conn = db.get_conn()?;
         if let Some(conn) = conn.as_ref() {
             let result = VetroInfissoDAO::get_all(conn)?;
 
@@ -149,7 +150,7 @@ struct ClimatizzazioneService;
 
 impl RetrieveManyService<ClimatizzazioneDTO> for ClimatizzazioneService {
     fn retrieve_many(db: State<'_, Database>) -> Result<Vec<ClimatizzazioneDTO>, AppError> {
-        let conn = db.get_conn();
+        let conn = db.get_conn()?;
         if let Some(conn) = conn.as_ref() {
             let result = ClimatizzazioneDAO::get_all(conn)?;
 
@@ -170,7 +171,7 @@ struct IlluminazioneService;
 
 impl RetrieveManyService<IlluminazioneDTO> for IlluminazioneService {
     fn retrieve_many(db: State<'_, Database>) -> Result<Vec<IlluminazioneDTO>, AppError> {
-        let conn = db.get_conn();
+        let conn = db.get_conn()?;
         if let Some(conn) = conn.as_ref() {
             let result = IlluminazioneDAO::get_all(conn)?;
 
@@ -191,7 +192,7 @@ struct TipoInfissoService;
 
 impl RetrieveManyService<TipoInfissiDTO> for TipoInfissoService {
     fn retrieve_many(db: State<'_, Database>) -> Result<Vec<TipoInfissiDTO>, AppError> {
-        let conn = db.get_conn();
+        let conn = db.get_conn()?;
         if let Some(conn) = conn.as_ref() {
             let result = TipoInfissoDAO::get_all(conn)?;
 
@@ -218,7 +219,7 @@ mod test {
     fn setup() -> App<MockRuntime> {
         let app = tauri::test::mock_app();
         let db = Database::open_in_memory();
-        crate::dao::create_tables(db.get_conn().as_ref().unwrap()).expect("create tables");
+        crate::dao::create_tables(db.get_conn().unwrap().as_ref().unwrap()).expect("create tables");
         app.manage(db);
         app
     }

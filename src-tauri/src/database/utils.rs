@@ -1,5 +1,6 @@
-use crate::dao::crud_operations::Insert;
-use crate::dao::{create_tables, create_views};
+use crate::app_traits::Insert;
+use crate::dao::create_tables;
+use crate::dao::crud_operations::Insert as OldInsert;
 use crate::dao::{entity::TipoInfisso, TipoInfissoDAO};
 use crate::database::{DatabaseConnection, QueryParam};
 use dirs_next::document_dir;
@@ -39,10 +40,6 @@ pub fn get_db_path(db_name: String) -> Result<String, String> {
 
 pub fn init_database(app_handle: AppHandle, tx: &Transaction) -> Result<(), String> {
     create_tables(tx).map_err(|e| {
-        error!("{}", e);
-        e.to_string()
-    })?;
-    create_views(tx).map_err(|e| {
         error!("{}", e);
         e.to_string()
     })?;

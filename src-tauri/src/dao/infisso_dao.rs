@@ -1,147 +1,83 @@
-use crate::dao::crud_operations::{GetAll, Insert, Update};
+use crate::app_traits::{CreateTable, DaoTrait, GetAll, Insert, Update};
 use crate::dao::entity::Infisso;
-use crate::dao::utils::schema_operations::CreateTable;
-use crate::dao::utils::DAO;
-use crate::database::{
-    convert_param, DatabaseConnection, QueryBuilder, SqlQueryBuilder, WhereBuilder,
-};
 use crate::utils::AppError;
-use log::{error, info};
 
 pub struct InfissoDAO;
 
-impl DAO for InfissoDAO {
-    fn table_name() -> &'static str {
-        "INFISSO"
-    }
+impl DaoTrait for InfissoDAO {
+    type Entity = Infisso;
+    type Error = AppError;
 }
+impl CreateTable for InfissoDAO {}
+impl GetAll for InfissoDAO {}
+impl Insert for InfissoDAO {}
+impl Update for InfissoDAO {}
 
-impl CreateTable for InfissoDAO {
-    fn create_table<C: DatabaseConnection>(conn: &C) -> Result<(), AppError> {
-        conn.execute(
-            format!(
-                "CREATE TABLE IF NOT EXISTS {}
-                (
-                    ID        TEXT,
-                    EDIFICIO  TEXT    NOT NULL REFERENCES EDIFICIO (CHIAVE),
-                    TIPO      TEXT    NOT NULL REFERENCES TIPO_INFISSO (NOME),
-                    ALTEZZA   INTEGER NOT NULL CHECK ( ALTEZZA >= 0 ),
-                    LARGHEZZA INTEGER NOT NULL CHECK ( LARGHEZZA >= 0 ),
-                    MATERIALE TEXT    NOT NULL REFERENCES MATERIALE_INFISSO (MATERIALE),
-                    VETRO     TEXT    NOT NULL REFERENCES VETRO_INFISSO (VETRO),
-                    MQ        REAL GENERATED ALWAYS AS ((ALTEZZA * LARGHEZZA) / 10000.0) VIRTUAL,
-                    PRIMARY KEY (ID, EDIFICIO),
-                    UNIQUE (ID, EDIFICIO, TIPO, ALTEZZA, LARGHEZZA, MATERIALE, VETRO)
-                ) STRICT;",
-                Self::table_name()
-            )
-            .as_str(),
-            (),
-        )?;
-        info!("Tabella INFISSO creata");
-        Ok(())
+#[cfg(test)]
+mod test {
+    use super::*;
+    use crate::app_traits::EntityTrait;
+    use rusqlite::Connection;
+
+    fn setup() -> Connection {
+        let conn = Connection::open_in_memory().unwrap();
+        conn.pragma_update(None, "foreign_keys", "OFF").unwrap();
+
+        InfissoDAO::create_table(&conn).unwrap();
+        conn
     }
-}
 
-impl GetAll<Infisso> for InfissoDAO {
-    fn get_all<C: DatabaseConnection>(conn: &C) -> Result<Vec<Infisso>, AppError> {
-        let (query, _) = QueryBuilder::select().table(Self::table_name()).build()?;
+    #[test]
+    fn test_insert() {
+        let conn = setup();
 
-        let mut stmt = conn.prepare(query.as_str())?;
-        let infissi: Result<Vec<Infisso>, rusqlite::Error> = stmt
-            .query_map([], |row| {
-                Ok(Infisso {
-                    id: row.get::<_, String>("ID")?,
-                    edificio_id: row.get::<_, String>("EDIFICIO")?,
-                    tipo: row.get::<_, String>("TIPO")?,
-                    altezza: row.get::<_, u16>("ALTEZZA")?,
-                    larghezza: row.get::<_, u16>("LARGHEZZA")?,
-                    materiale: row.get::<_, String>("MATERIALE")?,
-                    vetro: row.get::<_, String>("VETRO")?,
-                })
-            })?
-            .collect();
+        let entity = Infisso {
+            id: "A".to_string(),
+            edificio_id: "1587".to_string(),
+            tipo: "Porta".to_string(),
+            altezza: 150,
+            larghezza: 425,
+            materiale: "Legno".to_string(),
+            vetro: "Singolo".to_string(),
+        };
 
-        match infissi {
-            Ok(infissi) => Ok(infissi),
-            Err(e) => Err(AppError::from(e)),
+        match InfissoDAO::insert(&conn, entity.clone()) {
+            Ok(res) => {
+                assert_eq!(res, entity);
+            }
+            Err(err) => panic!("Errore durante l'inserimento: {err}"),
         }
+
+        pretty_sqlite::print_table(&conn, &Infisso::table_name()).unwrap()
     }
-}
 
-impl Insert<Infisso> for InfissoDAO {
-    fn insert<C: DatabaseConnection>(conn: &C, item: Infisso) -> Result<Infisso, AppError> {
-        let builder = QueryBuilder::insert()
-            .table(Self::table_name())
-            .columns(vec![
-                "ID",
-                "EDIFICIO",
-                "TIPO",
-                "ALTEZZA",
-                "LARGHEZZA",
-                "MATERIALE",
-                "VETRO",
-            ])
-            .values(vec![
-                item.id.clone().into(),
-                item.edificio_id.clone().into(),
-                item.tipo.clone().into(),
-                item.altezza.into(),
-                item.larghezza.into(),
-                item.materiale.clone().into(),
-                item.vetro.clone().into(),
-            ]);
-        let (query, params) = builder.build()?;
+    #[test]
+    fn test_update() {
+        let conn = setup();
 
-        match conn.execute(
-            query.as_str(),
-            rusqlite::params_from_iter(convert_param(params)),
-        ) {
-            Ok(_) => {
-                info!("Infisso {} inserito con successo", item.id);
-                Ok(item)
+        let mut entity = Infisso {
+            id: "A".to_string(),
+            edificio_id: "1587".to_string(),
+            tipo: "Porta".to_string(),
+            altezza: 150,
+            larghezza: 425,
+            materiale: "Legno".to_string(),
+            vetro: "Singolo".to_string(),
+        };
+
+        InfissoDAO::insert(&conn, entity.clone()).unwrap();
+        pretty_sqlite::print_table(&conn, &Infisso::table_name()).unwrap();
+
+        entity.altezza = 171;
+        entity.materiale = "Muro".to_string();
+
+        match InfissoDAO::update(&conn, entity.clone()) {
+            Ok(res) => {
+                assert_eq!(res, entity);
             }
-            Err(e) => {
-                error!(
-                    "Errore durante l'inserimento dell'infisso {}: {}",
-                    item.id, e
-                );
-                Err(e)
-            }
+            Err(err) => panic!("Errore durante l'aggiornamento: {err}"),
         }
-    }
-}
 
-impl Update<Infisso> for InfissoDAO {
-    fn update<C: DatabaseConnection>(conn: &C, item: Infisso) -> Result<Infisso, AppError> {
-        let builder = QueryBuilder::update()
-            .table(Self::table_name())
-            .set("ALTEZZA", item.altezza)
-            .set("LARGHEZZA", item.larghezza)
-            .set("MATERIALE", item.materiale.clone())
-            .set("VETRO", item.vetro.clone())
-            .where_eq("ID", item.id.clone())
-            .where_eq("EDIFICIO", item.edificio_id.clone());
-        let (query, params) = builder.build()?;
-
-        println!("{}", query);
-        println!("{:?}", params);
-
-        match conn.execute(
-            query.as_str(),
-            rusqlite::params_from_iter(convert_param(params)),
-        ) {
-            Ok(_) => {
-                info!("Infisso {} aggiornato con successo", item.id);
-                Ok(item)
-            }
-            Err(e) => {
-                error!(
-                    "Errore durante l'aggiornamento dell'infisso {}: {}",
-                    item.id, e
-                );
-                Err(e)
-            }
-        }
+        pretty_sqlite::print_table(&conn, &Infisso::table_name()).unwrap()
     }
 }

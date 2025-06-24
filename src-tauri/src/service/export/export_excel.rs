@@ -1,4 +1,5 @@
-use crate::dao::crud_operations::GetAll;
+use crate::app_traits::GetAll;
+use crate::dao::crud_operations::GetAll as Gold;
 use crate::dao::entity::{DatiStanza, Edificio, Fotovoltaico};
 use crate::dao::{DatiStanzeViewDAO, EdificioDAO, FotovoltaicoDAO};
 use crate::database::Database;
@@ -18,7 +19,7 @@ pub struct ExportDatiStanzaToExcel;
 
 impl ExportData for ExportDatiStanzaToExcel {
     fn export(db: State<'_, Database>, name_file: Option<String>) -> Result<(), String> {
-        let conn = db.get_conn();
+        let conn = db.get_conn()?;
         if let Some(conn) = conn.as_ref() {
             let dati_stanze = DatiStanzeViewDAO::get_all(conn)?;
 

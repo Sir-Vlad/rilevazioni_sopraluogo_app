@@ -1,4 +1,4 @@
-use crate::dao::crud_operations::{GetAll, Insert};
+use crate::app_traits::{GetAll, Insert};
 use crate::dao::FotovoltaicoDAO;
 use crate::database::Database;
 use crate::dto::FotovoltaicoDTO;
@@ -10,7 +10,7 @@ pub struct FotovoltaicoService;
 
 impl RetrieveManyService<FotovoltaicoDTO> for FotovoltaicoService {
     fn retrieve_many(db: State<'_, Database>) -> Result<Vec<FotovoltaicoDTO>, AppError> {
-        let conn = db.get_conn();
+        let conn = db.get_conn()?;
         if let Some(conn) = conn.as_ref() {
             let utenze = FotovoltaicoDAO::get_all(conn)?;
             Ok(utenze.iter().map(FotovoltaicoDTO::from).collect())
@@ -25,7 +25,7 @@ impl CreateService<FotovoltaicoDTO> for FotovoltaicoService {
         db: State<'_, Database>,
         fotovoltaico: FotovoltaicoDTO,
     ) -> Result<FotovoltaicoDTO, AppError> {
-        let conn = db.get_conn();
+        let conn = db.get_conn()?;
         if let Some(conn) = conn.as_ref() {
             let utenza = FotovoltaicoDAO::insert(conn, fotovoltaico.clone().into())?;
             Ok(FotovoltaicoDTO::from(&utenza))

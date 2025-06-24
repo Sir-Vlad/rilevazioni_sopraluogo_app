@@ -1,14 +1,21 @@
-use crate::dao::crud_operations::{GetAll, Insert, Update};
-use crate::dao::entity::Stanza;
-use crate::dao::utils::schema_operations::CreateTable;
-use crate::dao::utils::DAO;
-use crate::database::WhereBuilder;
-use crate::database::{convert_param, DatabaseConnection, QueryBuilder, SqlQueryBuilder};
-use crate::utils::AppError;
-use log::{error, info};
+use crate::{
+    app_traits::{CreateTable, DaoTrait, GetAll, Insert, Update},
+    dao::entity::Stanza,
+    utils::AppError,
+};
 
 pub struct StanzaDAO;
 
+impl DaoTrait for StanzaDAO {
+    type Entity = Stanza;
+    type Error = AppError;
+}
+impl CreateTable for StanzaDAO {}
+impl GetAll for StanzaDAO {}
+impl Insert for StanzaDAO {}
+impl Update for StanzaDAO {}
+
+/*
 impl DAO for StanzaDAO {
     fn table_name() -> &'static str {
         "STANZA"
@@ -155,16 +162,82 @@ impl Update<Stanza> for StanzaDAO {
         }
     }
 }
-
+*/
 #[cfg(test)]
 mod tests {
+    use crate::app_traits::{CreateTable, DaoTrait, Insert, Update};
+    use crate::dao::entity::Stanza;
+    use crate::dao::StanzaDAO;
     use rusqlite::Connection;
 
-    fn setup() -> Result<(), Box<dyn std::error::Error>> {
+    fn setup() -> Connection {
         let conn = Connection::open_in_memory().unwrap();
-        Ok(())
+        conn.pragma_update(None, "foreign_keys", "OFF").unwrap();
+        StanzaDAO::create_table(&conn).unwrap();
+        conn
     }
 
     #[test]
-    fn get_infissi_by_id() {}
+    fn test_insert() {
+        let conn = setup();
+
+        let entity = Stanza {
+            id: None,
+            chiave: "keyTest".to_string(),
+            piano: "1".to_string(),
+            id_spazio: "1452".to_string(),
+            cod_stanza: "102".to_string(),
+            destinazione_uso: "Ufficio".to_string(),
+            altezza: None,
+            spessore_muro: None,
+            riscaldamento: None,
+            raffrescamento: None,
+            illuminazione: None,
+        };
+
+        match StanzaDAO::insert(&conn, entity.clone()) {
+            Ok(res) => {
+                assert_eq!(res.id.unwrap(), 1);
+            }
+            Err(err) => panic!("Error during insert: {}", err),
+        }
+
+        pretty_sqlite::print_table(&conn, &StanzaDAO::table_name()).unwrap()
+    }
+
+    #[test]
+    fn test_update() {
+        let conn = setup();
+
+        let mut entity = Stanza {
+            id: None,
+            chiave: "keyTest".to_string(),
+            piano: "1".to_string(),
+            id_spazio: "1452".to_string(),
+            cod_stanza: "102".to_string(),
+            destinazione_uso: "Ufficio".to_string(),
+            altezza: None,
+            spessore_muro: None,
+            riscaldamento: None,
+            raffrescamento: None,
+            illuminazione: None,
+        };
+
+        StanzaDAO::insert(&conn, entity.clone()).unwrap();
+
+        pretty_sqlite::print_table(&conn, &StanzaDAO::table_name()).unwrap();
+
+        entity.id = Some(1);
+        entity.altezza = Some(500);
+        entity.spessore_muro = Some(10);
+
+        match StanzaDAO::update(&conn, entity) {
+            Ok(res) => {
+                assert_eq!(res.id.unwrap(), 1);
+            }
+            Err(err) => panic!("Error during insert: {}", err),
+        }
+
+        pretty_sqlite::print_table(&conn, &StanzaDAO::table_name()).unwrap()
+    }
 }

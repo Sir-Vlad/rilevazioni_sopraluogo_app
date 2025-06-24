@@ -4,8 +4,8 @@ pub mod command_tauri {
         FotovoltaicoDTO, TipoDTO, UtenzaDTO,
     };
     use crate::service::{
-        import::ImportData, import::ImportDatiStanzaToExcel, AnnotazioneService, CreateService,
-        FotovoltaicoService, RetrieveManyService, UpdateService, UtenzeService,
+        import::ImportData, import::ImportDatiStanzaToExcel, AnnotazioneService, CreateService, FotovoltaicoService,
+        RetrieveManyService, UpdateService, UtenzeService,
     };
     use crate::utils::AppError;
     use crate::{
@@ -64,17 +64,19 @@ pub mod command_tauri {
         db_name: String,
     ) -> ResultCommand<String> {
         let db_path = get_db_path(db_name).map_err(AppError::GenericError)?;
-        {
-            let mut conn = db.get_conn();
-            let mut path_to_database = db.get_path_to_database();
-            if let Some(existing_conn) = conn.take() {
-                drop(existing_conn);
-            }
-            *conn = Some(Connection::open(&db_path).map_err(|e| e.to_string())?);
-            *path_to_database = Some(db_path.clone());
+        db.switch_database(&db_path)?;
 
-            set_pragma(conn.as_ref().unwrap()).map_err(|e| e.to_string())?;
-        } // unlock mutex
+        // {
+        //     let mut conn = db.get_conn()?;
+        //     let mut path_to_database = db.get_path_to_database();
+        //     if let Some(existing_conn) = conn.take() {
+        //         drop(existing_conn);
+        //     }
+        //     *conn = Some(Connection::open(&db_path).map_err(|e| e.to_string())?);
+        //     *path_to_database = Some(db_path.clone());
+        //
+        //     set_pragma(conn.as_ref().unwrap()).map_err(|e| e.to_string())?;
+        // } // unlock mutex
         db.with_transaction(|tx| init_database(app_handle, tx).map_err(AppError::GenericError))?;
         Ok(db_path)
     }
@@ -87,14 +89,15 @@ pub mod command_tauri {
     ) -> ResultCommand<()> {
         info!("Switching database to {}", db_name);
         let db_path = get_db_path(db_name).map_err(AppError::GenericError)?;
-        let mut conn = db.get_conn();
-        let mut path_to_database = db.get_path_to_database();
-        if let Some(existing_conn) = conn.take() {
-            drop(existing_conn);
-        }
-        *conn = Some(Connection::open(&db_path).map_err(|e| e.to_string())?);
-        *path_to_database = Some(db_path.clone());
-        set_pragma(conn.as_ref().unwrap()).map_err(|e| e.to_string())?;
+        db.switch_database(&db_path)?;
+        // let mut conn = db.get_conn()?;
+        // let mut path_to_database = db.get_path_to_database();
+        // if let Some(existing_conn) = conn.take() {
+        //     drop(existing_conn);
+        // }
+        // *conn = Some(Connection::open(&db_path).map_err(|e| e.to_string())?);
+        // *path_to_database = Some(db_path.clone());
+        // set_pragma(conn.as_ref().unwrap()).map_err(|e| e.to_string())?;
 
         app_handle
             .emit(
@@ -112,12 +115,12 @@ pub mod command_tauri {
 
     #[tauri::command]
     pub fn close_database(db: State<'_, Database>) -> ResultCommand<()> {
-        let mut conn = db.get_conn();
+        let mut conn = db.get_conn()?;
         if let Some(conn) = conn.take() {
             drop(conn);
         }
         *conn = None;
-        let mut path_database = db.get_path_to_database();
+        let mut path_database = db.get_path_to_database()?;
         if let Some(path) = path_database.take() {
             drop(path);
         }

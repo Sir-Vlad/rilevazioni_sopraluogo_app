@@ -1,4 +1,5 @@
-use crate::dao::crud_operations::Insert;
+use crate::app_traits::Insert;
+use crate::dao::crud_operations::Insert as Iold;
 use crate::dao::entity::{Edificio, Stanza};
 use crate::dao::{EdificioDAO, StanzaDAO};
 use crate::database::Database;

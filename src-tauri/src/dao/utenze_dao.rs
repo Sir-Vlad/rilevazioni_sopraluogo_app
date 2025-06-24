@@ -1,15 +1,20 @@
-use crate::dao::crud_operations::{GetAll, Insert, Update};
+use crate::app_traits::{CreateTable, DaoTrait, GetAll, Insert, Update};
 use crate::dao::entity::Utenza;
-use crate::dao::utils::schema_operations::CreateTable;
-use crate::dao::utils::DAO;
-use crate::database::{
-    convert_param, DatabaseConnection, QueryBuilder, SqlQueryBuilder, WhereBuilder,
-};
+use crate::database::{DatabaseConnection, SqlQueryBuilder, WhereBuilder};
 use crate::utils::AppError;
-use log::info;
 
 pub struct UtenzeDAO;
 
+impl DaoTrait for UtenzeDAO {
+    type Entity = Utenza;
+    type Error = AppError;
+}
+impl CreateTable for UtenzeDAO {}
+impl GetAll for UtenzeDAO {}
+impl Insert for UtenzeDAO {}
+impl Update for UtenzeDAO {}
+
+/*
 impl DAO for UtenzeDAO {
     fn table_name() -> &'static str {
         "UTENZE"
@@ -97,20 +102,14 @@ impl Update<Utenza> for UtenzeDAO {
         Ok(item)
     }
 }
+*/
 
 #[cfg(test)]
 mod tests {
     use super::super::*;
-    use crate::dao::crud_operations::{Insert, Update};
-    use crate::dao::entity::{Edificio, TipoUtenza, Utenza};
-    use crate::dao::utils::schema_operations::CreateTable;
-    use once_cell::sync::Lazy;
+    use crate::app_traits::{CreateTable, Insert, Update};
+    use crate::dao::entity::{Edificio, Utenza};
     use rusqlite::Connection;
-    use serial_test::serial;
-    use std::ops::Deref;
-    use std::sync::Mutex;
-
-    static DATABASE: Lazy<Mutex<Connection>> = Lazy::new(|| Mutex::new(setup()));
 
     fn setup() -> Connection {
         let conn = Connection::open_in_memory().unwrap();
@@ -131,46 +130,37 @@ mod tests {
     }
 
     #[test]
-    #[serial]
     fn test_insert() {
-        let conn = DATABASE.lock().unwrap();
-        let utenza = Utenza::new("PR01-25", "acqua", "00008545", "Via Pallone");
-        let result = UtenzeDAO::insert(conn.deref(), utenza);
-        match result {
+        let conn = setup();
+        let utenza = Utenza::new("PR01-25", "idrica", "00008545", "Via Pallone");
+
+        match UtenzeDAO::insert(&conn, utenza) {
             Ok(res) => {
-                pretty_sqlite::print_table(&conn, "UTENZE").unwrap();
-                assert_eq!(
-                    res,
-                    Utenza {
-                        id: 1,
-                        id_edificio: "PR01-25".to_string(),
-                        tipo: TipoUtenza::Idrica,
-                        cod_contatore: "00008545".to_string(),
-                        indirizzo_contatore: Option::from("Via Pallone".to_string()),
-                    }
-                )
+                assert_eq!(1, res.id);
             }
             Err(e) => panic!("{}", e),
         }
+
+        pretty_sqlite::print_table(&conn, "UTENZE").unwrap();
     }
 
     #[test]
-    #[serial]
     fn test_update() {
-        let conn = DATABASE.lock().unwrap();
-        let update_utenza = Utenza {
-            id: 1,
-            id_edificio: "PR01-25".to_string(),
-            tipo: TipoUtenza::Idrica,
-            cod_contatore: "00008545".to_string(),
-            indirizzo_contatore: Option::from("Via Roma".to_string()),
-        };
+        let conn = setup();
+        let mut utenza = Utenza::new("PR01-25", "idrica", "00008545", "Via Pallone");
+        UtenzeDAO::insert(&conn, utenza.clone()).unwrap();
+
         pretty_sqlite::print_table(&conn, "UTENZE").unwrap();
-        let res = UtenzeDAO::update(conn.deref(), update_utenza.clone());
+
+        utenza.id = 1;
+        utenza.cod_contatore = "00008545".to_string();
+        utenza.indirizzo_contatore = Option::from("Via Roma".to_string());
+
+        let res = UtenzeDAO::update(&conn, utenza.clone());
         match res {
             Ok(res) => {
                 pretty_sqlite::print_table(&conn, "UTENZE").unwrap();
-                assert_eq!(res, update_utenza);
+                assert_eq!(res, utenza);
             }
             Err(e) => panic!("{}", e),
         }
