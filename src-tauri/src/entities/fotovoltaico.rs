@@ -110,6 +110,7 @@ impl ToInsert for Fotovoltaico {
 }
 
 impl ToUpdate for Fotovoltaico {
+    #[inline]
     fn to_update() -> String {
         format!(
             "UPDATE {} SET POTENZA = ?, PROPRIETARIO = ? WHERE ID = ? RETURNING *;",

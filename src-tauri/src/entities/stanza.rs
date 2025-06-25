@@ -97,10 +97,12 @@ impl FromRow for Stanza {
 impl EntityTrait for Stanza {
     type PrimaryKey = u64;
 
+    #[inline]
     fn table_name() -> String {
         "STANZA".to_string()
     }
 
+    #[inline]
     fn sql_create_table() -> String {
         format!("CREATE TABLE IF NOT EXISTS {}
             (
@@ -121,6 +123,7 @@ impl EntityTrait for Stanza {
 }
 impl ToRetrieveAll for Stanza {}
 impl ToInsert for Stanza {
+    #[inline]
     fn to_insert() -> String {
         format!(
             "INSERT INTO {} (CHIAVE, PIANO, ID_SPAZIO, STANZA, DESTINAZIONE_USO, ALTEZZA, \
@@ -146,6 +149,7 @@ impl ToInsert for Stanza {
     }
 }
 impl ToUpdate for Stanza {
+    #[inline]
     fn to_update() -> String {
         format!(
             "UPDATE {} SET ALTEZZA = ?, SPESSORE_MURO = ?, RISCALDAMENTO = ?, RAFFRESCAMENTO = ?, ILLUMINAZIONE = ? WHERE ID = ? RETURNING *;",

@@ -1,7 +1,7 @@
 mod app_traits;
 mod command;
 mod dao;
-mod database;
+mod db;
 mod dto;
 mod entities;
 mod service;
@@ -9,8 +9,8 @@ mod test;
 mod utils;
 
 use crate::command::command_tauri::*;
-use crate::database::*;
-use database::NAME_DIR_DATABASE;
+use crate::db::*;
+use db::NAME_DIR_DATABASE;
 use dirs_next::document_dir;
 use log::{error, info};
 use tauri::path::BaseDirectory;
@@ -37,7 +37,7 @@ pub fn run() {
             // miscellaneous
             export_data_to_excel,
             init_to_excel,
-            // database
+            // db
             set_database,
             switch_database,
             close_database,
@@ -76,7 +76,7 @@ fn handle_window_events(windows: &tauri::Window, event: &tauri::WindowEvent) {
         let db = windows.app_handle().state::<Database>();
         match close_database(db) {
             Ok(..) => info!("Database chiuso correttamente"),
-            Err(e) => error!("Errore durante la chiusura del database: {}", e),
+            Err(e) => error!("Errore durante la chiusura del db: {}", e),
         }
         clear_app_data(windows.app_handle()).unwrap_or_default();
     }

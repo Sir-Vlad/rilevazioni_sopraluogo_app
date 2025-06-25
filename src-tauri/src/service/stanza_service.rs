@@ -1,9 +1,8 @@
 use crate::app_traits::{GetAll, Insert, Update};
-use crate::dao::crud_operations::{GetAll as G, Update as U};
-use crate::dao::entity::StanzaConInfissi;
 use crate::dao::{StanzaConInfissiDao, StanzaDAO};
-use crate::database::Database;
+use crate::db::Database;
 use crate::dto::StanzaDTO;
+use crate::entities::StanzaConInfissi;
 use crate::service::utils::{CreateService, RetrieveManyService, UpdateService};
 use crate::utils::AppError;
 use tauri::State;

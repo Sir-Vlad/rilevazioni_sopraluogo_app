@@ -1,5 +1,5 @@
 use crate::app_traits::{CreateTable, CreateView, DaoTrait, EntityTrait, GetAll, SqlExecutor};
-use crate::entities::entity::{DatiStanza, MatMinEffStanza, MqInfissi, VetMinEffStanza};
+use crate::entities::{DatiStanza, MatMinEffStanza, MqInfissi, VetMinEffStanza};
 use crate::utils::AppError;
 
 pub struct DatiStanzeViewDAO;

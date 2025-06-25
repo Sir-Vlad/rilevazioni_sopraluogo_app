@@ -1,5 +1,4 @@
 use crate::app_traits::{EntityTrait, FromRow, SqlParams, ToInsert, ToRetrieveAll, ToUpdate};
-use crate::database::QueryBuilderError;
 use crate::dto::UtenzaDTO;
 use rusqlite::{Error, Row};
 use serde::{Deserialize, Serialize};
@@ -69,10 +68,12 @@ impl FromRow for Utenza {
 impl EntityTrait for Utenza {
     type PrimaryKey = u64;
 
+    #[inline]
     fn table_name() -> String {
         "UTENZE".to_string()
     }
 
+    #[inline]
     fn sql_create_table() -> String {
         format!(
             "CREATE TABLE IF NOT EXISTS {}
@@ -89,6 +90,7 @@ impl EntityTrait for Utenza {
 }
 impl ToRetrieveAll for Utenza {}
 impl ToInsert for Utenza {
+    #[inline]
     fn to_insert() -> String {
         format!(
             "INSERT INTO {} (ID_EDIFICIO, TIPO, COD_CONTATORE, INDIRIZZO_CONTATORE) VALUES (?, ?, ?, ?) RETURNING *;",
@@ -110,9 +112,7 @@ impl ToUpdate for Utenza {
         panic!("Don't call this method. Use to_build_update instead")
     }
 
-    fn to_build_update(
-        &self,
-    ) -> Result<Option<(String, Vec<Box<&dyn SqlParams>>)>, QueryBuilderError> {
+    fn to_build_update(&self) -> Option<(String, Vec<Box<&dyn SqlParams>>)> {
         let mut set_clauses = Vec::new();
         let mut params: Vec<Box<&dyn SqlParams>> = Vec::new();
 
@@ -127,7 +127,7 @@ impl ToUpdate for Utenza {
 
         // Se non ci sono campi da aggiornare, ritorniamo None
         if set_clauses.is_empty() {
-            return Ok(None);
+            return None;
         }
 
         // Costruzione condizione WHERE
@@ -141,7 +141,7 @@ impl ToUpdate for Utenza {
 
         query = format!("{} RETURNING *", query);
 
-        Ok(Some((query, params)))
+        Some((query, params))
     }
 
     fn to_update_params(&self) -> Vec<Box<&dyn SqlParams>> {

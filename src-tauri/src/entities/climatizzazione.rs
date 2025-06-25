@@ -57,6 +57,7 @@ impl EntityTrait for Climatizzazione {
 impl ToRetrieveAll for Climatizzazione {}
 
 impl ToInsert for Climatizzazione {
+    #[inline]
     fn to_insert() -> String {
         format!(
             "INSERT INTO {} (CLIMATIZZAZIONE, EFFICIENZA_ENERGETICA) VALUES (?, ?) RETURNING *;",

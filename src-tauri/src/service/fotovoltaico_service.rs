@@ -1,6 +1,6 @@
 use crate::app_traits::{GetAll, Insert};
 use crate::dao::FotovoltaicoDAO;
-use crate::database::Database;
+use crate::db::Database;
 use crate::dto::FotovoltaicoDTO;
 use crate::service::utils::{CreateService, RetrieveManyService};
 use crate::utils::AppError;

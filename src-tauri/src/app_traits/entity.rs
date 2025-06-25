@@ -1,5 +1,4 @@
 use crate::app_traits::sql_params::SqlParams;
-use crate::database::QueryBuilderError;
 use rusqlite::Row;
 
 pub trait FromRow {
@@ -33,14 +32,13 @@ pub trait ToInsert: EntityTrait {
 
 pub trait ToUpdate: EntityTrait {
     fn to_update() -> String;
-    fn to_build_update(
-        &self,
-    ) -> Result<Option<(String, Vec<Box<&dyn SqlParams>>)>, QueryBuilderError> {
-        Ok(None)
+    fn to_build_update(&self) -> Option<(String, Vec<Box<&dyn SqlParams>>)> {
+        None
     }
     fn to_update_params(&self) -> Vec<Box<&dyn SqlParams>>;
 }
 
+#[allow(dead_code)]
 pub trait ToDelete: EntityTrait {
     fn to_delete() -> String;
 }

@@ -1,6 +1,5 @@
 use crate::app_traits::{CreateTable, DaoTrait, GetAll, Insert};
-use crate::dao::entity::Climatizzazione;
-use crate::database::{DatabaseConnection, SqlQueryBuilder};
+use crate::entities::Climatizzazione;
 use crate::utils::AppError;
 
 pub struct ClimatizzazioneDAO;
@@ -63,7 +62,7 @@ mod tests {
     }
     #[test]
     fn get_all_empty_table() {
-        // Setup - solo creazione del database senza inserimento dati
+        // Setup - solo creazione del db senza inserimento dati
         let conn = setup_db();
 
         // Test
@@ -75,7 +74,7 @@ mod tests {
 
     #[test]
     fn test_errore_tabella_non_esistente() {
-        // Creare un database in memoria senza creare la tabella CLIMATIZZAZIONE
+        // Creare un db in memoria senza creare la tabella CLIMATIZZAZIONE
         let conn = Connection::open_in_memory().unwrap();
 
         // Il metodo dovrebbe restituire un errore

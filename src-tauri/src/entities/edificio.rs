@@ -1,5 +1,4 @@
 use crate::app_traits::{EntityTrait, FromRow, SqlParams, ToInsert, ToRetrieveAll, ToUpdate};
-use crate::database::QueryBuilderError;
 use crate::dto::EdificioDTO;
 use crate::utils::ToList;
 use rusqlite::{Error, Row};
@@ -123,6 +122,7 @@ impl EntityTrait for Edificio {
 impl ToRetrieveAll for Edificio {}
 
 impl ToInsert for Edificio {
+    #[inline]
     fn to_insert() -> String {
         "INSERT INTO EDIFICIO (CHIAVE, FASCICOLO, INDIRIZZO)  VALUES (?, ?, ?) RETURNING *"
             .to_string()
@@ -138,9 +138,7 @@ impl ToUpdate for Edificio {
         panic!("usare to_build_update()")
     }
 
-    fn to_build_update(
-        &self,
-    ) -> Result<Option<(String, Vec<Box<&dyn SqlParams>>)>, QueryBuilderError> {
+    fn to_build_update(&self) -> Option<(String, Vec<Box<&dyn SqlParams>>)> {
         let mut set_clauses = Vec::new();
         let mut params: Vec<Box<&dyn SqlParams>> = Vec::new();
 
@@ -168,7 +166,7 @@ impl ToUpdate for Edificio {
 
         // Se non ci sono campi da aggiornare, ritorniamo None
         if set_clauses.is_empty() {
-            return Ok(None);
+            return None;
         }
 
         // Costruzione condizione WHERE
@@ -182,7 +180,7 @@ impl ToUpdate for Edificio {
 
         query = format!("{} RETURNING *", query);
 
-        Ok(Some((query, params)))
+        Some((query, params))
     }
 
     fn to_update_params(&self) -> Vec<Box<&dyn SqlParams>> {
@@ -206,17 +204,17 @@ mod tests {
             isolamento_tetto: Some(true),
             cappotto: Some(true),
         };
-        let res = entity.to_build_update().unwrap().unwrap();
+        let res = entity.to_build_update().unwrap();
         println!("{:?}", res.0);
 
         entity.cappotto = None;
         entity.note_riqualificazione = None;
 
-        let res = entity.to_build_update().unwrap().unwrap();
+        let res = entity.to_build_update().unwrap();
         println!("{:?}", res.0);
         assert_eq!(
             res.0,
-            "UPDATE EDIFICIO SET ANNO_COSTRUZIONE = ?, ANNO_RIQUALIFICAZIONE = ?, ISOLAMENTO_TETTO = ? WHERE CHIAVE = ?"
+            "UPDATE EDIFICIO SET ANNO_COSTRUZIONE = ?, ANNO_RIQUALIFICAZIONE = ?, ISOLAMENTO_TETTO = ? WHERE CHIAVE = ? RETURNING *"
         );
         assert_eq!(res.1.len(), 4);
     }

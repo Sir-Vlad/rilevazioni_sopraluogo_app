@@ -1,4 +1,4 @@
-use crate::dao::entity::Edificio;
+use crate::entities::Edificio;
 use crate::dto::DTO;
 use serde::{Deserialize, Serialize};
 

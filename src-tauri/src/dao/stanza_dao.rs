@@ -1,6 +1,6 @@
 use crate::{
     app_traits::{CreateTable, DaoTrait, GetAll, Insert, Update},
-    dao::entity::Stanza,
+    entities::Stanza,
     utils::AppError,
 };
 
@@ -166,7 +166,7 @@ impl Update<Stanza> for StanzaDAO {
 #[cfg(test)]
 mod tests {
     use crate::app_traits::{CreateTable, DaoTrait, Insert, Update};
-    use crate::dao::entity::Stanza;
+    use crate::entities::Stanza;
     use crate::dao::StanzaDAO;
     use rusqlite::Connection;
 

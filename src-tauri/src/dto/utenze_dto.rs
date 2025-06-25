@@ -1,5 +1,5 @@
 use serde::{Deserialize, Serialize};
-use crate::dao::entity::{TipoUtenza, Utenza};
+use crate::entities::{TipoUtenza, Utenza};
 use crate::dto::DTO;
 
 #[derive(Serialize, Deserialize, Clone)]
@@ -15,7 +15,7 @@ impl DTO for UtenzaDTO {}
 
 impl From<&Utenza> for UtenzaDTO {
     fn from(value: &Utenza) -> Self {
-        Self{
+        Self {
             id: Some(value.id),
             id_edificio: value.id_edificio.clone(),
             tipo: value.tipo.clone(),

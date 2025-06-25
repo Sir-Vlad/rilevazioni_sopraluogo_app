@@ -1,4 +1,4 @@
-use crate::dao::entity::VetroInfisso;
+use crate::entities::VetroInfisso;
 use crate::dto::DTO;
 use serde::{Deserialize, Serialize};
 

@@ -1,5 +1,5 @@
 use crate::app_traits::{CreateTable, DaoTrait, GetAll, Insert};
-use crate::dao::entity::AnnotazioneStanza;
+use crate::entities::AnnotazioneStanza;
 use crate::utils::AppError;
 
 pub struct AnnotazioneStanzaDAO;
@@ -17,7 +17,7 @@ impl Insert for AnnotazioneStanzaDAO {}
 #[cfg(test)]
 mod test {
     use crate::app_traits::{CreateTable, DaoTrait, Insert};
-    use crate::dao::entity::AnnotazioneStanza;
+    use crate::entities::AnnotazioneStanza;
     use crate::dao::AnnotazioneStanzaDAO;
     use crate::utils::AppError;
     use rusqlite::{ffi, Connection, Error, ErrorCode};
@@ -65,12 +65,12 @@ mod test {
 
         match res.err().unwrap() {
             AppError::DatabaseError(Error::SqliteFailure(
-                ffi::Error {
-                    code: ErrorCode::ConstraintViolation,
-                    ..
-                },
-                res,
-            )) => {
+                                        ffi::Error {
+                                            code: ErrorCode::ConstraintViolation,
+                                            ..
+                                        },
+                                        res,
+                                    )) => {
                 assert!(res.unwrap().contains("LENGTH(CONTENT) > 0"));
             }
             e => panic!("{:?}", e),

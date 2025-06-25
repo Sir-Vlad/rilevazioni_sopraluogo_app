@@ -1,4 +1,4 @@
-use crate::dao::entity::Climatizzazione;
+use crate::entities::Climatizzazione;
 use crate::dto::DTO;
 use serde::{Deserialize, Serialize};
 

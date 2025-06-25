@@ -1,6 +1,6 @@
 use crate::dto::DTO;
 use serde::{Deserialize, Serialize};
-use crate::dao::entity::MaterialeInfisso;
+use crate::entities::MaterialeInfisso;
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct MaterialeInfissoDTO {

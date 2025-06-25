@@ -1,4 +1,4 @@
-use crate::database::Database;
+use crate::db::Database;
 use crate::dto::DTO;
 use crate::utils::AppError;
 use tauri::State;

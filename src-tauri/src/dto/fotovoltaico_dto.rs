@@ -1,4 +1,4 @@
-use crate::dao::entity::Fotovoltaico;
+use crate::entities::Fotovoltaico;
 use crate::dto::DTO;
 use serde::{Deserialize, Serialize};
 
@@ -14,7 +14,7 @@ impl DTO for FotovoltaicoDTO {}
 
 impl From<&Fotovoltaico> for FotovoltaicoDTO {
     fn from(value: &Fotovoltaico) -> Self {
-        Self{
+        Self {
             id: Some(value.id),
             id_edificio: value.id_edificio.clone(),
             potenza: value.potenza,

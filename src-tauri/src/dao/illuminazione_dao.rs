@@ -1,5 +1,5 @@
 use crate::app_traits::{CreateTable, DaoTrait, GetAll, Insert};
-use crate::dao::entity::Illuminazione;
+use crate::entities::Illuminazione;
 use crate::utils::AppError;
 
 pub struct IlluminazioneDAO;

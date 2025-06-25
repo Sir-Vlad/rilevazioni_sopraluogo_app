@@ -5,7 +5,6 @@ use crate::app_traits::{
     sql_executor::SqlExecutor,
     sql_params::SqlParams,
 };
-use crate::database::QueryBuilderError;
 use rusqlite::params;
 
 pub trait DaoTrait {
@@ -35,9 +34,9 @@ pub trait GetAll: DaoTrait
 where
     Self::Entity: ToRetrieveAll,
 {
-    /// Retrieves all records of an entity from the database.
+    /// Retrieves all records of an entity from the db.
     ///
-    /// This function interacts with the database connection to retrieve all records
+    /// This function interacts with the db connection to retrieve all records
     /// of the specified entity type. It prepares a SQL query, executes it, and
     /// maps the resulting rows to their corresponding entity type. If successful,
     /// it returns a `Vec` of entities. If an error occurs during the process, the
@@ -46,12 +45,12 @@ where
     /// # Type Parameters
     /// - `Self`: The struct implementing this method, typically representing a data access
     ///   layer for a specific entity type.
-    /// - `Self::Connection`: The type of the database connection.
+    /// - `Self::Connection`: The type of the db connection.
     /// - `Self::Entity`: The type of entity being retrieved.
     /// - `Self::Error`: The error type that this function returns in case of failure.
     ///
     /// # Arguments
-    /// - `conn`: An instance of the database connection that will be used to run the query.
+    /// - `conn`: An instance of the db connection that will be used to run the query.
     ///
     /// # Returns
     /// - `Ok(Vec<Self::Entity>)`: A vector of entities if the query and mapping operations succeed.
@@ -65,7 +64,7 @@ where
     ///
     /// # Example
     /// Assuming `MyEntity` implements the required traits (e.g., `to_retrieve_all`, `from_row`),
-    /// and `MyConnection` is the associated database connection:
+    /// and `MyConnection` is the associated db connection:
     ///
     /// ```rust
     /// let connection = MyConnection::new();
@@ -85,8 +84,8 @@ where
     /// - The `Self::Entity` struct must implement a method named `to_retrieve_all`, which
     ///   returns the SQL query string to fetch all records.
     /// - The `Self::Entity` struct must also implement a method named `from_row`,
-    ///   which maps a database row to an entity instance.
-    /// - The database connection should be compatible with the query execution and
+    ///   which maps a db row to an entity instance.
+    /// - The db connection should be compatible with the query execution and
     ///   parameter binding used in this function.
     fn get_all<Connection: SqlExecutor>(
         conn: &Connection,
@@ -105,15 +104,15 @@ pub trait GetById: DaoTrait
 where
     Self::Entity: ToRetrieve,
 {
-    /// Retrieves a single entity by its primary key from the database.
+    /// Retrieves a single entity by its primary key from the db.
     ///
-    /// This function is a wrapper designed to fetch a single record from the database
+    /// This function is a wrapper designed to fetch a single record from the db
     /// based on the primary key of the target entity. If the entity is found, it is returned
     /// as a result. If no record matches the provided primary key, an error is returned.
     ///
     /// # Parameters
     ///
-    /// - `conn`: The database connection used to perform the query. Must implement the
+    /// - `conn`: The db connection used to perform the query. Must implement the
     ///   `Self::Connection` type.
     /// - `id`: The primary key of the entity to retrieve. The type of the primary key
     ///   is defined by the `EntityTrait` implementation for `Self::Entity`.
@@ -181,19 +180,19 @@ where
     Self::Entity: ToInsert,
 {
     ///
-    /// Inserts a new entity into the database.
+    /// Inserts a new entity into the db.
     ///
-    /// This function takes a database connection and an entity instance, then performs an
-    /// insertion into the corresponding database table. The insertion query is generated
+    /// This function takes a db connection and an entity instance, then performs an
+    /// insertion into the corresponding db table. The insertion query is generated
     /// from the `Entity` trait's `to_insert` method, and the parameters needed for the
     /// query are resolved using the entity's `to_insert_params` method.
     ///
-    /// After inserting, the function retrieves the newly created entity from the database
+    /// After inserting, the function retrieves the newly created entity from the db
     /// and converts it back to the entity type using the `from_row` method of the `Entity` trait.
     ///
     /// # Parameters
-    /// - `conn`: The established database connection (`Self::Connection`) used to interact with the database.
-    /// - `entity`: The entity (`Self::Entity`) to be inserted into the database.
+    /// - `conn`: The established db connection (`Self::Connection`) used to interact with the db.
+    /// - `entity`: The entity (`Self::Entity`) to be inserted into the db.
     ///
     /// # Returns
     /// A `Result` containing the newly inserted entity (`Self::Entity`) on success, or an error of type
@@ -207,7 +206,7 @@ where
     ///
     /// # Example
     /// ```rust
-    /// let conn = establish_connection(); // Assumes a function to establish the database connection.
+    /// let conn = establish_connection(); // Assumes a function to establish the db connection.
     /// let entity = MyEntity::new(...);  // Create an instance of the entity to insert.
     ///
     /// match MyDatabase::insert(conn, entity) {
@@ -249,7 +248,7 @@ pub trait Update: DaoTrait
 where
     Self::Entity: ToUpdate,
 {
-    /// Updates an existing entity in the database using the provided connection.
+    /// Updates an existing entity in the db using the provided connection.
     ///
     /// This function performs the following steps:
     /// 1. Converts the entity into a query string and update parameters.
@@ -257,14 +256,14 @@ where
     /// 3. Executes the query using the parameters and extracts the updated entity from the result row.
     ///
     /// # Type Parameters
-    /// - `Connection`: A type that implements the `SqlExecutor` trait, used for database interaction.
+    /// - `Connection`: A type that implements the `SqlExecutor` trait, used for db interaction.
     ///
     /// # Parameters
-    /// - `conn`: A reference to the database connection implementing the `SqlExecutor` trait.
-    /// - `entity`: The entity to be updated in the database. The provided entity specifies the values for the update query.
+    /// - `conn`: A reference to the db connection implementing the `SqlExecutor` trait.
+    /// - `entity`: The entity to be updated in the db. The provided entity specifies the values for the update query.
     ///
     /// # Returns
-    /// - `Ok(Self::Entity)`: The updated entity retrieved from the database after successful execution of the query.
+    /// - `Ok(Self::Entity)`: The updated entity retrieved from the db after successful execution of the query.
     /// - `Err(Self::Error)`: An error if the query execution or row extraction fails.
     ///
     /// # Errors
@@ -276,25 +275,17 @@ where
     /// # Notes
     /// - `Self::Entity` must implement the `to_update` and `from_row` methods:
     ///   - `to_update` is expected to return the SQL update statement.
-    ///   - `from_row` is expected to deserialize the database row back into the entity type.
+    ///   - `from_row` is expected to deserialize the db row back into the entity type.
     /// - The `to_update_params` method is expected to convert the entity into a collection
     ///   of parameters for the SQL update query.
     fn update<Connection: SqlExecutor>(
         conn: &Connection,
         entity: Self::Entity,
-    ) -> Result<Self::Entity, Self::Error>
-    where
-        Self::Error: From<QueryBuilderError>,
-    {
-        let (query, params) = match entity.to_build_update() {
-            Ok(res) => {
-                if let Some((query, params)) = res {
-                    (query, params)
-                } else {
-                    (Self::Entity::to_update(), entity.to_update_params())
-                }
-            }
-            Err(err) => return Err(err.into()),
+    ) -> Result<Self::Entity, Self::Error> {
+        let (query, params) = if let Some((query, params)) = entity.to_build_update() {
+            (query, params)
+        } else {
+            (Self::Entity::to_update(), entity.to_update_params())
         };
         if !query.contains("RETURNING *") {
             panic!("Insert query must contain RETURNING *");

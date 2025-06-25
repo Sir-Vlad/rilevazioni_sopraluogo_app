@@ -1,5 +1,5 @@
 use crate::app_traits::{CreateTable, DaoTrait, GetAll, Insert};
-use crate::dao::entity::TipoInfisso;
+use crate::entities::TipoInfisso;
 use crate::utils::AppError;
 
 pub struct TipoInfissoDAO;

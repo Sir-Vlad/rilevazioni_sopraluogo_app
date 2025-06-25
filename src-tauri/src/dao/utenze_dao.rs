@@ -1,6 +1,5 @@
 use crate::app_traits::{CreateTable, DaoTrait, GetAll, Insert, Update};
-use crate::dao::entity::Utenza;
-use crate::database::{DatabaseConnection, SqlQueryBuilder, WhereBuilder};
+use crate::entities::Utenza;
 use crate::utils::AppError;
 
 pub struct UtenzeDAO;
@@ -108,7 +107,7 @@ impl Update<Utenza> for UtenzeDAO {
 mod tests {
     use super::super::*;
     use crate::app_traits::{CreateTable, Insert, Update};
-    use crate::dao::entity::{Edificio, Utenza};
+    use crate::entities::{Edificio, Utenza};
     use rusqlite::Connection;
 
     fn setup() -> Connection {

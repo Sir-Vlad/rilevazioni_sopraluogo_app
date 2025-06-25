@@ -1,8 +1,7 @@
 use crate::app_traits::GetAll;
-use crate::dao::crud_operations::GetAll as Gold;
-use crate::dao::entity::{DatiStanza, Edificio, Fotovoltaico};
 use crate::dao::{DatiStanzeViewDAO, EdificioDAO, FotovoltaicoDAO};
-use crate::database::Database;
+use crate::db::Database;
+use crate::entities::{DatiStanza, Edificio, Fotovoltaico};
 use crate::utils::{AppError, ToList};
 use dirs_next::document_dir;
 use log::info;

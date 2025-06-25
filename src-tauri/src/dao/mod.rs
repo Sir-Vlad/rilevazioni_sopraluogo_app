@@ -15,7 +15,6 @@ mod utenze_dao;
 mod utils;
 mod vetro_infisso_dao;
 
-pub use crate::entities::*;
 pub use annotazione_edificio_dao::*;
 pub use annotazione_infisso_dao::*;
 pub use annotazione_stanza_dao::*;
@@ -33,4 +32,4 @@ pub use vetro_infisso_dao::*;
 
 pub(crate) use tipo_infisso_dao::*;
 
-pub(crate) use utils::{create_tables, crud_operations, schema_operations};
+pub(crate) use utils::create_tables;

@@ -1,4 +1,4 @@
-use crate::dao::entity::Illuminazione;
+use crate::entities::Illuminazione;
 use crate::dto::DTO;
 use serde::{Deserialize, Serialize};
 

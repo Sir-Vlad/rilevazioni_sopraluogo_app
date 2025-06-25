@@ -35,10 +35,12 @@ impl FromRow for VetroInfisso {
 impl EntityTrait for VetroInfisso {
     type PrimaryKey = u64;
 
+    #[inline]
     fn table_name() -> String {
         "VETRO_INFISSO".to_string()
     }
 
+    #[inline]
     fn sql_create_table() -> String {
         format!(
             "CREATE TABLE IF NOT EXISTS {}
@@ -53,6 +55,7 @@ impl EntityTrait for VetroInfisso {
 }
 impl ToRetrieveAll for VetroInfisso {}
 impl ToInsert for VetroInfisso {
+    #[inline]
     fn to_insert() -> String {
         format!(
             "INSERT INTO {} (VETRO, EFFICIENZA_ENERGETICA) VALUES (?, ?) RETURNING *;",

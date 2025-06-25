@@ -2,13 +2,7 @@ use crate::app_traits::{
     CreateTable, DaoTrait, EntityTrait, GetAll, GetById, Insert, SqlExecutor, SqlParams, ToInsert,
     ToRetrieve, ToRetrieveAll, ToUpdate, Update,
 };
-use crate::dao::crud_operations::{
-    Get as oldG, Get, GetAll as oldGA, Insert as oldI, Update as oldU,
-};
-use crate::dao::entity::StanzaConInfissi;
-use crate::dao::schema_operations::CreateTable as OldC;
-use crate::dao::utils::DAO;
-use crate::database::{DatabaseConnection, QueryBuilderError, SqlQueryBuilder, WhereBuilder};
+use crate::entities::StanzaConInfissi;
 use crate::utils::AppError;
 use rusqlite::{params, Error};
 use std::collections::{HashMap, HashSet};
@@ -115,10 +109,7 @@ where
     fn update<Connection: SqlExecutor>(
         conn: &Connection,
         entity: Self::Entity,
-    ) -> Result<Self::Entity, Self::Error>
-    where
-        Self::Error: From<QueryBuilderError>,
-    {
+    ) -> Result<Self::Entity, Self::Error> {
         // Recupero l'elemento esistente per confrontarlo con quello nuovo
         let existing = match Self::get_by_id(conn, (entity.id_stanza, entity.id_edificio.clone())) {
             Ok(existing) => existing,
@@ -212,13 +203,11 @@ fn find_common_and_unique(
 mod test {
     use super::*;
     use crate::app_traits::{CreateTable, DaoTrait, Insert};
-    use crate::dao::entity::{
-        Edificio, Infisso, MaterialeInfisso, Stanza, TipoInfisso, VetroInfisso,
-    };
     use crate::dao::utils::create_types_tables;
     use crate::dao::{
         EdificioDAO, InfissoDAO, MaterialeInfissoDAO, StanzaDAO, TipoInfissoDAO, VetroInfissoDAO,
     };
+    use crate::entities::{Edificio, Infisso, MaterialeInfisso, Stanza, TipoInfisso, VetroInfisso};
     use rusqlite::Connection;
 
     static ID_EDIFICIO: &str = "PR01-25";

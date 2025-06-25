@@ -1,6 +1,6 @@
 use crate::app_traits::{GetAll, Insert};
 use crate::dao::{AnnotazioneEdificioDAO, AnnotazioneInfissoDAO, AnnotazioneStanzaDAO};
-use crate::database::Database;
+use crate::db::Database;
 use crate::dto::{AnnotazioneEdificioDTO, AnnotazioneInfissoDTO, AnnotazioneStanzaDTO};
 use crate::service::{CreateService, RetrieveManyService};
 use crate::utils::AppError;

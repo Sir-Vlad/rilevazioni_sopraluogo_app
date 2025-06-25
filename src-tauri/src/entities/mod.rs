@@ -15,20 +15,18 @@ mod utils;
 mod vetro_infisso;
 mod views;
 
-pub mod entity {
-    pub use super::annotazione_edificio::AnnotazioneEdificio;
-    pub use super::annotazione_infisso::AnnotazioneInfisso;
-    pub use super::annotazione_stanza::AnnotazioneStanza;
-    pub use super::climatizzazione::Climatizzazione;
-    pub use super::edificio::Edificio;
-    pub use super::fotovoltaico::Fotovoltaico;
-    pub use super::illuminazione::Illuminazione;
-    pub use super::infisso::Infisso;
-    pub use super::materiale_infisso::MaterialeInfisso;
-    pub use super::stanza::Stanza;
-    pub use super::stanze_con_infissi::StanzaConInfissi;
-    pub use super::tipo_infisso::TipoInfisso;
-    pub use super::utenza::{TipoUtenza, Utenza};
-    pub use super::vetro_infisso::VetroInfisso;
-    pub use super::views::{DatiStanza, MatMinEffStanza, MqInfissi, VetMinEffStanza};
-}
+pub use annotazione_edificio::AnnotazioneEdificio;
+pub use annotazione_infisso::AnnotazioneInfisso;
+pub use annotazione_stanza::AnnotazioneStanza;
+pub use climatizzazione::Climatizzazione;
+pub use edificio::Edificio;
+pub use fotovoltaico::Fotovoltaico;
+pub use illuminazione::Illuminazione;
+pub use infisso::Infisso;
+pub use materiale_infisso::MaterialeInfisso;
+pub use stanza::Stanza;
+pub use stanze_con_infissi::StanzaConInfissi;
+pub use tipo_infisso::TipoInfisso;
+pub use utenza::{TipoUtenza, Utenza};
+pub use vetro_infisso::VetroInfisso;
+pub use views::{DatiStanza, MatMinEffStanza, MqInfissi, VetMinEffStanza};

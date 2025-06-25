@@ -9,10 +9,7 @@ pub mod command_tauri {
     };
     use crate::utils::AppError;
     use crate::{
-        database::{
-            get_db_path, init_database, set_pragma, Database, DatabaseEventPayload,
-            NAME_DIR_DATABASE,
-        },
+        db::{get_db_path, init_database, Database, DatabaseEventPayload, NAME_DIR_DATABASE},
         dto::{EdificioDTO, InfissoDTO, StanzaDTO},
         service::{
             EdificioService, ExportData, ExportDatiStanzaToExcel, InfissoService, StanzaService,
@@ -21,7 +18,7 @@ pub mod command_tauri {
     };
     use dirs_next::document_dir;
     use log::info;
-    use rusqlite::Connection;
+
     use serde_json::Value;
     use std::{collections::HashMap, ffi::OsStr, fs};
     use tauri::{AppHandle, Emitter, State};
@@ -87,7 +84,7 @@ pub mod command_tauri {
         db: State<'_, Database>,
         db_name: String,
     ) -> ResultCommand<()> {
-        info!("Switching database to {}", db_name);
+        info!("Switching db to {}", db_name);
         let db_path = get_db_path(db_name).map_err(AppError::GenericError)?;
         db.switch_database(&db_path)?;
         // let mut conn = db.get_conn()?;
@@ -101,7 +98,7 @@ pub mod command_tauri {
 
         app_handle
             .emit(
-                "database-changed",
+                "db-changed",
                 DatabaseEventPayload {
                     type_event: "database_switched",
                     path: db_path.clone(),
@@ -151,10 +148,10 @@ pub mod command_tauri {
 
         ImportDatiStanzaToExcel::save_to_database(db, df)?;
 
-        // emit event del cambio di database
+        // emit event del cambio di db
         app_handle
             .emit(
-                "database-changed",
+                "db-changed",
                 DatabaseEventPayload {
                     type_event: "database_switched",
                     path: path_db.clone(),

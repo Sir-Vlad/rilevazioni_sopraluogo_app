@@ -35,10 +35,12 @@ impl FromRow for Illuminazione {
 impl EntityTrait for Illuminazione {
     type PrimaryKey = u64;
 
+    #[inline]
     fn table_name() -> String {
         "ILLUMINAZIONE".to_string()
     }
 
+    #[inline]
     fn sql_create_table() -> String {
         format!(
             "CREATE TABLE IF NOT EXISTS {}
@@ -53,6 +55,7 @@ impl EntityTrait for Illuminazione {
 }
 impl ToRetrieveAll for Illuminazione {}
 impl ToInsert for Illuminazione {
+    #[inline]
     fn to_insert() -> String {
         format!(
             "INSERT INTO {} (LAMPADINA, EFFICIENZA_ENERGETICA) VALUES (?, ?) RETURNING *;",

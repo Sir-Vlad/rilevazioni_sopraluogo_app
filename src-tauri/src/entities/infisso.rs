@@ -1,6 +1,7 @@
 use crate::app_traits::{EntityTrait, FromRow, SqlParams, ToInsert, ToRetrieveAll, ToUpdate};
 use crate::dto::InfissoDTO;
 use rusqlite::{Error, Row};
+
 #[cfg_attr(test, derive(Debug, PartialEq, Clone))]
 pub struct Infisso {
     pub(crate) id: String,
@@ -69,10 +70,12 @@ impl FromRow for Infisso {
 impl EntityTrait for Infisso {
     type PrimaryKey = (String, String);
 
+    #[inline]
     fn table_name() -> String {
         "INFISSO".to_string()
     }
 
+    #[inline]
     fn sql_create_table() -> String {
         format!(
             "CREATE TABLE IF NOT EXISTS {}
@@ -96,6 +99,7 @@ impl EntityTrait for Infisso {
 impl ToRetrieveAll for Infisso {}
 
 impl ToInsert for Infisso {
+    #[inline]
     fn to_insert() -> String {
         format!(
             "INSERT INTO {}(ID, EDIFICIO, TIPO, ALTEZZA, LARGHEZZA, MATERIALE, VETRO) VALUES (?, ?, ?, ?, ?, ?, ?) RETURNING *;",
@@ -117,6 +121,7 @@ impl ToInsert for Infisso {
 }
 
 impl ToUpdate for Infisso {
+    #[inline]
     fn to_update() -> String {
         format!(
             "UPDATE {} SET TIPO = ?, ALTEZZA = ?, LARGHEZZA = ?, MATERIALE = ?, VETRO = ? WHERE ID = ? AND EDIFICIO = ? RETURNING *;",

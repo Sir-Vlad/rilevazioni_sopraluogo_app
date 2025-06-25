@@ -1,8 +1,7 @@
 use crate::app_traits::Insert;
-use crate::dao::crud_operations::Insert as Iold;
-use crate::dao::entity::{Edificio, Stanza};
 use crate::dao::{EdificioDAO, StanzaDAO};
-use crate::database::Database;
+use crate::db::Database;
+use crate::entities::{Edificio, Stanza};
 use crate::service::import::IdGeneratorStanza;
 use crate::utils::AppError;
 use calamine::{open_workbook, Reader, Xlsx};

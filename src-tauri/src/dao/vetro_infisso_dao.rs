@@ -1,5 +1,5 @@
 use crate::app_traits::{CreateTable, DaoTrait, GetAll, Insert};
-use crate::dao::entity::VetroInfisso;
+use crate::entities::VetroInfisso;
 use crate::utils::AppError;
 
 pub struct VetroInfissoDAO;

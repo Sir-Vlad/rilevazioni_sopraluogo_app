@@ -21,10 +21,12 @@ impl FromRow for TipoInfisso {
 impl EntityTrait for TipoInfisso {
     type PrimaryKey = u64;
 
+    #[inline]
     fn table_name() -> String {
         "TIPO_INFISSO".to_string()
     }
 
+    #[inline]
     fn sql_create_table() -> String {
         format!(
             "CREATE TABLE IF NOT EXISTS {}
@@ -41,6 +43,7 @@ impl EntityTrait for TipoInfisso {
 impl ToRetrieveAll for TipoInfisso {}
 
 impl ToInsert for TipoInfisso {
+    #[inline]
     fn to_insert() -> String {
         format!(
             "INSERT INTO {} (NOME) VALUES (?) RETURNING *",

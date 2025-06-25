@@ -1,7 +1,7 @@
 use crate::app_traits::SqlExecutor;
 use crate::utils::AppError;
 use log::info;
-use rusqlite::{Connection, Params, Statement, ToSql, Transaction};
+use rusqlite::{Connection, Statement, ToSql, Transaction};
 use serde::Serialize;
 use std::ops::Deref;
 use std::sync::{Mutex, MutexGuard};
@@ -116,10 +116,7 @@ impl Drop for Database {
         if let Ok(mut conn_guard) = self.conn.lock() {
             if let Some(conn) = conn_guard.take() {
                 if let Err((_, e)) = conn.close() {
-                    eprintln!(
-                        "Errore durante la chiusura del database nel destructor: {}",
-                        e
-                    );
+                    eprintln!("Errore durante la chiusura del db nel destructor: {}", e);
                 }
                 info!("Database chiuso");
             }

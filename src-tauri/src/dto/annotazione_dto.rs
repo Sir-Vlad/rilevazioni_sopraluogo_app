@@ -1,4 +1,4 @@
-use crate::dao::entity::{AnnotazioneEdificio, AnnotazioneInfisso, AnnotazioneStanza};
+use crate::entities::{AnnotazioneEdificio, AnnotazioneInfisso, AnnotazioneStanza};
 use crate::dto::DTO;
 use serde::{Deserialize, Serialize};
 

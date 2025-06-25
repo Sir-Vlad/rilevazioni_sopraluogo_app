@@ -1,6 +1,6 @@
 use crate::app_traits::{GetAll, Update};
 use crate::dao::EdificioDAO;
-use crate::database::Database;
+use crate::db::Database;
 use crate::dto::EdificioDTO;
 use crate::service::utils::{RetrieveManyService, UpdateService};
 use crate::utils::AppError;

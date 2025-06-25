@@ -1,11 +1,10 @@
-use crate::app_traits::Insert;
+use crate::app_traits::{Insert, SqlExecutor};
 use crate::dao::create_tables;
-use crate::dao::crud_operations::Insert as OldInsert;
-use crate::dao::{entity::TipoInfisso, TipoInfissoDAO};
-use crate::database::{DatabaseConnection, QueryParam};
+use crate::dao::TipoInfissoDAO;
+use crate::entities::TipoInfisso;
 use dirs_next::document_dir;
 use log::{error, info, warn};
-use rusqlite::{params, Connection, Transaction};
+use rusqlite::{params, Transaction};
 use serde::Deserialize;
 use std::collections::HashMap;
 use std::fs;
@@ -30,7 +29,7 @@ pub fn get_db_path(db_name: String) -> Result<String, String> {
         if !path.exists() {
             match File::create(&path) {
                 Ok(_) => println!("Database creato correttamente"),
-                Err(e) => return Err(format!("Errore nella creazione del database: {}", e)),
+                Err(e) => return Err(format!("Errore nella creazione del db: {}", e)),
             }
         }
         return Ok(path.to_string_lossy().to_string());
@@ -81,14 +80,6 @@ pub fn init_database(app_handle: AppHandle, tx: &Transaction) -> Result<(), Stri
     Ok(())
 }
 
-pub fn set_pragma(connection: &Connection) -> Result<(), rusqlite::Error> {
-    connection.pragma_update(None, "foreign_keys", "ON")?;
-    info!("Foreign keys enabled");
-    connection.pragma_update(None, "journal_mode", "WAL")?;
-    info!("Journal mode enabled");
-    Ok(())
-}
-
 #[derive(Deserialize)]
 struct TypeRecord {
     value: String,
@@ -107,7 +98,7 @@ fn retrieve_type_to_file(app_handle: AppHandle, file_name: &str) -> Result<JsonT
     Ok(data)
 }
 
-fn insert_values_into_table<C: DatabaseConnection>(
+fn insert_values_into_table<C: SqlExecutor>(
     conn: &C,
     table_name: &str,
     column_name: &str,
@@ -119,27 +110,14 @@ fn insert_values_into_table<C: DatabaseConnection>(
     );
     let mut stmt = conn
         .prepare(&query)
-        .map_err(|_e| "Errore nella preparazione della query per inserire i dati nel database")?;
+        .map_err(|_e| "Errore nella preparazione della query per inserire i dati nel db")?;
     for value in values {
         stmt.execute(params![
             value.value.to_ascii_uppercase(),
             value.efficienza_energetica
         ])
-        .map_err(|_e| "Errore nell'inserimento dei dati nel database")?;
+        .map_err(|_e| "Errore nell'inserimento dei dati nel db")?;
     }
     info!("Tabella {} popolata con successo", table_name);
     Ok(())
-}
-
-pub fn convert_param(params: Vec<&QueryParam>) -> Vec<rusqlite::types::Value> {
-    params
-        .iter()
-        .map(|p| match p {
-            QueryParam::String(s) => rusqlite::types::Value::Text(s.clone()),
-            QueryParam::Integer(i) => rusqlite::types::Value::Integer(*i),
-            QueryParam::Float(f) => rusqlite::types::Value::Real(*f),
-            QueryParam::Boolean(b) => rusqlite::types::Value::Integer(if *b { 1 } else { 0 }),
-            QueryParam::Null => rusqlite::types::Value::Null,
-        })
-        .collect()
 }

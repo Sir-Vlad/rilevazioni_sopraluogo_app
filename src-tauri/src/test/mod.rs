@@ -4,7 +4,7 @@ mod tests {
         CreateTable, DaoTrait, EntityTrait, FromRow, GetAll, GetById, Insert, SqlParams, ToInsert,
         ToRetrieve, ToRetrieveAll, ToUpdate, Update,
     };
-    use crate::database::Database;
+    use crate::db::Database;
     use crate::utils::AppError;
     use rusqlite::Row;
 

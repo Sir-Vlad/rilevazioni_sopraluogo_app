@@ -1,6 +1,6 @@
 use crate::app_traits::{GetAll, Insert, Update};
 use crate::dao::InfissoDAO;
-use crate::database::Database;
+use crate::db::Database;
 use crate::dto::InfissoDTO;
 use crate::service::utils::{CreateService, RetrieveManyService, UpdateService};
 use crate::utils::AppError;

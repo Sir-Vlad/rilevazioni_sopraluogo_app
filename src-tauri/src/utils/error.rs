@@ -8,8 +8,6 @@ pub enum AppError {
     DatabaseNotInitialized,
     #[error("Database error: {0}")]
     DatabaseError(rusqlite::Error),
-    #[error("Query build error: {0}")]
-    QueryBuildError(#[from] crate::database::QueryBuilderError),
     #[error("Not found element: {0}")]
     NotFound(String),
     #[error("")]

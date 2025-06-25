@@ -1,4 +1,4 @@
-use crate::dao::entity::Stanza;
+use crate::entities::Stanza;
 use crate::dto::DTO;
 use serde::{Deserialize, Serialize};
 

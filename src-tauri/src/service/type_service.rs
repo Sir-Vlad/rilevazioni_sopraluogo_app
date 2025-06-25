@@ -1,9 +1,8 @@
 use crate::app_traits::{GetAll, Insert};
-use crate::dao::crud_operations::{GetAll as GetAllNew, Insert as InsertNew};
 use crate::dao::{
     ClimatizzazioneDAO, IlluminazioneDAO, MaterialeInfissoDAO, TipoInfissoDAO, VetroInfissoDAO,
 };
-use crate::database::Database;
+use crate::db::Database;
 use crate::dto::{
     ClimatizzazioneDTO, IlluminazioneDTO, MaterialeInfissoDTO, TipoDTO, TipoInfissiDTO, VetroInfissoDTO,
     DTO,
@@ -210,7 +209,7 @@ impl RetrieveManyService<TipoInfissiDTO> for TipoInfissoService {
 
 #[cfg(test)]
 mod test {
-    use crate::database::Database;
+    use crate::db::Database;
     use crate::dto::TipoDTO;
     use crate::service::{TypeDTO, TypeService, TypeServiceImpl};
     use tauri::test::MockRuntime;

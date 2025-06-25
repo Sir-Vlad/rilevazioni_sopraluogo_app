@@ -95,10 +95,12 @@ impl FromRow for DatiStanza {
 impl EntityTrait for DatiStanza {
     type PrimaryKey = u64;
 
+    #[inline]
     fn table_name() -> String {
         "V_DATI_STANZE".to_string()
     }
 
+    #[inline]
     fn sql_create_table() -> String {
         format!(
             "CREATE VIEW IF NOT EXISTS {} AS
@@ -133,7 +135,7 @@ impl ToRetrieveAll for DatiStanza {}
 pub struct MatMinEffStanza;
 
 impl FromRow for MatMinEffStanza {
-    fn from_row(row: &Row) -> Result<Self, Error>
+    fn from_row(_row: &Row) -> Result<Self, Error>
     where
         Self: Sized,
     {
@@ -144,10 +146,12 @@ impl FromRow for MatMinEffStanza {
 impl EntityTrait for MatMinEffStanza {
     type PrimaryKey = u64;
 
+    #[inline]
     fn table_name() -> String {
         "V_MAT_MIN_EFF_STANZA".to_string()
     }
 
+    #[inline]
     fn sql_create_table() -> String {
         format!(
             "CREATE VIEW IF NOT EXISTS {} AS
@@ -171,7 +175,7 @@ impl EntityTrait for MatMinEffStanza {
 pub struct VetMinEffStanza;
 
 impl FromRow for VetMinEffStanza {
-    fn from_row(row: &Row) -> Result<Self, Error>
+    fn from_row(_row: &Row) -> Result<Self, Error>
     where
         Self: Sized,
     {
@@ -182,10 +186,12 @@ impl FromRow for VetMinEffStanza {
 impl EntityTrait for VetMinEffStanza {
     type PrimaryKey = u64;
 
+    #[inline]
     fn table_name() -> String {
         "V_VET_MIN_EFF_STANZA".to_string()
     }
 
+    #[inline]
     fn sql_create_table() -> String {
         format!(
             "CREATE VIEW IF NOT EXISTS {} AS
@@ -209,7 +215,7 @@ impl EntityTrait for VetMinEffStanza {
 pub struct MqInfissi;
 
 impl FromRow for MqInfissi {
-    fn from_row(row: &Row) -> Result<Self, Error>
+    fn from_row(_row: &Row) -> Result<Self, Error>
     where
         Self: Sized,
     {
@@ -220,10 +226,12 @@ impl FromRow for MqInfissi {
 impl EntityTrait for MqInfissi {
     type PrimaryKey = u64;
 
+    #[inline]
     fn table_name() -> String {
         "V_MQ_INFISSI".to_string()
     }
 
+    #[inline]
     fn sql_create_table() -> String {
         format!(
             "CREATE VIEW IF NOT EXISTS {} AS

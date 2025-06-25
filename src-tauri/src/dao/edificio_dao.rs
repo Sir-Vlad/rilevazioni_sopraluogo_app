@@ -1,5 +1,5 @@
 use crate::app_traits::{CreateTable, DaoTrait, GetAll, Insert, Update};
-use crate::dao::entity::Edificio;
+use crate::entities::Edificio;
 use crate::utils::AppError;
 
 pub struct EdificioDAO;

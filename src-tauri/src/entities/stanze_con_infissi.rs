@@ -49,21 +49,23 @@ impl StanzaConInfissi {
 }
 
 impl FromRow for StanzaConInfissi {
-    fn from_row(row: &Row) -> Result<Self, Error>
+    fn from_row(_row: &Row) -> Result<Self, Error>
     where
         Self: Sized,
     {
-        todo!()
+        panic!("Should not be used");
     }
 }
 
 impl EntityTrait for StanzaConInfissi {
     type PrimaryKey = (u64, String);
 
+    #[inline]
     fn table_name() -> String {
         "STANZA_CON_INFISSI".to_string()
     }
 
+    #[inline]
     fn sql_create_table() -> String {
         format!(
             "CREATE TABLE IF NOT EXISTS {}
@@ -80,6 +82,7 @@ impl EntityTrait for StanzaConInfissi {
     }
 }
 impl ToRetrieve for StanzaConInfissi {
+    #[inline]
     fn to_retrieve() -> String {
         format!(
             "SELECT * FROM {} WHERE ID_STANZA = ? AND ID_EDIFICIO = ?;",
@@ -89,6 +92,7 @@ impl ToRetrieve for StanzaConInfissi {
 }
 impl ToRetrieveAll for StanzaConInfissi {}
 impl ToInsert for StanzaConInfissi {
+    #[inline]
     fn to_insert() -> String {
         format!(
             "INSERT INTO {}(ID_STANZA, ID_INFISSO, ID_EDIFICIO, NUM_INFISSI) VALUES (?,?,?,?)",
@@ -101,6 +105,7 @@ impl ToInsert for StanzaConInfissi {
     }
 }
 impl ToUpdate for StanzaConInfissi {
+    #[inline]
     fn to_update() -> String {
         format!(
             "UPDATE {} SET NUM_INFISSI = ? WHERE ID_INFISSO = ? AND ID_STANZA = ? AND ID_EDIFICIO = ?;",

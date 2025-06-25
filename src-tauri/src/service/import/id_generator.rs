@@ -1,4 +1,4 @@
-use crate::dao::entity::Stanza;
+use crate::entities::Stanza;
 use crate::utils::AppError;
 use std::collections::HashMap;
 use std::fmt::{Display, Formatter};

@@ -1,11 +1,6 @@
 use crate::app_traits::{CreateTable, DaoTrait, GetAll, Insert, Update};
-use crate::dao::utils::DAO;
-use crate::database::WhereBuilder;
+use crate::entities::Fotovoltaico;
 use crate::utils::AppError;
-use crate::{
-    dao::entity::Fotovoltaico,
-    database::{DatabaseConnection, SqlQueryBuilder},
-};
 
 pub struct FotovoltaicoDAO;
 
@@ -26,7 +21,7 @@ impl Update for FotovoltaicoDAO {}
 mod test {
     use super::super::*;
     use crate::app_traits::{CreateTable, Insert, Update};
-    use crate::dao::entity::{Edificio, Fotovoltaico};
+    use crate::entities::{Edificio, Fotovoltaico};
     use once_cell::sync::Lazy;
     use rusqlite::Connection;
     use std::sync::Mutex;
