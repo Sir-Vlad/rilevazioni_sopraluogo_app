@@ -1,10 +1,14 @@
 use crate::app_traits::{Insert, SqlExecutor};
-use crate::dao::create_tables;
 use crate::dao::TipoInfissoDAO;
-use crate::entities::TipoInfisso;
+use crate::dao::{
+    create_tables, ClimatizzazioneDAO, IlluminazioneDAO, MaterialeInfissoDAO, VetroInfissoDAO,
+};
+use crate::entities::{
+    Climatizzazione, Illuminazione, MaterialeInfisso, TipoInfisso, VetroInfisso,
+};
 use dirs_next::document_dir;
 use log::{error, info, warn};
-use rusqlite::{params, Transaction};
+use rusqlite::Transaction;
 use serde::Deserialize;
 use std::collections::HashMap;
 use std::fs;
@@ -14,7 +18,7 @@ use tauri::{AppHandle, Manager};
 
 pub const NAME_DIR_DATABASE: &str = "Dati_Sopralluogo";
 
-pub fn get_db_path(db_name: String) -> Result<String, String> {
+pub fn create_or_get_db_path(db_name: String) -> Result<String, String> {
     if let Some(mut path) = document_dir() {
         // creo la cartella per salvare i db
         path.push(NAME_DIR_DATABASE);
@@ -47,14 +51,36 @@ pub fn init_database(app_handle: AppHandle, tx: &Transaction) -> Result<(), Stri
     for (table_name, data) in type_data {
         match table_name.as_str() {
             "materiale_infisso" => {
-                insert_values_into_table(tx, table_name.as_str(), "MATERIALE", data)?
+                for data in data {
+                    MaterialeInfissoDAO::insert(
+                        tx,
+                        MaterialeInfisso::new(data.value, data.efficienza_energetica as u8),
+                    )?;
+                }
             }
-            "vetro_infisso" => insert_values_into_table(tx, table_name.as_str(), "VETRO", data)?,
+            "vetro_infisso" => {
+                for data in data {
+                    VetroInfissoDAO::insert(
+                        tx,
+                        VetroInfisso::new(data.value, data.efficienza_energetica as u8),
+                    )?;
+                }
+            }
             "climatizzazione" => {
-                insert_values_into_table(tx, table_name.as_str(), "CLIMATIZZAZIONE", data)?
+                for data in data {
+                    ClimatizzazioneDAO::insert(
+                        tx,
+                        Climatizzazione::new(data.value, data.efficienza_energetica as u8),
+                    )?;
+                }
             }
             "illuminazione" => {
-                insert_values_into_table(tx, table_name.as_str(), "LAMPADINA", data)?
+                for data in data {
+                    IlluminazioneDAO::insert(
+                        tx,
+                        Illuminazione::new(data.value, data.efficienza_energetica as u8),
+                    )?;
+                }
             }
             _ => warn!("Tabella {} non presente", table_name),
         }
@@ -96,28 +122,4 @@ fn retrieve_type_to_file(app_handle: AppHandle, file_name: &str) -> Result<JsonT
     let data: JsonTypeMap = serde_json::from_str(&file_content)
         .map_err(|e| format!("Errore nella deserializzazione di {}: {}", file_name, e))?;
     Ok(data)
-}
-
-fn insert_values_into_table<C: SqlExecutor>(
-    conn: &C,
-    table_name: &str,
-    column_name: &str,
-    values: Vec<TypeRecord>,
-) -> Result<(), String> {
-    let query = format!(
-        "INSERT OR IGNORE INTO {}({}, EFFICIENZA_ENERGETICA) VALUES (?1, ?2)",
-        table_name, column_name
-    );
-    let mut stmt = conn
-        .prepare(&query)
-        .map_err(|_e| "Errore nella preparazione della query per inserire i dati nel db")?;
-    for value in values {
-        stmt.execute(params![
-            value.value.to_ascii_uppercase(),
-            value.efficienza_energetica
-        ])
-        .map_err(|_e| "Errore nell'inserimento dei dati nel db")?;
-    }
-    info!("Tabella {} popolata con successo", table_name);
-    Ok(())
 }

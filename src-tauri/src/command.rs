@@ -1,15 +1,17 @@
 pub mod command_tauri {
     use crate::dto::{
-        AnnotazioneDTO, AnnotazioneEdificioDTO, AnnotazioneInfissoDTO, AnnotazioneStanzaDTO,
-        FotovoltaicoDTO, TipoDTO, UtenzaDTO,
+        AnnotazioneDTO, AnnotazioneEdificioDTO, AnnotazioneInfissoDTO, AnnotazioneStanzaDTO, FotovoltaicoDTO,
+        TipoDTO, UtenzaDTO, DTO,
     };
     use crate::service::{
         import::ImportData, import::ImportDatiStanzaToExcel, AnnotazioneService, CreateService, FotovoltaicoService,
         RetrieveManyService, UpdateService, UtenzeService,
     };
-    use crate::utils::AppError;
+    use crate::utils::{database_change_event, AppError};
     use crate::{
-        db::{get_db_path, init_database, Database, DatabaseEventPayload, NAME_DIR_DATABASE},
+        db::{
+            create_or_get_db_path, init_database, Database, DatabaseEventPayload, NAME_DIR_DATABASE,
+        },
         dto::{EdificioDTO, InfissoDTO, StanzaDTO},
         service::{
             EdificioService, ExportData, ExportDatiStanzaToExcel, InfissoService, StanzaService,
@@ -18,7 +20,6 @@ pub mod command_tauri {
     };
     use dirs_next::document_dir;
     use log::info;
-
     use serde_json::Value;
     use std::{collections::HashMap, ffi::OsStr, fs};
     use tauri::{AppHandle, Emitter, State};
@@ -54,27 +55,17 @@ pub mod command_tauri {
     /******************************* COMMAND PER GESTIRE IL DATABASE **********************************/
     /**************************************************************************************************/
 
-    #[tauri::command]
     pub fn set_database(
         app_handle: AppHandle,
         db: State<'_, Database>,
         db_name: String,
     ) -> ResultCommand<String> {
-        let db_path = get_db_path(db_name).map_err(AppError::GenericError)?;
+        let db_path = create_or_get_db_path(db_name).map_err(AppError::GenericError)?;
         db.switch_database(&db_path)?;
-
-        // {
-        //     let mut conn = db.get_conn()?;
-        //     let mut path_to_database = db.get_path_to_database();
-        //     if let Some(existing_conn) = conn.take() {
-        //         drop(existing_conn);
-        //     }
-        //     *conn = Some(Connection::open(&db_path).map_err(|e| e.to_string())?);
-        //     *path_to_database = Some(db_path.clone());
-        //
-        //     set_pragma(conn.as_ref().unwrap()).map_err(|e| e.to_string())?;
-        // } // unlock mutex
-        db.with_transaction(|tx| init_database(app_handle, tx).map_err(AppError::GenericError))?;
+        db.with_transaction(|tx| {
+            init_database(app_handle, tx)
+                .map_err(|e| AppError::GenericError(format!("Init failed: {e}")))
+        })?;
         Ok(db_path)
     }
 
@@ -85,44 +76,17 @@ pub mod command_tauri {
         db_name: String,
     ) -> ResultCommand<()> {
         info!("Switching db to {}", db_name);
-        let db_path = get_db_path(db_name).map_err(AppError::GenericError)?;
+        let db_path = create_or_get_db_path(db_name).map_err(AppError::GenericError)?;
         db.switch_database(&db_path)?;
-        // let mut conn = db.get_conn()?;
-        // let mut path_to_database = db.get_path_to_database();
-        // if let Some(existing_conn) = conn.take() {
-        //     drop(existing_conn);
-        // }
-        // *conn = Some(Connection::open(&db_path).map_err(|e| e.to_string())?);
-        // *path_to_database = Some(db_path.clone());
-        // set_pragma(conn.as_ref().unwrap()).map_err(|e| e.to_string())?;
 
-        app_handle
-            .emit(
-                "db-changed",
-                DatabaseEventPayload {
-                    type_event: "database_switched",
-                    path: db_path.clone(),
-                },
-            )
-            .map_err(|e| e.to_string())?;
-
+        database_change_event(app_handle, db_path).map_err(|e| e.to_string())?;
         info!("Database switched");
         Ok(())
     }
 
     #[tauri::command]
     pub fn close_database(db: State<'_, Database>) -> ResultCommand<()> {
-        let mut conn = db.get_conn()?;
-        if let Some(conn) = conn.take() {
-            drop(conn);
-        }
-        *conn = None;
-        let mut path_database = db.get_path_to_database()?;
-        if let Some(path) = path_database.take() {
-            drop(path);
-        }
-        *path_database = None;
-        Ok(())
+        db.close().map_err(|e| e.to_string())
     }
 
     /**************************************************************************************************/
@@ -144,22 +108,13 @@ pub mod command_tauri {
             .map_err(|e| e.to_string())?
             .to_string()
             .replace("\"", "");
-        let path_db = set_database(app_handle.clone(), db.clone(), name_db)?;
+        let db_path = set_database(app_handle.clone(), db.clone(), name_db)?;
 
         ImportDatiStanzaToExcel::save_to_database(db, df)?;
 
         // emit event del cambio di db
-        app_handle
-            .emit(
-                "db-changed",
-                DatabaseEventPayload {
-                    type_event: "database_switched",
-                    path: path_db.clone(),
-                },
-            )
-            .map_err(|e| e.to_string())?;
-
-        Ok(path_db)
+        database_change_event(app_handle, db_path.clone()).map_err(|e| e.to_string())?;
+        Ok(db_path)
     }
 
     /**************************************************************************************************/
@@ -289,39 +244,18 @@ pub mod command_tauri {
         db: State<'_, Database>,
         table: String,
     ) -> ResultCommand<Vec<AnnotazioneDTO>> {
-        match table.as_str() {
-            "edificio" => Ok(
-                <AnnotazioneService as RetrieveManyService<AnnotazioneEdificioDTO>>::retrieve_many(
-                    db,
-                )
-                .map_err(|e| e.to_string())?
-                .into_iter()
-                .map(AnnotazioneDTO::from)
-                .collect::<Vec<AnnotazioneDTO>>(),
-            ),
-            "stanza" => Ok(
-                <AnnotazioneService as RetrieveManyService<AnnotazioneStanzaDTO>>::retrieve_many(
-                    db,
-                )
-                .map_err(|e| e.to_string())?
-                .into_iter()
-                .map(AnnotazioneDTO::from)
-                .collect::<Vec<AnnotazioneDTO>>(),
-            ),
-            "infisso" => Ok(
-                <AnnotazioneService as RetrieveManyService<AnnotazioneInfissoDTO>>::retrieve_many(
-                    db,
-                )
-                .map_err(|e| e.to_string())?
-                .into_iter()
-                .map(AnnotazioneDTO::from)
-                .collect::<Vec<AnnotazioneDTO>>(),
-            ),
-            _ => Err(format!(
-                "Tabella {table} non ha le annotazioni",
-                table = table
-            )),
-        }
+        let result = match table.as_str() {
+            "edificio" => handle_retrieve_many::<AnnotazioneEdificioDTO>(db)?,
+            "stanza" => handle_retrieve_many::<AnnotazioneStanzaDTO>(db)?,
+            "infisso" => handle_retrieve_many::<AnnotazioneInfissoDTO>(db)?,
+            _ => {
+                return Err(format!(
+                    "Tabella {table} non ha le annotazioni",
+                    table = table
+                ));
+            }
+        };
+        Ok(result)
     }
 
     #[tauri::command]
@@ -329,35 +263,43 @@ pub mod command_tauri {
         db: State<'_, Database>,
         annotazione: AnnotazioneDTO,
     ) -> ResultCommand<AnnotazioneDTO> {
-        match annotazione.ref_table.as_str() {
-            "edificio" => Ok(
-                <AnnotazioneService as CreateService<AnnotazioneEdificioDTO>>::create(
-                    db,
-                    annotazione.into(),
-                )
-                .map_err(|e| e.to_string())?
-                .into(),
-            ),
-            "stanza" => Ok(
-                <AnnotazioneService as CreateService<AnnotazioneStanzaDTO>>::create(
-                    db,
-                    annotazione.into(),
-                )
-                .map_err(|e| e.to_string())?
-                .into(),
-            ),
-            "infisso" => Ok(
-                <AnnotazioneService as CreateService<AnnotazioneInfissoDTO>>::create(
-                    db,
-                    annotazione.into(),
-                )
-                .map_err(|e| e.to_string())?
-                .into(),
-            ),
-            _ => Err(format!(
-                "Tabella {table} non ha le annotazioni",
-                table = annotazione.ref_table
-            )),
-        }
+        let result = match annotazione.ref_table.as_str() {
+            "edificio" => handle_create::<AnnotazioneEdificioDTO>(db, annotazione)?,
+            "stanza" => handle_create::<AnnotazioneStanzaDTO>(db, annotazione)?,
+            "infisso" => handle_create::<AnnotazioneInfissoDTO>(db, annotazione)?,
+            _ => {
+                return Err(format!(
+                    "Tabella {table} non ha le annotazioni",
+                    table = annotazione.ref_table
+                ));
+            }
+        };
+        Ok(result)
+    }
+
+    fn handle_retrieve_many<T>(db: State<'_, Database>) -> Result<Vec<AnnotazioneDTO>, AppError>
+    where
+        AnnotazioneService: RetrieveManyService<T>,
+        T: Into<AnnotazioneDTO> + DTO,
+        AnnotazioneDTO: From<T>,
+    {
+        Ok(
+            <AnnotazioneService as RetrieveManyService<T>>::retrieve_many(db)?
+                .into_iter()
+                .map(AnnotazioneDTO::from)
+                .collect::<Vec<AnnotazioneDTO>>(),
+        )
+    }
+
+    fn handle_create<T>(
+        db: State<'_, Database>,
+        annotazione: AnnotazioneDTO,
+    ) -> Result<AnnotazioneDTO, AppError>
+    where
+        AnnotazioneService: CreateService<T>,
+        T: From<AnnotazioneDTO> + DTO,
+        AnnotazioneDTO: From<T>,
+    {
+        Ok(<AnnotazioneService as CreateService<T>>::create(db, annotazione.into())?.into())
     }
 }

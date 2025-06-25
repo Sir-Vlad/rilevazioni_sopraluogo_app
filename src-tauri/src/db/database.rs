@@ -22,7 +22,6 @@ impl Default for Database {
 
 impl Database {
     pub fn new(url: String) -> Result<Self, AppError> {
-        let url = format!("sqlite:{}", url);
         let connection = Connection::open(&url).map_err(AppError::DatabaseError)?;
         let instance = Self {
             conn: Mutex::new(Some(connection)),
@@ -79,48 +78,56 @@ impl Database {
     }
 
     pub fn switch_database(&self, url: &str) -> Result<(), AppError> {
-        let url = format!("sqlite:{}", url);
-        let new_connection = Connection::open(&url)?;
+        let new_connection = Connection::open(url)?;
+        {
+            let mut conn_guard = self.get_conn()?;
+            let mut path_guard = self.get_path_to_database()?;
 
+            if let Some(conn) = conn_guard.take() {
+                if let Err((returned_conn, e)) = conn.close() {
+                    // If closing the connection fails, the error is returned and
+                    // restore the previous connection
+                    *conn_guard = Some(returned_conn);
+                    return Err(AppError::DatabaseError(e));
+                }
+            }
+
+            *conn_guard = Some(new_connection);
+            *path_guard = Some(url.to_string());
+        } // unlock conn_guard
+        self.set_pragmas()?;
+        Ok(())
+    }
+
+    pub fn close(&self) -> Result<(), AppError> {
         let mut conn_guard = self.get_conn()?;
         let mut path_guard = self.get_path_to_database()?;
 
         if let Some(conn) = conn_guard.take() {
-            if let Err((returned_conn, e)) = conn.close() {
-                // If closing the connection fails, the error is returned and
-                // restore the previous connection
-                *conn_guard = Some(returned_conn);
-                return Err(AppError::DatabaseError(e));
+            if let Err((_, e)) = conn.close() {
+                eprintln!("Errore durante la chiusura del db nel destructor: {}", e);
+            } else {
+                *path_guard = None;
             }
+            info!("Database chiuso");
         }
-
-        *conn_guard = Some(new_connection);
-        *path_guard = Some(url);
-
-        self.set_pragmas()?;
-
         Ok(())
     }
 
     fn set_pragmas(&self) -> Result<(), AppError> {
-        self.with_transaction(|tx| {
-            tx.pragma_update(None, "foreign_keys", "ON")?;
-            tx.pragma_update(None, "journal_mode", "WAL")?;
+        if let Some(conn) = self.get_conn()?.as_ref() {
+            conn.pragma_update(None, "foreign_keys", "ON")?;
+            conn.pragma_update(None, "journal_mode", "WAL")?;
             Ok(())
-        })
+        } else {
+            Err(AppError::GenericError("Pragma update failed".to_string()))
+        }
     }
 }
 
 impl Drop for Database {
     fn drop(&mut self) {
-        if let Ok(mut conn_guard) = self.conn.lock() {
-            if let Some(conn) = conn_guard.take() {
-                if let Err((_, e)) = conn.close() {
-                    eprintln!("Errore durante la chiusura del db nel destructor: {}", e);
-                }
-                info!("Database chiuso");
-            }
-        }
+        Self::close(self);
     }
 }
 

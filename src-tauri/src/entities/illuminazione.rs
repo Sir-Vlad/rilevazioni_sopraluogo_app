@@ -9,6 +9,16 @@ pub struct Illuminazione {
     pub(crate) efficienza_energetica: u8,
 }
 
+impl Illuminazione {
+    pub(crate) fn new(lampadina: String, efficienza_energetica: u8) -> Illuminazione {
+        Self {
+            _id: None,
+            lampadina,
+            efficienza_energetica,
+        }
+    }
+}
+
 impl From<TipoDTO> for Illuminazione {
     fn from(value: TipoDTO) -> Self {
         Self {

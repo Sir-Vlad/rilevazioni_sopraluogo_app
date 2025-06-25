@@ -9,6 +9,16 @@ pub struct Climatizzazione {
     pub(crate) efficienza_energetica: u8,
 }
 
+impl Climatizzazione {
+    pub(crate) fn new(climatizzazione: String, efficienza_energetica: u8) -> Climatizzazione {
+        Self {
+            _id: None,
+            climatizzazione,
+            efficienza_energetica,
+        }
+    }
+}
+
 impl From<TipoDTO> for Climatizzazione {
     fn from(value: TipoDTO) -> Self {
         Self {

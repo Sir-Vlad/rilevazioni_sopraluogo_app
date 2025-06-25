@@ -38,7 +38,6 @@ pub fn run() {
             export_data_to_excel,
             init_to_excel,
             // db
-            set_database,
             switch_database,
             close_database,
             get_all_name_database,

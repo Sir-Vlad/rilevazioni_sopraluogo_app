@@ -9,11 +9,10 @@ pub struct VetroInfisso {
 }
 
 impl VetroInfisso {
-    #[cfg(test)]
-    pub(crate) fn new(vetro: &str, efficienza_energetica: u8) -> Self {
+    pub(crate) fn new(vetro: String, efficienza_energetica: u8) -> Self {
         Self {
             _id: None,
-            vetro: vetro.to_string(),
+            vetro,
             efficienza_energetica,
         }
     }
