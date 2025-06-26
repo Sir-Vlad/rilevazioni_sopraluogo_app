@@ -1,5 +1,5 @@
+use crate::app_traits::{DtoTrait, FromEntity};
 use crate::entities::VetroInfisso;
-use crate::dto::DTO;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Deserialize, Serialize)]
@@ -8,13 +8,15 @@ pub struct VetroInfissoDTO {
     pub efficienza_energetica: u8,
 }
 
-impl DTO for VetroInfissoDTO {}
+impl DtoTrait for VetroInfissoDTO {
+    type EntityLinked = VetroInfisso;
+}
 
-impl From<VetroInfisso> for VetroInfissoDTO {
-    fn from(value: VetroInfisso) -> Self {
+impl FromEntity for VetroInfissoDTO {
+    fn from_entity(entity: <Self as DtoTrait>::EntityLinked) -> Self {
         Self {
-            vetro: value.vetro,
-            efficienza_energetica: value.efficienza_energetica,
+            vetro: entity.vetro,
+            efficienza_energetica: entity.efficienza_energetica,
         }
     }
 }

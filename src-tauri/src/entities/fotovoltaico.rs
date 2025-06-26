@@ -1,4 +1,6 @@
-use crate::app_traits::{EntityTrait, FromRow, SqlParams, ToInsert, ToRetrieveAll, ToUpdate};
+use crate::app_traits::{
+    EntityTrait, FromDto, FromRow, SqlParams, ToInsert, ToRetrieveAll, ToUpdate,
+};
 use crate::dto::FotovoltaicoDTO;
 use crate::utils::ToList;
 use rusqlite::{Error, Row};
@@ -34,13 +36,15 @@ impl Fotovoltaico {
     }
 }
 
-impl From<FotovoltaicoDTO> for Fotovoltaico {
-    fn from(value: FotovoltaicoDTO) -> Self {
+impl FromDto for Fotovoltaico {
+    type Dto = FotovoltaicoDTO;
+
+    fn from_dto(dto: Self::Dto) -> Self {
         Self {
-            id: value.id.unwrap_or(0),
-            id_edificio: value.id_edificio,
-            potenza: value.potenza,
-            proprietario: value.proprietario,
+            id: dto.id.unwrap_or(0),
+            id_edificio: dto.id_edificio,
+            potenza: dto.potenza,
+            proprietario: dto.proprietario,
         }
     }
 }

@@ -1,5 +1,5 @@
+use crate::app_traits::{DtoTrait, FromEntity};
 use crate::entities::Climatizzazione;
-use crate::dto::DTO;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Deserialize, Serialize)]
@@ -8,13 +8,15 @@ pub struct ClimatizzazioneDTO {
     pub efficienza_energetica: u8,
 }
 
-impl DTO for ClimatizzazioneDTO {}
+impl DtoTrait for ClimatizzazioneDTO {
+    type EntityLinked = Climatizzazione;
+}
 
-impl From<Climatizzazione> for ClimatizzazioneDTO {
-    fn from(value: Climatizzazione) -> Self {
+impl FromEntity for ClimatizzazioneDTO {
+    fn from_entity(entity: <Self as DtoTrait>::EntityLinked) -> Self {
         Self {
-            climatizzazione: value.climatizzazione,
-            efficienza_energetica: value.efficienza_energetica,
+            climatizzazione: entity.climatizzazione,
+            efficienza_energetica: entity.efficienza_energetica,
         }
     }
 }

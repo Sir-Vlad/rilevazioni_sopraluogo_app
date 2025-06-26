@@ -1,6 +1,6 @@
-use crate::dto::DTO;
-use serde::{Deserialize, Serialize};
+use crate::app_traits::{DtoTrait, FromEntity};
 use crate::entities::MaterialeInfisso;
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct MaterialeInfissoDTO {
@@ -8,13 +8,15 @@ pub struct MaterialeInfissoDTO {
     pub efficienza_energetica: u8,
 }
 
-impl DTO for MaterialeInfissoDTO {}
+impl DtoTrait for MaterialeInfissoDTO {
+    type EntityLinked = MaterialeInfisso;
+}
 
-impl From<MaterialeInfisso> for MaterialeInfissoDTO {
-    fn from(materiali_infisso: MaterialeInfisso) -> Self {
+impl FromEntity for MaterialeInfissoDTO {
+    fn from_entity(entity: <Self as DtoTrait>::EntityLinked) -> Self {
         Self {
-            materiale: materiali_infisso.materiale,
-            efficienza_energetica: materiali_infisso.efficienza_energetica,
+            materiale: entity.materiale,
+            efficienza_energetica: entity.efficienza_energetica,
         }
     }
 }

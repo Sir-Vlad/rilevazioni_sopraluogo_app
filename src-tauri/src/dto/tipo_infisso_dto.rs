@@ -1,4 +1,5 @@
-use crate::dto::DTO;
+use crate::app_traits::DtoTrait;
+use crate::entities::TipoInfisso;
 use serde::Serialize;
 
 #[derive(Serialize)]
@@ -6,4 +7,6 @@ pub struct TipoInfissiDTO {
     pub(crate) nome: String,
 }
 
-impl DTO for TipoInfissiDTO {}
+impl DtoTrait for TipoInfissiDTO {
+    type EntityLinked = TipoInfisso;
+}

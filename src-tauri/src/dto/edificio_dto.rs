@@ -1,5 +1,5 @@
+use crate::app_traits::{DtoTrait, FromEntity};
 use crate::entities::Edificio;
-use crate::dto::DTO;
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -14,19 +14,21 @@ pub struct EdificioDTO {
     pub cappotto: Option<bool>,
 }
 
-impl DTO for EdificioDTO {}
+impl DtoTrait for EdificioDTO {
+    type EntityLinked = Edificio;
+}
 
-impl From<&Edificio> for EdificioDTO {
-    fn from(value: &Edificio) -> Self {
-        EdificioDTO {
-            chiave: value.chiave.to_string(),
-            fascicolo: value.fascicolo.to_string(),
-            indirizzo: value.indirizzo.to_string(),
-            anno_costruzione: value.anno_costruzione.clone(),
-            anno_riqualificazione: value.anno_riqualificazione.clone(),
-            note_riqualificazione: value.note_riqualificazione.clone(),
-            isolamento_tetto: value.isolamento_tetto,
-            cappotto: value.cappotto,
+impl FromEntity for EdificioDTO {
+    fn from_entity(entity: <Self as DtoTrait>::EntityLinked) -> Self {
+        Self {
+            chiave: entity.chiave.to_string(),
+            fascicolo: entity.fascicolo.to_string(),
+            indirizzo: entity.indirizzo.to_string(),
+            anno_costruzione: entity.anno_costruzione.clone(),
+            anno_riqualificazione: entity.anno_riqualificazione.clone(),
+            note_riqualificazione: entity.note_riqualificazione.clone(),
+            isolamento_tetto: entity.isolamento_tetto,
+            cappotto: entity.cappotto,
         }
     }
 }

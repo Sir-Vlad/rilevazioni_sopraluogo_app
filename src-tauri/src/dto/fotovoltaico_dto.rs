@@ -1,5 +1,5 @@
+use crate::app_traits::{DtoTrait, FromEntity};
 use crate::entities::Fotovoltaico;
-use crate::dto::DTO;
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Clone)]
@@ -10,15 +10,17 @@ pub struct FotovoltaicoDTO {
     pub(crate) proprietario: String,
 }
 
-impl DTO for FotovoltaicoDTO {}
+impl DtoTrait for FotovoltaicoDTO {
+    type EntityLinked = Fotovoltaico;
+}
 
-impl From<&Fotovoltaico> for FotovoltaicoDTO {
-    fn from(value: &Fotovoltaico) -> Self {
+impl FromEntity for FotovoltaicoDTO {
+    fn from_entity(entity: <Self as DtoTrait>::EntityLinked) -> Self {
         Self {
-            id: Some(value.id),
-            id_edificio: value.id_edificio.clone(),
-            potenza: value.potenza,
-            proprietario: value.proprietario.clone(),
+            id: Some(entity.id),
+            id_edificio: entity.id_edificio.clone(),
+            potenza: entity.potenza,
+            proprietario: entity.proprietario.clone(),
         }
     }
 }

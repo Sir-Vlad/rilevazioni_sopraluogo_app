@@ -1,5 +1,5 @@
+use crate::app_traits::{DtoTrait, FromEntity};
 use crate::entities::{AnnotazioneEdificio, AnnotazioneInfisso, AnnotazioneStanza};
-use crate::dto::DTO;
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize)]
@@ -19,8 +19,6 @@ pub struct AnnotazioneDTO {
     /// contenuto dell'annotazione
     content: String,
 }
-
-impl DTO for AnnotazioneDTO {}
 
 impl From<AnnotazioneEdificioDTO> for AnnotazioneDTO {
     fn from(dto: AnnotazioneEdificioDTO) -> Self {
@@ -62,14 +60,16 @@ pub struct AnnotazioneEdificioDTO {
     pub(crate) content: String,
 }
 
-impl DTO for AnnotazioneEdificioDTO {}
+impl DtoTrait for AnnotazioneEdificioDTO {
+    type EntityLinked = AnnotazioneEdificio;
+}
 
-impl From<AnnotazioneEdificio> for AnnotazioneEdificioDTO {
-    fn from(dto: AnnotazioneEdificio) -> Self {
+impl FromEntity for AnnotazioneEdificioDTO {
+    fn from_entity(entity: <Self as DtoTrait>::EntityLinked) -> Self {
         Self {
-            id: dto.id,
-            id_edificio: dto.id_edificio,
-            content: dto.content,
+            id: entity.id,
+            id_edificio: entity.id_edificio,
+            content: entity.content,
         }
     }
 }
@@ -100,14 +100,16 @@ pub struct AnnotazioneStanzaDTO {
     pub(crate) content: String,
 }
 
-impl DTO for AnnotazioneStanzaDTO {}
+impl DtoTrait for AnnotazioneStanzaDTO {
+    type EntityLinked = AnnotazioneStanza;
+}
 
-impl From<AnnotazioneStanza> for AnnotazioneStanzaDTO {
-    fn from(dto: AnnotazioneStanza) -> Self {
+impl FromEntity for AnnotazioneStanzaDTO {
+    fn from_entity(entity: <Self as DtoTrait>::EntityLinked) -> Self {
         Self {
-            id: dto.id,
-            id_stanza: dto.id_stanza,
-            content: dto.content,
+            id: entity.id,
+            id_stanza: entity.id_stanza,
+            content: entity.content,
         }
     }
 }
@@ -139,15 +141,17 @@ pub struct AnnotazioneInfissoDTO {
     pub(crate) content: String,
 }
 
-impl DTO for AnnotazioneInfissoDTO {}
+impl DtoTrait for AnnotazioneInfissoDTO {
+    type EntityLinked = AnnotazioneInfisso;
+}
 
-impl From<AnnotazioneInfisso> for AnnotazioneInfissoDTO {
-    fn from(dto: AnnotazioneInfisso) -> Self {
+impl FromEntity for AnnotazioneInfissoDTO {
+    fn from_entity(entity: <Self as DtoTrait>::EntityLinked) -> Self {
         Self {
-            id: dto.id,
-            id_infisso: dto.id_infisso,
-            edificio: dto.edificio,
-            content: dto.content,
+            id: entity.id,
+            id_infisso: entity.id_infisso,
+            edificio: entity.edificio,
+            content: entity.content,
         }
     }
 }

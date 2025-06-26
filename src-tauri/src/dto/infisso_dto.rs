@@ -1,5 +1,5 @@
+use crate::app_traits::{DtoTrait, FromEntity};
 use crate::entities::Infisso;
-use crate::dto::DTO;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -13,18 +13,20 @@ pub struct InfissoDTO {
     pub vetro: String,
 }
 
-impl DTO for InfissoDTO {}
+impl DtoTrait for InfissoDTO {
+    type EntityLinked = Infisso;
+}
 
-impl From<&Infisso> for InfissoDTO {
-    fn from(infisso: &Infisso) -> Self {
-        InfissoDTO {
-            id: infisso.id.clone(),
-            id_edificio: infisso.edificio_id.clone(),
-            tipo: infisso.tipo.clone(),
-            altezza: infisso.altezza,
-            larghezza: infisso.larghezza,
-            materiale: infisso.materiale.clone(),
-            vetro: infisso.vetro.clone(),
+impl FromEntity for InfissoDTO {
+    fn from_entity(entity: <Self as DtoTrait>::EntityLinked) -> Self {
+        Self {
+            id: entity.id.clone(),
+            id_edificio: entity.edificio_id.clone(),
+            tipo: entity.tipo.clone(),
+            altezza: entity.altezza,
+            larghezza: entity.larghezza,
+            materiale: entity.materiale.clone(),
+            vetro: entity.vetro.clone(),
         }
     }
 }

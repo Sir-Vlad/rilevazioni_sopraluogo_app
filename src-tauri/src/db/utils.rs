@@ -1,4 +1,4 @@
-use crate::app_traits::{Insert, SqlExecutor};
+use crate::app_traits::Insert;
 use crate::dao::TipoInfissoDAO;
 use crate::dao::{
     create_tables, ClimatizzazioneDAO, IlluminazioneDAO, MaterialeInfissoDAO, VetroInfissoDAO,

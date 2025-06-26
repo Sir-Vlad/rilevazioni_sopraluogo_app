@@ -1,7 +1,12 @@
+use crate::app_traits::DtoTrait;
 use crate::entities::{Climatizzazione, Illuminazione};
-use crate::dto::DTO;
 use crate::service::TypeDTO;
 use serde::{Deserialize, Serialize};
+
+pub enum TipoEntity {
+    Climatizzazione(Climatizzazione),
+    Illuminazione(Illuminazione),
+}
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct TipoDTO {
@@ -10,7 +15,9 @@ pub struct TipoDTO {
     pub(crate) efficienza_energetica: u8,
 }
 
-impl DTO for TipoDTO {}
+impl DtoTrait for TipoDTO {
+    type EntityLinked = TipoEntity;
+}
 
 impl TipoDTO {
     #[cfg(test)]
@@ -39,6 +46,16 @@ impl From<Illuminazione> for TipoDTO {
             tipo: TypeDTO::Illuminazione,
             name: value.lampadina,
             efficienza_energetica: value.efficienza_energetica,
+        }
+    }
+}
+
+impl Into<Climatizzazione> for TipoDTO {
+    fn into(self) -> Climatizzazione {
+        Climatizzazione {
+            _id: None,
+            efficienza_energetica: self.efficienza_energetica,
+            climatizzazione: self.name,
         }
     }
 }

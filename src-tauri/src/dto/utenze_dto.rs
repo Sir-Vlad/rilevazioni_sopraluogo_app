@@ -1,6 +1,6 @@
-use serde::{Deserialize, Serialize};
+use crate::app_traits::{DtoTrait, FromEntity};
 use crate::entities::{TipoUtenza, Utenza};
-use crate::dto::DTO;
+use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Clone)]
 pub struct UtenzaDTO {
@@ -11,16 +11,18 @@ pub struct UtenzaDTO {
     pub(crate) indirizzo_contatore: Option<String>,
 }
 
-impl DTO for UtenzaDTO {}
+impl DtoTrait for UtenzaDTO {
+    type EntityLinked = Utenza;
+}
 
-impl From<&Utenza> for UtenzaDTO {
-    fn from(value: &Utenza) -> Self {
+impl FromEntity for UtenzaDTO {
+    fn from_entity(entity: <Self as DtoTrait>::EntityLinked) -> Self {
         Self {
-            id: Some(value.id),
-            id_edificio: value.id_edificio.clone(),
-            tipo: value.tipo.clone(),
-            cod_contatore: value.cod_contatore.clone(),
-            indirizzo_contatore: value.indirizzo_contatore.clone(),
+            id: Some(entity.id),
+            id_edificio: entity.id_edificio.clone(),
+            tipo: entity.tipo.clone(),
+            cod_contatore: entity.cod_contatore.clone(),
+            indirizzo_contatore: entity.indirizzo_contatore.clone(),
         }
     }
 }

@@ -1,9 +1,9 @@
-use crate::app_traits::{GetAll, Insert, Update};
+use crate::app_traits::{ConvertibleDto, FromEntity, GetAll, Insert, Update};
+use crate::app_traits::{CreateService, RetrieveManyService, UpdateService};
 use crate::dao::{StanzaConInfissiDao, StanzaDAO};
 use crate::db::Database;
 use crate::dto::StanzaDTO;
 use crate::entities::StanzaConInfissi;
-use crate::service::utils::{CreateService, RetrieveManyService, UpdateService};
 use crate::utils::AppError;
 use tauri::State;
 
@@ -14,7 +14,10 @@ impl RetrieveManyService<StanzaDTO> for StanzaService {
         let conn = db.get_conn()?;
         if let Some(conn) = conn.as_ref() {
             let stanze = StanzaDAO::get_all(conn)?;
-            let mut stanze_dto: Vec<StanzaDTO> = stanze.iter().map(StanzaDTO::from).collect();
+            let mut stanze_dto: Vec<StanzaDTO> = stanze
+                .iter()
+                .map(|e| StanzaDTO::from_entity(e.clone()))
+                .collect();
             let infissi = StanzaConInfissiDao::get_all(conn)?;
 
             for stanza in &mut stanze_dto {
@@ -38,8 +41,8 @@ impl CreateService<StanzaDTO> for StanzaService {
     fn create(db: State<'_, Database>, stanza: StanzaDTO) -> Result<StanzaDTO, AppError> {
         let conn = db.get_conn()?;
         if let Some(conn) = conn.as_ref() {
-            let result = StanzaDAO::insert(conn, stanza.clone().into())?;
-            Ok(StanzaDTO::from(result))
+            let result = StanzaDAO::insert(conn, stanza.into_entity())?;
+            Ok(StanzaDTO::from_entity(result))
         } else {
             Err(AppError::DatabaseNotInitialized)
         }
@@ -49,7 +52,7 @@ impl CreateService<StanzaDTO> for StanzaService {
 impl UpdateService<StanzaDTO> for StanzaService {
     fn update(db: State<'_, Database>, stanza: StanzaDTO) -> Result<StanzaDTO, AppError> {
         db.with_transaction(|tx| {
-            let stanza_aggiornata = StanzaDAO::update(tx, stanza.clone().into())?;
+            let stanza_aggiornata = StanzaDAO::update(tx, stanza.clone().into_entity())?;
             let stanza_dto = match &stanza.infissi {
                 Some(infissi) => {
                     let stanza_con_infissi = StanzaConInfissi::new_with_infissi_expanse(
@@ -60,11 +63,11 @@ impl UpdateService<StanzaDTO> for StanzaService {
 
                     let infissi_aggiornati = StanzaConInfissiDao::update(tx, stanza_con_infissi)?;
 
-                    let mut stanza_risultato = StanzaDTO::from(stanza_aggiornata);
+                    let mut stanza_risultato = StanzaDTO::from_entity(stanza_aggiornata);
                     stanza_risultato.infissi = Some(infissi_aggiornati.expanse_infissi());
                     stanza_risultato
                 }
-                None => StanzaDTO::from(stanza_aggiornata),
+                None => StanzaDTO::from_entity(stanza_aggiornata),
             };
             Ok(stanza_dto)
         })

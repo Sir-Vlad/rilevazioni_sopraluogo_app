@@ -1,8 +1,8 @@
-use crate::app_traits::{GetAll, Insert};
+use crate::app_traits::{ConvertibleDto, FromEntity, GetAll, Insert};
+use crate::app_traits::{CreateService, RetrieveManyService};
 use crate::dao::{AnnotazioneEdificioDAO, AnnotazioneInfissoDAO, AnnotazioneStanzaDAO};
 use crate::db::Database;
 use crate::dto::{AnnotazioneEdificioDTO, AnnotazioneInfissoDTO, AnnotazioneStanzaDTO};
-use crate::service::{CreateService, RetrieveManyService};
 use crate::utils::AppError;
 use tauri::State;
 
@@ -15,7 +15,7 @@ impl RetrieveManyService<AnnotazioneEdificioDTO> for AnnotazioneService {
             let result = AnnotazioneEdificioDAO::get_all(conn)?;
             Ok(result
                 .into_iter()
-                .map(AnnotazioneEdificioDTO::from)
+                .map(AnnotazioneEdificioDTO::from_entity)
                 .collect())
         } else {
             Err(AppError::DatabaseNotInitialized)
@@ -30,8 +30,8 @@ impl CreateService<AnnotazioneEdificioDTO> for AnnotazioneService {
     ) -> Result<AnnotazioneEdificioDTO, AppError> {
         let conn = db.get_conn()?;
         if let Some(conn) = conn.as_ref() {
-            let result = AnnotazioneEdificioDAO::insert(conn, item.clone().into())?;
-            Ok(AnnotazioneEdificioDTO::from(result))
+            let result = AnnotazioneEdificioDAO::insert(conn, item.into_entity())?;
+            Ok(AnnotazioneEdificioDTO::from_entity(result))
         } else {
             Err(AppError::DatabaseNotInitialized)
         }
@@ -43,7 +43,10 @@ impl RetrieveManyService<AnnotazioneStanzaDTO> for AnnotazioneService {
         let conn = db.get_conn()?;
         if let Some(conn) = conn.as_ref() {
             let result = AnnotazioneStanzaDAO::get_all(conn)?;
-            Ok(result.into_iter().map(AnnotazioneStanzaDTO::from).collect())
+            Ok(result
+                .into_iter()
+                .map(AnnotazioneStanzaDTO::from_entity)
+                .collect())
         } else {
             Err(AppError::DatabaseNotInitialized)
         }
@@ -57,8 +60,8 @@ impl CreateService<AnnotazioneStanzaDTO> for AnnotazioneService {
     ) -> Result<AnnotazioneStanzaDTO, AppError> {
         let conn = db.get_conn()?;
         if let Some(conn) = conn.as_ref() {
-            let result = AnnotazioneStanzaDAO::insert(conn, item.clone().into())?;
-            Ok(AnnotazioneStanzaDTO::from(result))
+            let result = AnnotazioneStanzaDAO::insert(conn, item.into_entity())?;
+            Ok(AnnotazioneStanzaDTO::from_entity(result))
         } else {
             Err(AppError::DatabaseNotInitialized)
         }
@@ -72,7 +75,7 @@ impl RetrieveManyService<AnnotazioneInfissoDTO> for AnnotazioneService {
             let result = AnnotazioneInfissoDAO::get_all(conn)?;
             Ok(result
                 .into_iter()
-                .map(AnnotazioneInfissoDTO::from)
+                .map(AnnotazioneInfissoDTO::from_entity)
                 .collect())
         } else {
             Err(AppError::DatabaseNotInitialized)
@@ -87,8 +90,8 @@ impl CreateService<AnnotazioneInfissoDTO> for AnnotazioneService {
     ) -> Result<AnnotazioneInfissoDTO, AppError> {
         let conn = db.get_conn()?;
         if let Some(conn) = conn.as_ref() {
-            let result = AnnotazioneInfissoDAO::insert(conn, item.clone().into())?;
-            Ok(AnnotazioneInfissoDTO::from(result))
+            let result = AnnotazioneInfissoDAO::insert(conn, item.into_entity())?;
+            Ok(AnnotazioneInfissoDTO::from_entity(result))
         } else {
             Err(AppError::DatabaseNotInitialized)
         }

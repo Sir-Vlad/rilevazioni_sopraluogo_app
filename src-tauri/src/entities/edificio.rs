@@ -1,10 +1,13 @@
-use crate::app_traits::{EntityTrait, FromRow, SqlParams, ToInsert, ToRetrieveAll, ToUpdate};
+use crate::app_traits::{
+    EntityTrait, FromDto, FromRow, SqlParams, ToInsert, ToRetrieveAll, ToUpdate,
+};
 use crate::dto::EdificioDTO;
 use crate::utils::ToList;
 use rusqlite::{Error, Row};
 use std::any::Any;
 
-#[cfg_attr(test, derive(Debug, PartialEq, Clone))]
+#[cfg_attr(test, derive(Debug, PartialEq))]
+#[derive(Clone)]
 pub struct Edificio {
     pub(crate) chiave: String,
     pub(crate) fascicolo: String,
@@ -44,17 +47,19 @@ impl Edificio {
     }
 }
 
-impl From<EdificioDTO> for Edificio {
-    fn from(value: EdificioDTO) -> Self {
-        Edificio {
-            chiave: value.chiave.to_string(),
-            fascicolo: value.fascicolo.to_string(),
-            indirizzo: value.indirizzo.to_string(),
-            anno_costruzione: value.anno_costruzione.clone(),
-            anno_riqualificazione: value.anno_riqualificazione.clone(),
+impl FromDto for Edificio {
+    type Dto = EdificioDTO;
+
+    fn from_dto(dto: Self::Dto) -> Self {
+        Self {
+            chiave: dto.chiave.to_string(),
+            fascicolo: dto.fascicolo.to_string(),
+            indirizzo: dto.indirizzo.to_string(),
+            anno_costruzione: dto.anno_costruzione.clone(),
+            anno_riqualificazione: dto.anno_riqualificazione.clone(),
             note_riqualificazione: None,
-            isolamento_tetto: value.isolamento_tetto,
-            cappotto: value.cappotto,
+            isolamento_tetto: dto.isolamento_tetto,
+            cappotto: dto.cappotto,
         }
     }
 }

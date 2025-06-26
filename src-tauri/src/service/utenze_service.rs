@@ -1,8 +1,8 @@
-use crate::app_traits::{GetAll, Insert};
+use crate::app_traits::{CreateService, RetrieveManyService};
+use crate::app_traits::{FromEntity, GetAll, Insert};
 use crate::dao::UtenzeDAO;
 use crate::db::Database;
 use crate::dto::UtenzaDTO;
-use crate::service::utils::{CreateService, RetrieveManyService};
 use crate::utils::AppError;
 use tauri::State;
 
@@ -13,7 +13,10 @@ impl RetrieveManyService<UtenzaDTO> for UtenzeService {
         let conn = db.get_conn()?;
         if let Some(conn) = conn.as_ref() {
             let utenze = UtenzeDAO::get_all(conn)?;
-            Ok(utenze.iter().map(UtenzaDTO::from).collect())
+            Ok(utenze
+                .iter()
+                .map(|e| UtenzaDTO::from_entity(e.clone()))
+                .collect())
         } else {
             Err(AppError::DatabaseNotInitialized)
         }
@@ -25,7 +28,7 @@ impl CreateService<UtenzaDTO> for UtenzeService {
         let conn = db.get_conn()?;
         if let Some(conn) = conn.as_ref() {
             let utenza = UtenzeDAO::insert(conn, utenza.clone().into())?;
-            Ok(UtenzaDTO::from(&utenza))
+            Ok(UtenzaDTO::from_entity(utenza))
         } else {
             Err(AppError::DatabaseNotInitialized)
         }

@@ -1,4 +1,6 @@
-use crate::app_traits::{EntityTrait, FromRow, SqlParams, ToInsert, ToRetrieveAll, ToUpdate};
+use crate::app_traits::{
+    EntityTrait, FromDto, FromRow, SqlParams, ToInsert, ToRetrieveAll, ToUpdate,
+};
 use crate::dto::StanzaDTO;
 use rusqlite::{Error, Row};
 
@@ -55,20 +57,22 @@ impl Stanza {
     }
 }
 
-impl From<StanzaDTO> for Stanza {
-    fn from(value: StanzaDTO) -> Self {
-        Stanza {
-            id: Some(value.id),
-            chiave: value.chiave.clone(),
-            piano: value.piano.clone(),
-            id_spazio: value.id_spazio.clone(),
-            cod_stanza: value.stanza.clone(),
-            destinazione_uso: value.destinazione_uso.clone(),
-            altezza: value.altezza,
-            spessore_muro: value.spessore_muro,
-            riscaldamento: value.riscaldamento.clone(),
-            raffrescamento: value.raffrescamento.clone(),
-            illuminazione: value.illuminazione.clone(),
+impl FromDto for Stanza {
+    type Dto = StanzaDTO;
+
+    fn from_dto(dto: Self::Dto) -> Self {
+        Self {
+            id: Some(dto.id),
+            chiave: dto.chiave.clone(),
+            piano: dto.piano.clone(),
+            id_spazio: dto.id_spazio.clone(),
+            cod_stanza: dto.stanza.clone(),
+            destinazione_uso: dto.destinazione_uso.clone(),
+            altezza: dto.altezza,
+            spessore_muro: dto.spessore_muro,
+            riscaldamento: dto.riscaldamento.clone(),
+            raffrescamento: dto.raffrescamento.clone(),
+            illuminazione: dto.illuminazione.clone(),
         }
     }
 }

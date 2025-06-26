@@ -1,13 +1,13 @@
-use crate::app_traits::{GetAll, Insert};
+use crate::app_traits::RetrieveManyService;
+use crate::app_traits::{DtoTrait, GetAll, Insert};
 use crate::dao::{
     ClimatizzazioneDAO, IlluminazioneDAO, MaterialeInfissoDAO, TipoInfissoDAO, VetroInfissoDAO,
 };
 use crate::db::Database;
 use crate::dto::{
-    ClimatizzazioneDTO, IlluminazioneDTO, MaterialeInfissoDTO, TipoDTO, TipoInfissiDTO, VetroInfissoDTO,
-    DTO,
+    ClimatizzazioneDTO, IlluminazioneDTO, MaterialeInfissoDTO, TipoDTO, TipoInfissiDTO,
+    VetroInfissoDTO,
 };
-use crate::service::utils::RetrieveManyService;
 use crate::utils::AppError;
 use serde::{Deserialize, Deserializer, Serialize};
 use serde_json::Value;
@@ -48,7 +48,7 @@ impl<'de> Deserialize<'de> for TypeDTO {
     }
 }
 
-fn convert_to_json<T: DTO + Serialize>(items: Vec<T>) -> Vec<Value> {
+fn convert_to_json<T: DtoTrait + Serialize>(items: Vec<T>) -> Vec<Value> {
     items
         .iter()
         .map(|x| serde_json::to_value(x).unwrap_or_default())

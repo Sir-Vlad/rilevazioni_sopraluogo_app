@@ -1,4 +1,4 @@
-use crate::app_traits::{EntityTrait, FromRow, SqlParams, ToInsert, ToRetrieveAll};
+use crate::app_traits::{EntityTrait, FromDto, FromRow, SqlParams, ToInsert, ToRetrieveAll};
 use crate::dto::AnnotazioneStanzaDTO;
 use crate::entities::utils::convert_timestamp_to_local;
 use rusqlite::{Error, Row};
@@ -11,12 +11,14 @@ pub struct AnnotazioneStanza {
     pub(crate) _data: Option<String>,
 }
 
-impl From<AnnotazioneStanzaDTO> for AnnotazioneStanza {
-    fn from(value: AnnotazioneStanzaDTO) -> Self {
+impl FromDto for AnnotazioneStanza {
+    type Dto = AnnotazioneStanzaDTO;
+
+    fn from_dto(dto: Self::Dto) -> Self {
         Self {
-            id: value.id,
-            id_stanza: value.id_stanza,
-            content: value.content,
+            id: dto.id,
+            id_stanza: dto.id_stanza,
+            content: dto.content,
             _data: None,
         }
     }

@@ -216,16 +216,16 @@ mod test {
         let conn = Connection::open_in_memory().unwrap();
         create_types_tables(&conn).expect("Errore nella creazione delle tabelle dei tipi");
 
-        let materiale = MaterialeInfisso::new("Legno", 1);
+        let materiale = MaterialeInfisso::new("Legno".to_string(), 1);
         MaterialeInfissoDAO::insert(&conn, materiale)
             .expect("Errore nella creazione del materiale");
-        let materiale = MaterialeInfisso::new("PVC", 2);
+        let materiale = MaterialeInfisso::new("PVC".to_string(), 2);
         MaterialeInfissoDAO::insert(&conn, materiale)
             .expect("Errore nella creazione del materiale");
 
-        let vetro = VetroInfisso::new("Singolo", 1);
+        let vetro = VetroInfisso::new("Singolo".to_string(), 1);
         VetroInfissoDAO::insert(&conn, vetro).expect("Errore nella creazione del materiale");
-        let vetro = VetroInfisso::new("Doppio", 2);
+        let vetro = VetroInfisso::new("Doppio".to_string(), 2);
         VetroInfissoDAO::insert(&conn, vetro).expect("Errore nella creazione del materiale");
 
         let tipo_infisso = TipoInfisso {

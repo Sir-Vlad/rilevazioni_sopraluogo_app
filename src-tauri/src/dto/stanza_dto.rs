@@ -1,5 +1,5 @@
+use crate::app_traits::{DtoTrait, FromEntity};
 use crate::entities::Stanza;
-use crate::dto::DTO;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -18,35 +18,25 @@ pub struct StanzaDTO {
     pub infissi: Option<Vec<String>>,
 }
 
-impl DTO for StanzaDTO {}
+impl DtoTrait for StanzaDTO {
+    type EntityLinked = Stanza;
+}
 
-impl StanzaDTO {
-    fn from_stanza_common(stanza: &Stanza) -> Self {
-        StanzaDTO {
-            id: stanza.id.unwrap_or(0),
-            chiave: stanza.chiave.clone(),
-            piano: stanza.piano.clone(),
-            id_spazio: stanza.id_spazio.clone(),
-            stanza: stanza.cod_stanza.clone(),
-            destinazione_uso: stanza.destinazione_uso.clone(),
-            altezza: stanza.altezza,
-            spessore_muro: stanza.spessore_muro,
-            riscaldamento: stanza.riscaldamento.clone(),
-            raffrescamento: stanza.raffrescamento.clone(),
-            illuminazione: stanza.illuminazione.clone(),
+impl FromEntity for StanzaDTO {
+    fn from_entity(entity: <Self as DtoTrait>::EntityLinked) -> Self {
+        Self {
+            id: entity.id.unwrap_or(0),
+            chiave: entity.chiave.clone(),
+            piano: entity.piano.clone(),
+            id_spazio: entity.id_spazio.clone(),
+            stanza: entity.cod_stanza.clone(),
+            destinazione_uso: entity.destinazione_uso.clone(),
+            altezza: entity.altezza,
+            spessore_muro: entity.spessore_muro,
+            riscaldamento: entity.riscaldamento.clone(),
+            raffrescamento: entity.raffrescamento.clone(),
+            illuminazione: entity.illuminazione.clone(),
             infissi: None,
         }
-    }
-}
-
-impl From<Stanza> for StanzaDTO {
-    fn from(value: Stanza) -> Self {
-        StanzaDTO::from_stanza_common(&value)
-    }
-}
-
-impl From<&Stanza> for StanzaDTO {
-    fn from(value: &Stanza) -> Self {
-        StanzaDTO::from_stanza_common(value)
     }
 }

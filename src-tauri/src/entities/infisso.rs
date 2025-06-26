@@ -1,8 +1,11 @@
-use crate::app_traits::{EntityTrait, FromRow, SqlParams, ToInsert, ToRetrieveAll, ToUpdate};
+use crate::app_traits::{
+    EntityTrait, FromDto, FromRow, SqlParams, ToInsert, ToRetrieveAll, ToUpdate,
+};
 use crate::dto::InfissoDTO;
 use rusqlite::{Error, Row};
 
-#[cfg_attr(test, derive(Debug, PartialEq, Clone))]
+#[cfg_attr(test, derive(Debug, PartialEq))]
+#[derive(Clone)]
 pub struct Infisso {
     pub(crate) id: String,
     pub(crate) edificio_id: String,
@@ -36,16 +39,18 @@ impl Infisso {
     }
 }
 
-impl From<InfissoDTO> for Infisso {
-    fn from(infisso: InfissoDTO) -> Self {
-        Infisso {
-            id: infisso.id,
-            edificio_id: infisso.id_edificio,
-            tipo: infisso.tipo,
-            altezza: infisso.altezza,
-            larghezza: infisso.larghezza,
-            materiale: infisso.materiale,
-            vetro: infisso.vetro,
+impl FromDto for Infisso {
+    type Dto = InfissoDTO;
+
+    fn from_dto(dto: Self::Dto) -> Self {
+        Self {
+            id: dto.id,
+            edificio_id: dto.id_edificio,
+            tipo: dto.tipo,
+            altezza: dto.altezza,
+            larghezza: dto.larghezza,
+            materiale: dto.materiale,
+            vetro: dto.vetro,
         }
     }
 }

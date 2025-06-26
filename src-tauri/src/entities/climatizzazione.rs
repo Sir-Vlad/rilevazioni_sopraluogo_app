@@ -1,4 +1,4 @@
-use crate::app_traits::{EntityTrait, FromRow, SqlParams, ToInsert, ToRetrieveAll};
+use crate::app_traits::{EntityTrait, FromDto, FromRow, SqlParams, ToInsert, ToRetrieveAll};
 use crate::dto::TipoDTO;
 use rusqlite::{Error, Row};
 
@@ -19,12 +19,14 @@ impl Climatizzazione {
     }
 }
 
-impl From<TipoDTO> for Climatizzazione {
-    fn from(value: TipoDTO) -> Self {
+impl FromDto for Climatizzazione {
+    type Dto = TipoDTO;
+
+    fn from_dto(dto: Self::Dto) -> Self {
         Self {
             _id: None,
-            climatizzazione: value.name.clone(),
-            efficienza_energetica: value.efficienza_energetica,
+            climatizzazione: dto.name.clone(),
+            efficienza_energetica: dto.efficienza_energetica,
         }
     }
 }

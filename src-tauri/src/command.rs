@@ -1,17 +1,17 @@
 pub mod command_tauri {
+    use crate::app_traits::DtoTrait;
+    use crate::app_traits::{CreateService, RetrieveManyService, UpdateService};
     use crate::dto::{
-        AnnotazioneDTO, AnnotazioneEdificioDTO, AnnotazioneInfissoDTO, AnnotazioneStanzaDTO, FotovoltaicoDTO,
-        TipoDTO, UtenzaDTO, DTO,
+        AnnotazioneDTO, AnnotazioneEdificioDTO, AnnotazioneInfissoDTO, AnnotazioneStanzaDTO,
+        FotovoltaicoDTO, TipoDTO, UtenzaDTO,
     };
     use crate::service::{
-        import::ImportData, import::ImportDatiStanzaToExcel, AnnotazioneService, CreateService, FotovoltaicoService,
-        RetrieveManyService, UpdateService, UtenzeService,
+        import::ImportData, import::ImportDatiStanzaToExcel, AnnotazioneService, FotovoltaicoService,
+        UtenzeService,
     };
     use crate::utils::{database_change_event, AppError};
     use crate::{
-        db::{
-            create_or_get_db_path, init_database, Database, DatabaseEventPayload, NAME_DIR_DATABASE,
-        },
+        db::{create_or_get_db_path, init_database, Database, NAME_DIR_DATABASE},
         dto::{EdificioDTO, InfissoDTO, StanzaDTO},
         service::{
             EdificioService, ExportData, ExportDatiStanzaToExcel, InfissoService, StanzaService,
@@ -22,7 +22,7 @@ pub mod command_tauri {
     use log::info;
     use serde_json::Value;
     use std::{collections::HashMap, ffi::OsStr, fs};
-    use tauri::{AppHandle, Emitter, State};
+    use tauri::{AppHandle, State};
 
     type ResultCommand<T> = Result<T, String>;
 
@@ -280,7 +280,7 @@ pub mod command_tauri {
     fn handle_retrieve_many<T>(db: State<'_, Database>) -> Result<Vec<AnnotazioneDTO>, AppError>
     where
         AnnotazioneService: RetrieveManyService<T>,
-        T: Into<AnnotazioneDTO> + DTO,
+        T: Into<AnnotazioneDTO> + DtoTrait,
         AnnotazioneDTO: From<T>,
     {
         Ok(
@@ -297,7 +297,7 @@ pub mod command_tauri {
     ) -> Result<AnnotazioneDTO, AppError>
     where
         AnnotazioneService: CreateService<T>,
-        T: From<AnnotazioneDTO> + DTO,
+        T: From<AnnotazioneDTO> + DtoTrait,
         AnnotazioneDTO: From<T>,
     {
         Ok(<AnnotazioneService as CreateService<T>>::create(db, annotazione.into())?.into())

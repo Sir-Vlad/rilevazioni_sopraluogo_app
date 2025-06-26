@@ -1,8 +1,8 @@
-use crate::app_traits::{GetAll, Insert};
+use crate::app_traits::{ConvertibleDto, FromEntity, GetAll, Insert};
+use crate::app_traits::{CreateService, RetrieveManyService};
 use crate::dao::FotovoltaicoDAO;
 use crate::db::Database;
 use crate::dto::FotovoltaicoDTO;
-use crate::service::utils::{CreateService, RetrieveManyService};
 use crate::utils::AppError;
 use tauri::State;
 
@@ -13,7 +13,10 @@ impl RetrieveManyService<FotovoltaicoDTO> for FotovoltaicoService {
         let conn = db.get_conn()?;
         if let Some(conn) = conn.as_ref() {
             let utenze = FotovoltaicoDAO::get_all(conn)?;
-            Ok(utenze.iter().map(FotovoltaicoDTO::from).collect())
+            Ok(utenze
+                .iter()
+                .map(|e| FotovoltaicoDTO::from_entity(e.clone()))
+                .collect())
         } else {
             Err(AppError::DatabaseNotInitialized)
         }
@@ -27,8 +30,8 @@ impl CreateService<FotovoltaicoDTO> for FotovoltaicoService {
     ) -> Result<FotovoltaicoDTO, AppError> {
         let conn = db.get_conn()?;
         if let Some(conn) = conn.as_ref() {
-            let utenza = FotovoltaicoDAO::insert(conn, fotovoltaico.clone().into())?;
-            Ok(FotovoltaicoDTO::from(&utenza))
+            let utenza = FotovoltaicoDAO::insert(conn, fotovoltaico.into_entity())?;
+            Ok(FotovoltaicoDTO::from_entity(utenza))
         } else {
             Err(AppError::DatabaseNotInitialized)
         }

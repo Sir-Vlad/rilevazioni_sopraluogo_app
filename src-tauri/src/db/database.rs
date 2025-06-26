@@ -127,7 +127,9 @@ impl Database {
 
 impl Drop for Database {
     fn drop(&mut self) {
-        Self::close(self);
+        Self::close(self).unwrap_or_else(|e| {
+            eprintln!("Errore durante la chiusura del db nel drop: {}", e);
+        });
     }
 }
 
