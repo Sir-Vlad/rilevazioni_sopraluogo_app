@@ -1,4 +1,6 @@
-use crate::app_traits::{ConvertibleDto, FromEntity, GetAll, Insert};
+use crate::app_traits::{
+    ConvertibleDto, FromEntity, GetAll, Insert,
+};
 use crate::app_traits::{CreateService, RetrieveManyService};
 use crate::dao::{AnnotazioneEdificioDAO, AnnotazioneInfissoDAO, AnnotazioneStanzaDAO};
 use crate::db::Database;

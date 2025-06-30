@@ -20,6 +20,8 @@ pub enum AppError {
     GenericError(String),
     #[error("")]
     IdInvalid(#[from] crate::service::import::Error),
+    #[error("")]
+    ParseError(#[from] crate::service::parser::error::ParserError),
 }
 
 impl From<rusqlite::Error> for AppError {

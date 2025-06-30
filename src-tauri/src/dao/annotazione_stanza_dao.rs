@@ -17,8 +17,8 @@ impl Insert for AnnotazioneStanzaDAO {}
 #[cfg(test)]
 mod test {
     use crate::app_traits::{CreateTable, DaoTrait, Insert};
-    use crate::entities::AnnotazioneStanza;
     use crate::dao::AnnotazioneStanzaDAO;
+    use crate::entities::AnnotazioneStanza;
     use crate::utils::AppError;
     use rusqlite::{ffi, Connection, Error, ErrorCode};
 
@@ -65,15 +65,47 @@ mod test {
 
         match res.err().unwrap() {
             AppError::DatabaseError(Error::SqliteFailure(
-                                        ffi::Error {
-                                            code: ErrorCode::ConstraintViolation,
-                                            ..
-                                        },
-                                        res,
-                                    )) => {
+                ffi::Error {
+                    code: ErrorCode::ConstraintViolation,
+                    ..
+                },
+                res,
+            )) => {
                 assert!(res.unwrap().contains("LENGTH(CONTENT) > 0"));
             }
             e => panic!("{:?}", e),
         }
+    }
+
+    #[test]
+    fn test_sql_injection_attempts() {
+        let conn = setup();
+
+        let malicious_contents = vec![
+            "'; DROP TABLE ANNOTAZIONE_STANZA; --",
+            "' OR 1=1 --",
+            "'; INSERT INTO ANNOTAZIONE_STANZA (ID_STANZA, CONTENT) VALUES (999, 'hacked'); --",
+        ];
+
+        for malicious_content in malicious_contents {
+            let item = AnnotazioneStanza {
+                id: 0,
+                id_stanza: 1,
+                content: malicious_content.to_string(),
+                _data: None,
+            };
+
+            // Questo dovrebbe essere sicuro
+            let result = AnnotazioneStanzaDAO::insert(&conn, item);
+            assert!(result.is_ok());
+
+            // Verifica che il contenuto sia stato salvato letteralmente
+            // (non eseguito come SQL)
+            if let Ok(inserted) = result {
+                assert_eq!(inserted.content, malicious_content);
+            }
+        }
+
+        pretty_sqlite::print_table(&conn, &AnnotazioneStanzaDAO::table_name()).unwrap()
     }
 }

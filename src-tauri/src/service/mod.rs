@@ -4,6 +4,7 @@ pub mod export;
 mod fotovoltaico_service;
 pub mod import;
 mod infisso_service;
+pub mod parser;
 mod stanza_service;
 mod type_service;
 mod utenze_service;

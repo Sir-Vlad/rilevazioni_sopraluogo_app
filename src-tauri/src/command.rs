@@ -1,10 +1,12 @@
 pub mod command_tauri {
-    use crate::app_traits::DtoTrait;
     use crate::app_traits::{CreateService, RetrieveManyService, UpdateService};
+    use crate::app_traits::{DtoTrait, Update};
+    use crate::dao::StanzaDAO;
     use crate::dto::{
         AnnotazioneDTO, AnnotazioneEdificioDTO, AnnotazioneInfissoDTO, AnnotazioneStanzaDTO,
         FotovoltaicoDTO, TipoDTO, UtenzaDTO,
     };
+    use crate::service::parser::{Command, InternalCommand, Parser, TypeFieldStanza, TypeValue};
     use crate::service::{
         import::ImportData, import::ImportDatiStanzaToExcel, AnnotazioneService, FotovoltaicoService,
         UtenzeService,
@@ -21,6 +23,7 @@ pub mod command_tauri {
     use dirs_next::document_dir;
     use log::info;
     use serde_json::Value;
+    use std::iter::repeat;
     use std::{collections::HashMap, ffi::OsStr, fs};
     use tauri::{AppHandle, State};
 
@@ -301,5 +304,66 @@ pub mod command_tauri {
         AnnotazioneDTO: From<T>,
     {
         Ok(<AnnotazioneService as CreateService<T>>::create(db, annotazione.into())?.into())
+    }
+
+    /**************************************************************************************************/
+    /************************************ COMMAND PER QUERY *******************************************/
+    /**************************************************************************************************/
+
+    #[tauri::command]
+    pub fn exec_command(db: State<'_, Database>, command: String) -> Result<(), AppError> {
+        todo!("Funzione non implementata");
+        let command_parsed = Command::parse(command.as_str())?;
+
+        match command_parsed {
+            Command::Internal(InternalCommand::Stanza(mut stanza_update)) => {
+                let mut stanze: Vec<StanzaDTO> = Vec::with_capacity(stanza_update.stanze.len());
+
+                for (stanza, stanza_update) in
+                    stanze.iter_mut().zip(stanza_update.stanze.iter_mut())
+                {
+                    stanza.stanza = stanza_update.clone();
+                }
+                for (stanza, field_update) in
+                    stanze.iter_mut().zip(stanza_update.fields_updates.iter())
+                {
+                    match field_update.field {
+                        TypeFieldStanza::Altezza => {
+                            stanza.altezza = Some(i64::try_from(&field_update.value)? as u16)
+                        }
+                        TypeFieldStanza::SpessoreMuro => {
+                            stanza.spessore_muro = Some(i64::try_from(&field_update.value)? as u8)
+                        }
+                        TypeFieldStanza::Riscaldamento => {
+                            stanza.riscaldamento = Some(String::try_from(&field_update.value)?)
+                        }
+                        TypeFieldStanza::Raffrescamento => {
+                            stanza.raffrescamento = Some(String::try_from(&field_update.value)?)
+                        }
+                        TypeFieldStanza::Illuminazione => {
+                            stanza.illuminazione = Some(String::try_from(&field_update.value)?)
+                        }
+                        TypeFieldStanza::Infissi => {
+                            let value =
+                                <&HashMap<String, TypeValue>>::try_from(&field_update.value)?;
+                            let mut infissi_updated: Vec<String> = Vec::new();
+                            for (k, v) in value {
+                                let quantity = i64::try_from(v)?;
+                                let i: Vec<String> =
+                                    std::iter::repeat_n(k.clone(), quantity as usize).collect();
+                                infissi_updated.extend(i);
+                            }
+
+                            stanza.infissi = Some(infissi_updated)
+                        }
+                    }
+                }
+
+                StanzaService::update_by_query(db, stanze)?;
+            }
+            Command::Internal(InternalCommand::Infisso()) => todo!(),
+        }
+
+        Ok(())
     }
 }

@@ -1,3 +1,5 @@
+mod parser_insert_stanza;
+
 #[cfg(test)]
 mod tests {
     use crate::app_traits::{

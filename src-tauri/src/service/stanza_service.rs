@@ -9,6 +9,25 @@ use tauri::State;
 
 pub struct StanzaService;
 
+impl StanzaService {
+    pub fn update_by_query(
+        db: State<'_, Database>,
+        stanze_updated: Vec<StanzaDTO>,
+    ) -> Result<Vec<StanzaDTO>, AppError> {
+        let mut results = Vec::with_capacity(stanze_updated.len());
+        db.with_transaction(|tx| {
+            for stanza in stanze_updated {
+                let entity = stanza.into_entity();
+                let result = StanzaDAO::update(tx, entity)?;
+                let stanza_dto = StanzaDTO::from_entity(result);
+                results.push(stanza_dto);
+            }
+            Ok(())
+        })?;
+        Ok(results)
+    }
+}
+
 impl RetrieveManyService<StanzaDTO> for StanzaService {
     fn retrieve_many(db: State<'_, Database>) -> Result<Vec<StanzaDTO>, AppError> {
         let conn = db.get_conn()?;
