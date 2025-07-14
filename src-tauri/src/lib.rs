@@ -1,18 +1,15 @@
-mod command;
-mod dao;
+// mod command;
+// mod dao;
 mod database;
-mod dto;
-mod service;
-mod utils;
+mod models;
+mod schema;
+// mod dto;
+// mod service;
+// mod utils;
 
-use crate::command::command_tauri::*;
+// use crate::command::command_tauri::*;
 use crate::database::*;
-use database::NAME_DIR_DATABASE;
-use dirs_next::document_dir;
-use log::{error, info};
-use tauri::path::BaseDirectory;
-use tauri::{App, AppHandle, Manager};
-use tauri_plugin_log::{RotationStrategy, Target, TargetKind};
+use tauri::Manager;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -26,10 +23,23 @@ pub fn run() {
         }))
         .plugin(tauri_plugin_dialog::init())
         .setup(|app| {
-            app.manage(Database::default());
-            setup_logger(app)?;
+            let mut database = Database::new();
+            if let Err(e) = database.init() {
+                log::error!("Error initialization database: {e}");
+                std::process::exit(1);
+            }
+
+            // Esegui migrazioni
+            if let Err(e) = run_schema_migrations(&database) {
+                log::error!("Errore execution migration: {e}");
+                std::process::exit(1);
+            }
+
+            app.manage(database);
+            //setup_logger(app)?;
             Ok(())
         })
+        /*
         .invoke_handler(tauri::generate_handler![
             // miscellaneous
             export_data_to_excel,
@@ -64,10 +74,11 @@ pub fn run() {
             insert_annotazione
         ])
         .on_window_event(handle_window_events)
+        */
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
-
+/*
 fn handle_window_events(windows: &tauri::Window, event: &tauri::WindowEvent) {
     if let tauri::WindowEvent::CloseRequested { .. } = event {
         let db = windows.app_handle().state::<Database>();
@@ -108,3 +119,4 @@ fn clear_app_data(app: &AppHandle) -> Result<(), Box<dyn std::error::Error>> {
         Err(e) => Err(e.into()),
     }
 }
+*/

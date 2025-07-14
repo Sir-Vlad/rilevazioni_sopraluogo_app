@@ -1,70 +1,63 @@
-use crate::utils::AppError;
-use log::info;
-use rusqlite::Connection;
+use diesel::r2d2::{self, ConnectionManager};
+use diesel::{Connection, PgConnection};
+use dotenvy::dotenv;
 use serde::Serialize;
-use std::sync::{Mutex, MutexGuard};
+use std::env;
+
+pub type DbPool = r2d2::Pool<ConnectionManager<PgConnection>>;
+pub type DbConnection = r2d2::PooledConnection<ConnectionManager<PgConnection>>;
 
 pub struct Database {
-    conn: Mutex<Option<Connection>>,
-    path_to_database: Mutex<Option<String>>,
-}
-
-impl Default for Database {
-    fn default() -> Self {
-        Self {
-            conn: Mutex::new(None),
-            path_to_database: Mutex::new(None),
-        }
-    }
+    pool: Option<DbPool>,
 }
 
 impl Database {
-    pub fn get_path_to_database(&self) -> MutexGuard<'_, Option<String>> {
-        self.path_to_database.lock().unwrap()
+    pub fn new() -> Self {
+        Self { pool: None }
     }
 
-    pub fn get_conn(&self) -> MutexGuard<'_, Option<Connection>> {
-        self.conn.lock().unwrap()
+    pub fn init(&mut self) -> Result<(), diesel::r2d2::Error> {
+        dotenv().ok();
+
+        let database_url =
+            env::var("DATABASE_URL").expect("DATABASE_URL must setting in the file .env");
+
+        let pool_size = env::var("DATABASE_POOL_SIZE")
+            .unwrap_or_else(|_| "10".to_string())
+            .parse::<u32>()
+            .expect("DATABASE_POOL_SIZE must be a number");
+
+        let manager = ConnectionManager::<PgConnection>::new(database_url);
+        let pool = DbPool::builder()
+            .max_size(pool_size)
+            .build(manager)
+            .expect("Failed to create pool.");
+        self.pool = Some(pool);
+        Ok(())
     }
 
-    pub fn with_transaction<F, T>(&self, op: F) -> Result<T, AppError>
+    pub fn get_conn(&self) -> Result<DbConnection, diesel::result::Error> {
+        match &self.pool {
+            Some(pool) => pool.get().map_err(|_| {
+                diesel::result::Error::DatabaseError(
+                    diesel::result::DatabaseErrorKind::UnableToSendCommand,
+                    Box::new("Failed to get connection from pool".to_string()),
+                )
+            }),
+            None => Err(diesel::result::Error::DatabaseError(
+                diesel::result::DatabaseErrorKind::UnableToSendCommand,
+                Box::new("Database not initialized".to_string()),
+            )),
+        }
+    }
+
+    pub fn with_transaction<F, T>(&self, op: F) -> Result<T, diesel::result::Error>
     where
         T: for<'de> serde::Deserialize<'de> + serde::Serialize,
-        F: FnOnce(&rusqlite::Transaction) -> Result<T, AppError>,
+        F: FnOnce(&mut PgConnection) -> Result<T, diesel::result::Error>,
     {
-        let mut conn_guard = self.get_conn();
-        if let Some(conn) = conn_guard.as_mut() {
-            let tx = conn.transaction()?;
-            let result = op(&tx)?;
-            tx.commit()?;
-            Ok(result)
-        } else {
-            Err(AppError::DatabaseNotInitialized)
-        }
-    }
-
-    #[cfg(test)] // serve solo per i test
-    pub fn open_in_memory() -> Self {
-        Self {
-            conn: Mutex::new(Connection::open_in_memory().ok()),
-            path_to_database: Mutex::new(Some(":memory:".to_string())),
-        }
-    }
-}
-
-impl Drop for Database {
-    fn drop(&mut self) {
-        if let Ok(mut conn_guard) = self.conn.lock() {
-            if let Some(conn) = conn_guard.take() {
-                if let Err((_, e)) = conn.close() {
-                    eprintln!(
-                        "Errore durante la chiusura del database nel destructor: {}",
-                        e
-                    );
-                }
-                info!("Database chiuso");
-            }
-        }
+        let mut conn = self.get_conn()?;
+        conn.transaction(|conn| op(conn))
     }
 }
 
