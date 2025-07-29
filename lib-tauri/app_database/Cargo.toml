@@ -1,0 +1,17 @@
+[package]
+name = "app_database"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+serde = { workspace = true }
+diesel = { workspace = true }
+tokio = { workspace = true }
+async-trait = { workspace = true }
+dotenvy = { workspace = true }
+thiserror = { workspace = true }
+libc = "0.2.174"
+
+[dev-dependencies]
+testcontainers = { workspace = true }
+testcontainers-modules = { workspace = true }

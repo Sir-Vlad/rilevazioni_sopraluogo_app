@@ -1,19 +1,12 @@
-use crate::dao::crud_operations::Insert;
-use crate::dao::{create_tables, create_views};
-use crate::dao::{entity::TipoInfisso, TipoInfissoDAO};
-use crate::database::{DatabaseConnection, QueryParam};
-use dirs_next::document_dir;
-use log::{error, info, warn};
-use rusqlite::{params, Connection, Transaction};
-use serde::Deserialize;
-use std::collections::HashMap;
-use std::fs;
-use std::fs::File;
-use tauri::path::BaseDirectory;
-use tauri::{AppHandle, Manager};
+use serde::Serialize;
 
-pub const NAME_DIR_DATABASE: &str = "Dati_Sopralluogo";
+#[derive(Serialize, Clone)]
+pub struct DatabaseEventPayload {
+    pub type_event: &'static str,
+    pub path: String,
+}
 
+/*
 pub fn get_db_path(db_name: String) -> Result<String, String> {
     if let Some(mut path) = document_dir() {
         // creo la cartella per salvare i db
@@ -146,3 +139,4 @@ pub fn convert_param(params: Vec<&QueryParam>) -> Vec<rusqlite::types::Value> {
         })
         .collect()
 }
+*/

@@ -1,15 +1,18 @@
-// mod command;
 // mod dao;
-mod database;
-mod models;
-mod schema;
+mod constants;
 // mod dto;
 // mod service;
 // mod utils;
+mod command;
 
-// use crate::command::command_tauri::*;
-use crate::database::*;
-use tauri::Manager;
+use crate::command::command_tauri::*;
+use crate::constants::NAME_DIR_DATABASE;
+use app_database::database::*;
+use dirs_next::document_dir;
+use tauri::path::BaseDirectory;
+use tauri::{App, AppHandle, Manager};
+use tauri_plugin_log::{RotationStrategy, Target, TargetKind};
+use tracing::{error, info};
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -22,66 +25,58 @@ pub fn run() {
                 .set_focus();
         }))
         .plugin(tauri_plugin_dialog::init())
-        .setup(|app| {
-            let mut database = Database::new();
-            if let Err(e) = database.init() {
-                log::error!("Error initialization database: {e}");
-                std::process::exit(1);
-            }
+        .setup(|app: &mut App| {
+            setup_logger(app)?;
 
-            // Esegui migrazioni
-            if let Err(e) = run_schema_migrations(&database) {
-                log::error!("Errore execution migration: {e}");
-                std::process::exit(1);
-            }
-
-            app.manage(database);
-            //setup_logger(app)?;
+            tauri::async_runtime::block_on(async {
+                let database = DatabaseManager::new().await;
+                app.manage(database);
+            });
             Ok(())
         })
-        /*
         .invoke_handler(tauri::generate_handler![
-            // miscellaneous
-            export_data_to_excel,
-            init_to_excel,
-            // database
-            set_database,
-            switch_database,
-            close_database,
-            get_all_name_database,
-            // tipi
-            get_all_tipi,
-            insert_tipo,
-            // stanza
-            get_stanze,
-            insert_stanza,
-            update_stanza,
-            // infisso
-            get_infissi,
-            insert_infisso,
-            update_infisso,
-            // edificio
-            get_edifici,
-            update_edificio,
-            // utenze
-            get_utenze,
-            insert_utenza,
-            // fotovoltaico
-            get_fotovoltaico,
-            insert_fotovoltaico,
-            // annotazioni
-            get_annotazioni,
-            insert_annotazione
+            /*
+                // miscellaneous
+                export_data_to_excel,
+                init_to_excel,
+                // database
+                set_database,
+                switch_database,
+                close_database,
+                get_all_name_database,
+                // tipi
+                get_all_tipi,
+                insert_tipo,
+                // stanza
+                get_stanze,
+                insert_stanza,
+                update_stanza,
+                // infisso
+                get_infissi,
+                insert_infisso,
+                update_infisso,
+                // edificio
+                get_edifici,
+                update_edificio,
+                // utenze
+                get_utenze,
+                insert_utenza,
+                // fotovoltaico
+                get_fotovoltaico,
+                insert_fotovoltaico,
+                // annotazioni
+                get_annotazioni,
+                insert_annotazione
+            */
         ])
         .on_window_event(handle_window_events)
-        */
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
-/*
+
 fn handle_window_events(windows: &tauri::Window, event: &tauri::WindowEvent) {
     if let tauri::WindowEvent::CloseRequested { .. } = event {
-        let db = windows.app_handle().state::<Database>();
+        let db = windows.app_handle().state::<DatabaseManager>();
         match close_database(db) {
             Ok(..) => info!("Database chiuso correttamente"),
             Err(e) => error!("Errore durante la chiusura del database: {}", e),
@@ -92,7 +87,7 @@ fn handle_window_events(windows: &tauri::Window, event: &tauri::WindowEvent) {
 
 fn setup_logger(app: &mut App) -> Result<(), Box<dyn std::error::Error>> {
     let mut log_directory = document_dir().unwrap();
-    log_directory.push(format!("{}/log", NAME_DIR_DATABASE));
+    log_directory.push(format!("{NAME_DIR_DATABASE}/log"));
     app.handle().plugin(
         tauri_plugin_log::Builder::new()
             .target(Target::new(TargetKind::Stdout))
@@ -119,4 +114,3 @@ fn clear_app_data(app: &AppHandle) -> Result<(), Box<dyn std::error::Error>> {
         Err(e) => Err(e.into()),
     }
 }
-*/

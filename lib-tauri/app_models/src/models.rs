@@ -46,22 +46,22 @@ pub struct TipoInfisso {
 #[diesel(table_name = edificio)]
 #[diesel(primary_key(chiave))]
 pub struct Edificio {
-    pub(crate) chiave: String,
-    pub(crate) fascicolo: i32,
-    pub(crate) indirizzo: String,
-    pub(crate) anno_costruzione: Option<i32>,
-    pub(crate) anno_riqualificazione: Option<i32>,
-    pub(crate) note_riqualificazione: Option<String>,
-    pub(crate) isolamento_tetto: bool,
-    pub(crate) cappotto: bool,
+    pub chiave: String,
+    pub fascicolo: i32,
+    pub indirizzo: String,
+    pub anno_costruzione: Option<i32>,
+    pub anno_riqualificazione: Option<i32>,
+    pub note_riqualificazione: Option<String>,
+    pub isolamento_tetto: bool,
+    pub cappotto: bool,
 }
 
 #[derive(Insertable, Debug, PartialEq)]
 #[diesel(table_name = edificio)]
 pub struct NewEdificio<'a> {
-    pub(crate) chiave: &'a str,
-    pub(crate) fascicolo: i32,
-    pub(crate) indirizzo: &'a str,
+    pub chiave: &'a str,
+    pub fascicolo: i32,
+    pub indirizzo: &'a str,
 }
 
 #[derive(AsChangeset, Debug, PartialEq)]
@@ -78,27 +78,27 @@ pub struct UpdateEdificio<'a> {
 #[diesel(belongs_to(Edificio))]
 #[diesel(table_name = stanza)]
 pub struct Stanza {
-    pub(crate) id: i32,
-    pub(crate) edificio_id: String,
-    pub(crate) piano: String,
-    pub(crate) id_spazio: String,
-    pub(crate) cod_stanza: String,
-    pub(crate) destinazione_uso: String,
-    pub(crate) altezza: Option<i16>,
-    pub(crate) spessore_muro: Option<i16>,
-    pub(crate) riscaldamento: Option<String>,
-    pub(crate) raffrescamento: Option<String>,
-    pub(crate) illuminazione: Option<String>,
+    pub id: i32,
+    pub edificio_id: String,
+    pub piano: String,
+    pub id_spazio: String,
+    pub cod_stanza: String,
+    pub destinazione_uso: String,
+    pub altezza: Option<i16>,
+    pub spessore_muro: Option<i16>,
+    pub riscaldamento: Option<String>,
+    pub raffrescamento: Option<String>,
+    pub illuminazione: Option<String>,
 }
 
 #[derive(Insertable, Debug, PartialEq)]
 #[diesel(table_name = stanza)]
 pub struct NewStanza<'a> {
-    edificio_id: &'a str,
-    piano: &'a str,
-    id_spazio: &'a str,
-    cod_stanza: &'a str,
-    destinazione_uso: &'a str,
+    pub edificio_id: &'a str,
+    pub piano: &'a str,
+    pub id_spazio: &'a str,
+    pub cod_stanza: &'a str,
+    pub destinazione_uso: &'a str,
 }
 
 #[derive(AsChangeset, Debug, PartialEq)]
@@ -115,26 +115,26 @@ pub struct UpdateStanza<'a> {
 #[diesel(table_name = infisso)]
 #[diesel(primary_key(id, edificio_id))]
 pub struct Infisso {
-    pub(crate) id: String,
-    pub(crate) edificio_id: String,
-    pub(crate) tipo: String,
-    pub(crate) altezza: i16,
-    pub(crate) larghezza: i16,
-    pub(crate) materiale: String,
-    pub(crate) vetro: String,
-    pub(crate) mq: f32,
+    pub id: String,
+    pub edificio_id: String,
+    pub tipo: String,
+    pub altezza: i16,
+    pub larghezza: i16,
+    pub materiale: String,
+    pub vetro: String,
+    pub mq: f32,
 }
 
 #[derive(Insertable, Debug, PartialEq)]
 #[diesel(table_name = infisso)]
 pub struct NewInfisso<'a> {
-    pub(crate) id: &'a str,
-    pub(crate) edificio_id: &'a str,
-    pub(crate) tipo: &'a str,
-    pub(crate) altezza: i16,
-    pub(crate) larghezza: i16,
-    pub(crate) materiale: &'a str,
-    pub(crate) vetro: &'a str,
+    pub id: &'a str,
+    pub edificio_id: &'a str,
+    pub tipo: &'a str,
+    pub altezza: i16,
+    pub larghezza: i16,
+    pub materiale: &'a str,
+    pub vetro: &'a str,
 }
 
 #[derive(AsChangeset, Debug, PartialEq)]
@@ -151,27 +151,27 @@ pub struct UpdateInfisso<'a> {
 #[diesel(primary_key(infisso_id, edificio_id, stanza_id))]
 #[diesel(belongs_to(Stanza, foreign_key = stanza_id))]
 pub struct StanzaConInfissi {
-    pub(crate) infisso_id: String,
-    pub(crate) edificio_id: String,
-    pub(crate) stanza_id: i32,
-    pub(crate) num_infisso: i32,
+    pub infisso_id: String,
+    pub edificio_id: String,
+    pub stanza_id: i32,
+    pub num_infisso: i32,
 }
 
 #[derive(Queryable, Selectable, Identifiable, Debug, PartialEq)]
 #[diesel(table_name = fotovoltaico)]
 pub struct Fotovoltaico {
     id: i32,
-    pub(crate) edificio_id: String,
-    pub(crate) potenza: f32,
-    pub(crate) proprietario: String,
+    pub edificio_id: String,
+    pub potenza: f32,
+    pub proprietario: String,
 }
 
 #[derive(Insertable, Debug, PartialEq)]
 #[diesel(table_name = fotovoltaico)]
 pub struct NewFotovoltaico<'a> {
-    pub(crate) edificio_id: &'a str,
-    pub(crate) potenza: f32,
-    pub(crate) proprietario: &'a str,
+    pub edificio_id: &'a str,
+    pub potenza: f32,
+    pub proprietario: &'a str,
 }
 
 #[derive(AsChangeset, Debug, PartialEq)]
@@ -185,19 +185,19 @@ pub struct UpdateFotovoltaico<'a> {
 #[diesel(table_name = utenze)]
 pub struct Utenza {
     id: i32,
-    pub(crate) edificio_id: String,
-    pub(crate) tipo: TipoUtenza,
-    pub(crate) cod_contatore: String,
-    pub(crate) indirizzo_contatore: Option<String>,
+    pub edificio_id: String,
+    pub tipo: TipoUtenza,
+    pub cod_contatore: String,
+    pub indirizzo_contatore: Option<String>,
 }
 
 #[derive(Insertable, Debug, PartialEq)]
 #[diesel(table_name = utenze)]
 pub struct NewUtenza<'a> {
-    pub(crate) edificio_id: &'a str,
-    pub(crate) tipo: TipoUtenza,
-    pub(crate) cod_contatore: &'a str,
-    pub(crate) indirizzo_contatore: Option<&'a str>,
+    pub edificio_id: &'a str,
+    pub tipo: TipoUtenza,
+    pub cod_contatore: &'a str,
+    pub indirizzo_contatore: Option<&'a str>,
 }
 
 #[derive(AsChangeset, Debug, PartialEq)]
@@ -220,10 +220,10 @@ pub enum TipoUtenza {
 impl From<&str> for TipoUtenza {
     fn from(value: &str) -> Self {
         match value {
-            "idrica" => TipoUtenza::Acqua,
-            "termica" => TipoUtenza::Riscaldamento,
-            "elettrica" => TipoUtenza::Elettricità,
-            _ => panic!("TipoUtenza non riconosciuto: {}", value),
+            "idrica" | "acqua" => TipoUtenza::Acqua,
+            "termica" | "riscaldamento" => TipoUtenza::Riscaldamento,
+            "elettrica" | "elettricità" => TipoUtenza::Elettricità,
+            _ => panic!("TipoUtenza non riconosciuto: {value}"),
         }
     }
 }
@@ -304,7 +304,7 @@ mod test {
         conn: &mut PgConnection,
         retries: u32,
     ) -> Result<(), Box<dyn Error>> {
-        const MIGRATIONS: EmbeddedMigrations = embed_migrations!("migrations");
+        const MIGRATIONS: EmbeddedMigrations = embed_migrations!("migrations/postgres");
 
         for attempt in 0..retries {
             match conn.run_pending_migrations(MIGRATIONS) {
