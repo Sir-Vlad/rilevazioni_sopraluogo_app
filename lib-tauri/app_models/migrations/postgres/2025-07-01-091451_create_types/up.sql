@@ -5,7 +5,7 @@ create table if not exists climatizzazione
 );
 
 insert into climatizzazione
-values ('No climatizzazione', 0),
+values ('No climatizzata', 0),
        ('Radiatori', 1),
        ('Ventilconvettori', 2),
        ('Split', 3),
@@ -48,7 +48,8 @@ insert into vetro_infisso
 values ('Singolo', 1),
        ('Doppio', 2),
        ('Camera', 3),
-       ('Triplo', 4);
+       ('Triplo', 4),
+       ('Plexiglas', 5);
 
 create table if not exists tipo_infisso
 (

@@ -58,20 +58,21 @@ pub struct Edificio {
 
 #[derive(Insertable, Debug, PartialEq)]
 #[diesel(table_name = edificio)]
-pub struct NewEdificio<'a> {
-    pub chiave: &'a str,
+#[cfg_attr(feature = "default", derive(Clone))]
+pub struct NewEdificio {
+    pub chiave: String,
     pub fascicolo: i32,
-    pub indirizzo: &'a str,
+    pub indirizzo: String,
 }
 
 #[derive(AsChangeset, Debug, PartialEq)]
 #[diesel(table_name = edificio)]
-pub struct UpdateEdificio<'a> {
-    anno_costruzione: Option<i32>,
-    anno_riqualificazione: Option<i32>,
-    note_riqualificazione: Option<&'a str>,
-    isolamento_tetto: Option<bool>,
-    cappotto: Option<bool>,
+pub struct UpdateEdificio {
+    pub anno_costruzione: Option<i32>,
+    pub anno_riqualificazione: Option<i32>,
+    pub note_riqualificazione: Option<String>,
+    pub isolamento_tetto: Option<bool>,
+    pub cappotto: Option<bool>,
 }
 
 #[derive(Queryable, Selectable, Identifiable, Associations, Debug, PartialEq)]
@@ -281,10 +282,10 @@ pub struct NewAnnotazioneInfisso<'a> {
 #[cfg(test)]
 mod test {
     use super::*;
-    use diesel::{dsl::sql, prelude::*, sql_types::Integer, PgConnection, RunQueryDsl};
-    use diesel_migrations::{embed_migrations, EmbeddedMigrations, MigrationHarness};
+    use diesel::{PgConnection, RunQueryDsl, dsl::sql, prelude::*, sql_types::Integer};
+    use diesel_migrations::{EmbeddedMigrations, MigrationHarness, embed_migrations};
     use std::error::Error;
-    use testcontainers::{runners::SyncRunner, Container};
+    use testcontainers::{Container, runners::SyncRunner};
     use testcontainers_modules::postgres::Postgres;
 
     fn setup_postgresql_database() -> Result<(PgConnection, Container<Postgres>), Box<dyn Error>> {
@@ -397,9 +398,9 @@ mod test {
 
     fn insert_edificio_standard(conn: &mut PgConnection) -> Result<Edificio, Box<dyn Error>> {
         let new_values = NewEdificio {
-            chiave: "1234567",
+            chiave: "1234567".to_string(),
             fascicolo: 1,
-            indirizzo: "Via Roma 1",
+            indirizzo: "Via Roma 1".to_string(),
         };
         Ok(diesel::insert_into(edificio::table)
             .values(&new_values)

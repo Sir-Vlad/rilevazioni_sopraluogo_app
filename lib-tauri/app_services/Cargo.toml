@@ -1,0 +1,25 @@
+[package]
+name = "app_services"
+version = "0.1.0"
+description.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+app_database = { path = "../app_database" }
+app_models = { path = "../app_models" }
+app_error = { path = "../app_error" }
+app_interface = {path = "../app_interface", features = ["dao", "services"]}
+
+serde = { workspace = true }
+chrono = { workspace = true }
+diesel = { workspace = true }
+tauri = { workspace = true }
+async-trait = { workspace = true }
+tokio = { workspace = true }
+
+[dev-dependencies]
+app_models = { path = "../app_models", features = ["test-models"] }

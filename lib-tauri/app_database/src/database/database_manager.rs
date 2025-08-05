@@ -1,76 +1,24 @@
 use crate::database::DbError;
+use app_interface::database_interface::DatabaseManager as DatabaseManagerInterface;
+pub use app_interface::database_interface::{DatabaseConnector, PostgresPool, PostgresPooled};
 use async_trait::async_trait;
-use diesel::r2d2::{ConnectionManager, Pool, PooledConnection};
+use diesel::r2d2::{ConnectionManager, Pool};
 use diesel::PgConnection;
-use dotenvy::dotenv;
 use std::any::Any;
 use std::env;
 use std::fmt::{Debug, Formatter};
+use std::path::Path;
 use std::sync::Arc;
 use tokio::sync::{Mutex, RwLock, RwLockReadGuard};
-
-pub type PostgresPool = Pool<ConnectionManager<PgConnection>>;
-pub type PostgresPooled = PooledConnection<ConnectionManager<PgConnection>>;
-
-// #[derive(Debug)]
-// pub enum ConnectionPool {
-//     Sqlite(SqlitePool),
-//     Postgres(PostgresPool),
-// }
-//
-// impl ConnectionPool {
-//     pub fn get_sqlite_pool(&self) -> &SqlitePool {
-//         match self {
-//             ConnectionPool::Sqlite(pool) => pool,
-//             _ => panic!("Attempted to get SQLite pool from Postgres pool"),
-//         }
-//     }
-//
-//     pub fn get_postgres_pool(&self) -> &PostgresPool {
-//         match self {
-//             ConnectionPool::Postgres(pool) => pool,
-//             _ => panic!("Attempted to get Postgres pool from Sqlite pool"),
-//         }
-//     }
-// }
-
-// pub enum DatabaseConnection {
-//     Sqlite(SqlitePooled),
-//     Postgres(PostgresPooled),
-// }
-
-// #[derive(Debug, PartialEq, Clone)]
-// pub enum DatabaseType {
-//     Sqlite,
-//     Postgres,
-// }
-//
-// impl Display for DatabaseType {
-//     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-//         match self {
-//             DatabaseType::Sqlite => f.write_str("Sqlite"),
-//             DatabaseType::Postgres => f.write_str("Postgres"),
-//         }
-//     }
-// }
-
-#[async_trait]
-pub trait DatabaseConnector {
-    async fn create_postgres_pool(&self) -> PostgresPool;
-    // fn create_sqlite_pool(&self, path: Option<&str>) -> Result<SqlitePool, DbError>;
-    fn as_any_mut(&mut self) -> &mut dyn Any;
-}
 
 pub struct RealDatabaseConnector;
 
 #[async_trait]
 impl DatabaseConnector for RealDatabaseConnector {
     async fn create_postgres_pool(&self) -> PostgresPool {
-        dotenv().ok();
+        dotenvy::from_path(Path::new("./lib-tauri/app_database/.env")).ok();
 
         let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
-
-        println!("Database URL: {}", database_url);
 
         let pool_size = env::var("DATABASE_POOL_SIZE")
             .unwrap_or_else(|_| "10".to_string())
@@ -84,10 +32,6 @@ impl DatabaseConnector for RealDatabaseConnector {
             .expect("Failed to create pool")
     }
 
-    // fn as_any(&self) -> &dyn Any {
-    //     self
-    // }
-    //
     fn as_any_mut(&mut self) -> &mut dyn Any {
         self
     }
@@ -108,6 +52,17 @@ pub struct DatabaseManager {
     connector: RwLock<ConnectorDatabase>,
 }
 
+#[async_trait]
+impl DatabaseManagerInterface for DatabaseManager {
+    async fn get_connection(&self) -> Result<PostgresPooled, DbError> {
+        let pool_guard = self.postgres_pool.lock().await;
+        let conn = pool_guard
+            .get()
+            .map_err(|e| DbError::ConnectionPoolError(e.to_string()))?;
+        Ok(conn)
+    }
+}
+
 impl DatabaseManager {
     pub async fn new() -> Self {
         Self::with_connector(Box::new(RealDatabaseConnector)).await
@@ -122,23 +77,12 @@ impl DatabaseManager {
         }
     }
 
-    pub async fn get_connection(&self) -> Result<PostgresPooled, DbError> {
-        let pool_guard = self.postgres_pool.lock().await;
-        let conn = pool_guard
-            .get()
-            .map_err(|e| DbError::ConnectionPoolError(e.to_string()))?;
-        Ok(conn)
-    }
-
     pub async fn get_connector(&self) -> RwLockReadGuard<'_, ConnectorDatabase> {
         self.connector.read().await
     }
 
     #[cfg(test)]
-    pub async fn modify_connector_field<'a, T, F>(
-        &self,
-        f: F,
-    ) -> Result<(), Box<dyn std::error::Error>>
+    pub async fn modify_connector_field<T, F>(&self, f: F) -> Result<(), Box<dyn std::error::Error>>
     where
         F: FnOnce(&mut T),
         T: DatabaseConnector + Send + Sync + 'static,
@@ -177,7 +121,7 @@ impl Debug for DatabaseManager {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::tests::common::{get_postgres_container, MockDatabaseConnector};
+    use app_utils::test::{get_postgres_container, MockDatabaseConnector};
     use async_trait::async_trait;
     use diesel::r2d2::R2D2Connection;
     use std::any::Any;

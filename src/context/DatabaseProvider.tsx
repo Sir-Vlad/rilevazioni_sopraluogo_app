@@ -36,9 +36,7 @@ const DatabaseProvider = ({ children }: { children: React.ReactNode }) => {
 
 
     useEffect(() => {
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-expect-error
-        const databaseChangeListener = listen<DatabaseEventPayload>("database-changed", (e: Event<DatabaseEventPayload>) => {
+        const databaseChangeListener = listen<DatabaseEventPayload>("db-changed", (e) => {
             console.log("Evento ricevuto: ", e);
             const { payload } = e as { payload: DatabaseEventPayload };
 

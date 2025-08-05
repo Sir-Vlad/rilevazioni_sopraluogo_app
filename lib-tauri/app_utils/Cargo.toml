@@ -1,0 +1,27 @@
+[package]
+name = "app_utils"
+version.workspace = true
+description.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+app_interface = { path = "../app_interface", features = ["database"] }
+
+async-trait = { workspace = true }
+diesel = { workspace = true }
+tokio = { workspace = true }
+libc = "0.2.174"
+testcontainers = { workspace = true }
+testcontainers-modules = { workspace = true }
+
+[dev-dependencies]
+
+[features]
+default = []
+test-utils = [
+
+]

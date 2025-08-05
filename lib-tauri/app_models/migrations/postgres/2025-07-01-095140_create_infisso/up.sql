@@ -1,7 +1,7 @@
 create table if not exists infisso
 (
     id          char(4)     not null,
-    edificio_id char(7)     not null,
+    edificio_id varchar(10)    not null,
     tipo        varchar(20) not null,
     altezza     smallint    not null check ( altezza >= 0 ),
     larghezza   smallint    not null check ( larghezza >= 0 ),

@@ -1,0 +1,15 @@
+[package]
+name = "app_api"
+version = "0.1.0"
+description.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+app_database = { path = "../app_database" }
+app_services = { path = "../app_services" }
+
+tauri = { workspace = true }

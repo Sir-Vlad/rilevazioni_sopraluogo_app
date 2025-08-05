@@ -1,6 +1,6 @@
 create table if not exists edificio
 (
-    chiave                char(7) primary key,
+    chiave                varchar(10) primary key,
     fascicolo             integer not null,
     indirizzo             text    not null,
     anno_costruzione      integer check ( anno_costruzione >= 1900 and anno_costruzione <= 2100 )           default null,

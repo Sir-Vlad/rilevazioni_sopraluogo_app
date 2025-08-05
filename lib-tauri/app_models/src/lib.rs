@@ -1,6 +1,6 @@
-use diesel_migrations::{embed_migrations, EmbeddedMigrations};
+use diesel_migrations::{EmbeddedMigrations, embed_migrations};
 
-mod models;
-mod schema;
+pub mod models;
+pub mod schema;
 
 pub const MIGRATIONS_POSTGRES: EmbeddedMigrations = embed_migrations!("./migrations/postgres/");
