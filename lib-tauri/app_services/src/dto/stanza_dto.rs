@@ -1,14 +1,14 @@
-use crate::dao::entity::Stanza;
-use crate::dto::DTO;
+use app_interface::dto_interface::DTO;
+use app_models::models::{NewStanza, Stanza, UpdateStanza};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct StanzaDTO {
     pub id: u64,
-    pub chiave: String,
+    pub edificio_id: String,
     pub piano: String,
     pub id_spazio: String,
-    pub stanza: String,
+    pub cod_stanza: String,
     pub destinazione_uso: String,
     pub altezza: Option<u16>,
     pub spessore_muro: Option<u8>,
@@ -20,33 +20,45 @@ pub struct StanzaDTO {
 
 impl DTO for StanzaDTO {}
 
-impl StanzaDTO {
-    fn from_stanza_common(stanza: &Stanza) -> Self {
-        StanzaDTO {
-            id: stanza.id.unwrap_or(0),
-            chiave: stanza.chiave.clone(),
-            piano: stanza.piano.clone(),
-            id_spazio: stanza.id_spazio.clone(),
-            stanza: stanza.cod_stanza.clone(),
-            destinazione_uso: stanza.destinazione_uso.clone(),
-            altezza: stanza.altezza,
-            spessore_muro: stanza.spessore_muro,
-            riscaldamento: stanza.riscaldamento.clone(),
-            raffrescamento: stanza.raffrescamento.clone(),
-            illuminazione: stanza.illuminazione.clone(),
+impl From<&Stanza> for StanzaDTO {
+    fn from(value: &Stanza) -> Self {
+        Self {
+            id: value.id as u64,
+            edificio_id: value.edificio_id.clone(),
+            piano: value.piano.clone(),
+            id_spazio: value.id_spazio.clone(),
+            cod_stanza: value.cod_stanza.clone(),
+            destinazione_uso: value.destinazione_uso.clone(),
+            altezza: value.altezza.map(|t| t as u16),
+            spessore_muro: value.spessore_muro.map(|t| t as u8),
+            riscaldamento: value.riscaldamento.clone(),
+            raffrescamento: value.raffrescamento.clone(),
+            illuminazione: value.illuminazione.clone(),
             infissi: None,
         }
     }
 }
 
-impl From<Stanza> for StanzaDTO {
-    fn from(value: Stanza) -> Self {
-        StanzaDTO::from_stanza_common(&value)
+impl From<StanzaDTO> for NewStanza {
+    fn from(value: StanzaDTO) -> Self {
+        Self{
+            edificio_id: value.edificio_id,
+            piano: value.piano,
+            id_spazio: value.id_spazio,
+            cod_stanza: value.cod_stanza,
+            destinazione_uso: value.destinazione_uso,
+        }
     }
 }
 
-impl From<&Stanza> for StanzaDTO {
-    fn from(value: &Stanza) -> Self {
-        StanzaDTO::from_stanza_common(value)
+impl From<StanzaDTO> for UpdateStanza {
+    fn from(value: StanzaDTO) -> Self {
+        Self {
+            altezza: value.altezza.map(|v| v as i16),
+            spessore_muro: value.spessore_muro.map(|v| v as i16),
+            riscaldamento: value.riscaldamento,
+            raffrescamento: value.raffrescamento,
+            illuminazione: value.illuminazione,
+        }
     }
 }

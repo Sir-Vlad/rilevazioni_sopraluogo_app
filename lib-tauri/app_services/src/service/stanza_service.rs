@@ -1,21 +1,29 @@
-use crate::dao::crud_operations::{GetAll, Insert, Update};
-use crate::dao::entity::StanzaConInfissi;
 use crate::dao::{StanzaConInfissiDao, StanzaDAO};
-use crate::database::Database;
 use crate::dto::StanzaDTO;
-use crate::service::utils::{CreateService, RetrieveManyService, UpdateService};
-use crate::utils::AppError;
+use app_error::AppResult;
+use app_interface::dao_interface::crud_operations::{Get, GetAll, Insert, Update};
+use app_interface::database_interface::DatabaseManager;
+use app_interface::service_interface::{CreateService, RetrieveManyService, UpdateService};
+use app_models::models::StanzaConInfissi;
+use app_models::schema::stanza::dsl::stanza;
+use async_trait::async_trait;
+use diesel::Connection;
 use tauri::State;
 
 pub struct StanzaService;
 
+#[async_trait]
 impl RetrieveManyService<StanzaDTO> for StanzaService {
-    fn retrieve_many(db: State<'_, Database>) -> Result<Vec<StanzaDTO>, AppError> {
-        let conn = db.get_conn();
-        if let Some(conn) = conn.as_ref() {
+    async fn retrieve_many(
+        db: State<'_, impl DatabaseManager + Send + Sync>,
+    ) -> AppResult<Vec<StanzaDTO>> {
+        let mut conn = db.get_connection().await?;
+
+        conn.transaction::<_, _, _>(|conn| {
             let stanze = StanzaDAO::get_all(conn)?;
             let mut stanze_dto: Vec<StanzaDTO> = stanze.iter().map(StanzaDTO::from).collect();
-            let infissi = StanzaConInfissiDao::get_all(conn)?;
+
+            let infissi = StanzaConInfissiDao::get(conn, ())?;
 
             for stanza in &mut stanze_dto {
                 let infissi = infissi.iter().find(|x| x.id_stanza == stanza.id);
@@ -28,14 +36,18 @@ impl RetrieveManyService<StanzaDTO> for StanzaService {
             }
 
             Ok(stanze_dto)
-        } else {
-            Err(AppError::DatabaseNotInitialized)
-        }
+        })
+
+
     }
 }
 
+#[async_trait]
 impl CreateService<StanzaDTO> for StanzaService {
-    fn create(db: State<'_, Database>, stanza: StanzaDTO) -> Result<StanzaDTO, AppError> {
+    async fn create(
+        db: State<'_, impl DatabaseManager + Send + Sync>,
+        item: StanzaDTO,
+    ) -> AppResult<StanzaDTO> {
         let conn = db.get_conn();
         if let Some(conn) = conn.as_ref() {
             let result = StanzaDAO::insert(conn, stanza.clone().into())?;
@@ -46,8 +58,12 @@ impl CreateService<StanzaDTO> for StanzaService {
     }
 }
 
+#[async_trait]
 impl UpdateService<StanzaDTO> for StanzaService {
-    fn update(db: State<'_, Database>, stanza: StanzaDTO) -> Result<StanzaDTO, AppError> {
+    async fn update(
+        db: State<'_, impl DatabaseManager + Send + Sync>,
+        item: StanzaDTO,
+    ) -> AppResult<StanzaDTO> {
         db.with_transaction(|tx| {
             let stanza_aggiornata = StanzaDAO::update(tx, stanza.clone().into())?;
             let stanza_dto = match &stanza.infissi {

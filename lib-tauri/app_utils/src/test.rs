@@ -3,7 +3,7 @@ use async_trait::async_trait;
 use diesel::r2d2::{ConnectionManager, Pool};
 use diesel::PgConnection;
 use std::error::Error;
-use std::sync::Once;
+use std::sync::{Once, OnceLock};
 use std::time::Duration;
 use testcontainers::ContainerAsync;
 use testcontainers_modules::postgres::Postgres;
@@ -85,4 +85,20 @@ impl DatabaseConnector for MockDatabaseConnector {
     fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
         self
     }
+}
+
+
+static POOL_DB: OnceLock<Pool<ConnectionManager<PgConnection>>> = OnceLock::new();
+
+pub async fn create_postgres_pool() -> &'static Pool<ConnectionManager<PgConnection>> {
+    POOL_DB.get_or_init(|| {
+        let connection_string =
+            "postgres://app_user:app_password@127.0.0.1:5432/app_development".to_string();
+        let manager = ConnectionManager::<PgConnection>::new(connection_string);
+        Pool::builder()
+            .max_size(1)
+            .connection_timeout(Duration::from_secs(1))
+            .build(manager)
+            .expect("Failed to create pool")
+    })
 }

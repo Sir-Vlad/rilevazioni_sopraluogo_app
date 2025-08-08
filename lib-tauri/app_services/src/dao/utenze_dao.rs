@@ -1,88 +1,61 @@
-use crate::dao::crud_operations::{GetAll, Insert, Update};
-use crate::dao::entity::Utenza;
-use crate::dao::utils::schema_operations::CreateTable;
-use crate::dao::utils::DAO;
-use crate::database::{
-    convert_param, DatabaseConnection, QueryBuilder, SqlQueryBuilder, WhereBuilder,
-};
-use crate::utils::AppError;
-use log::info;
+use app_error::DomainError;
+use app_interface::dao_interface::crud_operations::{GetAll, Insert, Update};
+use app_interface::dao_interface::DAO;
+use app_interface::database_interface::PostgresPooled;
+use app_models::models::{NewUtenza, UpdateUtenza, Utenza};
+use app_models::schema::utenze;
+use diesel::result::Error;
+use diesel::RunQueryDsl;
 
 pub struct UtenzeDAO;
 
-impl DAO for UtenzeDAO {
-    fn table_name() -> &'static str {
-        "UTENZE"
-    }
-}
-
-impl CreateTable for UtenzeDAO {
-    fn create_table<C: DatabaseConnection>(conn: &C) -> Result<(), AppError> {
-        conn.execute(
-            format!("CREATE TABLE IF NOT EXISTS {}
-            (
-                ID                  INTEGER PRIMARY KEY AUTOINCREMENT,
-                ID_EDIFICIO         TEXT NOT NULL REFERENCES EDIFICIO (CHIAVE),
-                TIPO                TEXT NOT NULL CHECK ( TIPO IN ('idrica', 'termica', 'elettrica') ),
-                COD_CONTATORE       TEXT NOT NULL,
-                INDIRIZZO_CONTATORE TEXT
-            ) STRICT;", Self::table_name()).as_str(),
-            (),
-        )?;
-        info!("Table utenze creata");
-        Ok(())
-    }
-}
+impl DAO for UtenzeDAO {}
 
 impl GetAll<Utenza> for UtenzeDAO {
-    fn get_all<C: DatabaseConnection>(conn: &C) -> Result<Vec<Utenza>, AppError> {
-        let (query, _) = QueryBuilder::select().table("UTENZE").build()?;
-        let mut stmt = conn.prepare(query.as_str())?;
-        let result: Result<Vec<Utenza>, rusqlite::Error> = stmt
-            .query_map([], |row| {
-                Ok(Utenza {
-                    id: row.get("ID")?,
-                    id_edificio: row.get("ID_EDIFICIO")?,
-                    tipo: row.get::<_, String>("TIPO")?.into(),
-                    cod_contatore: row.get("COD_CONTATORE")?,
-                    indirizzo_contatore: row.get("INDIRIZZO_CONTATORE")?,
-                })
-            })?
-            .collect();
-        result.map_err(AppError::from)
+    type Output = Utenza;
+    fn get_all(conn: &mut PostgresPooled) -> Result<Vec<Self::Output>, DomainError> {
+        utenze::table.load(conn).map_err(DomainError::from)
     }
 }
 
-impl Insert<Utenza> for UtenzeDAO {
-    fn insert<C: DatabaseConnection>(conn: &C, item: Utenza) -> Result<Utenza, AppError> {
-        let builder = QueryBuilder::insert()
-            .table("UTENZE")
-            .columns(vec![
-                "ID_EDIFICIO",
-                "TIPO",
-                "COD_CONTATORE",
-                "INDIRIZZO_CONTATORE",
-            ])
-            .values(vec![
-                item.id_edificio.clone().into(),
-                item.tipo.to_string().into(),
-                item.cod_contatore.clone().into(),
-                item.indirizzo_contatore.clone().into(),
-            ])
-            .returning("ID");
-        let (query, param) = builder.build()?;
-        let mut stmt = conn.prepare(query.as_str())?;
-        let mut result = stmt
-            .query_map(rusqlite::params_from_iter(convert_param(param)), |row| {
-                row.get::<_, u64>(0)
-            })?;
-        let id = result.next().unwrap()?;
-        info!("Utenza inserita con id {}", id);
-        Ok(Utenza { id, ..item })
+impl Insert<NewUtenza> for UtenzeDAO {
+    type Output = Utenza;
+    fn insert(conn: &mut PostgresPooled, item: NewUtenza) -> Result<Self::Output, DomainError> {
+        diesel::insert_into(utenze::table)
+            .values(&item)
+            .get_result(conn)
+            .map_err(|e| match e {
+                Error::NotFound => DomainError::UtenzaNotFound,
+                Error::DatabaseError(kind, ..) => {
+                    if matches!(kind, diesel::result::DatabaseErrorKind::UniqueViolation) {
+                        DomainError::UtenzaAlreadyExists
+                    } else {
+                        DomainError::from(e)
+                    }
+                }
+                _ => DomainError::Unexpected(e),
+            })
     }
 }
 
-impl Update<Utenza> for UtenzeDAO {
+impl Update<UpdateUtenza, i32> for UtenzeDAO {
+    type Output = Utenza;
+
+    fn update(
+        conn: &mut PostgresPooled,
+        id: i32,
+        item: UpdateUtenza,
+    ) -> Result<Self::Output, DomainError> {
+        diesel::update(utenze::table)
+            .set(&item)
+            .get_result(conn)
+            .map_err(|e| match e {
+                Error::NotFound => DomainError::StanzaNotFound,
+                _ => DomainError::Unexpected(e),
+            })
+    }
+
+    /*
     fn update<C: DatabaseConnection>(conn: &C, item: Utenza) -> Result<Utenza, AppError> {
         let builder = QueryBuilder::update()
             .table("UTENZE")
@@ -96,14 +69,20 @@ impl Update<Utenza> for UtenzeDAO {
         )?;
         Ok(item)
     }
+
+     */
 }
 
 #[cfg(test)]
 mod tests {
     use super::super::*;
+    /*
     use crate::dao::crud_operations::{Insert, Update};
     use crate::dao::entity::{Edificio, TipoUtenza, Utenza};
     use crate::dao::utils::schema_operations::CreateTable;
+    use app_interface::dao_interface::crud_operations::Insert;
+    use app_models::models::{Edificio, Utenza};
+    use diesel::Connection;
     use once_cell::sync::Lazy;
     use rusqlite::Connection;
     use serial_test::serial;
@@ -175,4 +154,6 @@ mod tests {
             Err(e) => panic!("{}", e),
         }
     }
+    
+     */
 }

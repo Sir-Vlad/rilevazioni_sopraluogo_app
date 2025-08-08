@@ -1,81 +1,46 @@
-use crate::dao::crud_operations::{GetAll, Insert};
-use crate::dao::entity::MaterialeInfisso;
-use crate::dao::utils::schema_operations::CreateTable;
-use crate::dao::utils::DAO;
-use crate::database::{convert_param, DatabaseConnection, QueryBuilder, SqlQueryBuilder};
-use crate::utils::AppError;
-use log::info;
+use app_error::DomainError;
+use app_interface::dao_interface::crud_operations::GetAll;
+use app_interface::dao_interface::DAO;
+use app_interface::database_interface::PostgresPooled;
+use app_models::models::MaterialeInfisso;
+use app_models::schema::materiale_infisso;
+use diesel::RunQueryDsl;
 
 pub struct MaterialeInfissoDAO;
 
 impl DAO for MaterialeInfissoDAO {
-    fn table_name() -> &'static str {
-        "MATERIALE_INFISSO"
-    }
-}
-
-impl CreateTable for MaterialeInfissoDAO {
-    fn create_table<C: DatabaseConnection>(conn: &C) -> Result<(), AppError> {
-        conn.execute(
-            format!(
-                "CREATE TABLE IF NOT EXISTS {}
-                (
-                    ID                    INTEGER PRIMARY KEY AUTOINCREMENT,
-                    MATERIALE             TEXT    NOT NULL UNIQUE COLLATE NOCASE,
-                    EFFICIENZA_ENERGETICA INTEGER NOT NULL
-                ) STRICT;",
-                Self::table_name()
-            )
-            .as_str(),
-            (),
-        )?;
-        info!("Tabella MATERIALI_INFISSO creata");
-        Ok(())
-    }
 }
 
 impl GetAll<MaterialeInfisso> for MaterialeInfissoDAO {
-    fn get_all<C: DatabaseConnection>(conn: &C) -> Result<Vec<MaterialeInfisso>, AppError> {
-        let (query, _) = QueryBuilder::select().table("MATERIALE_INFISSO").build()?;
-
-        let mut stmt = conn.prepare(query.as_str())?;
-
-        let result: Result<Vec<MaterialeInfisso>, rusqlite::Error> = stmt
-            .query_map([], |row| {
-                Ok(MaterialeInfisso {
-                    _id: Some(row.get::<_, u64>("ID")?),
-                    materiale: row.get::<_, String>("MATERIALE")?,
-                    efficienza_energetica: row.get::<_, u8>("EFFICIENZA_ENERGETICA")?,
-                })
-            })?
-            .collect();
-        result.map_err(|e| AppError::from(e))
+    type Output = MaterialeInfisso;
+    fn get_all(conn: &mut PostgresPooled) -> Result<Vec<Self::Output>, DomainError> {
+        materiale_infisso::table
+            .load(conn)
+            .map_err(|e| DomainError::from(e))
     }
 }
 
+/*
 impl Insert<MaterialeInfisso> for MaterialeInfissoDAO {
-    fn insert<C: DatabaseConnection>(
-        conn: &C,
+    fn insert(
+        conn: &mut PostgresPooled,
         item: MaterialeInfisso,
-    ) -> Result<MaterialeInfisso, AppError> {
-        let builder = QueryBuilder::insert()
-            .table(Self::table_name())
-            .columns(vec!["MATERIALE", "EFFICIENZA_ENERGETICA"])
-            .values(vec![
-                item.materiale.clone().into(),
-                item.efficienza_energetica.into(),
-            ])
-            .returning("ID");
-        let (query, param) = builder.build()?;
-        let mut stmt = conn.prepare(query.as_str())?;
-        let mut res = stmt.query_map(rusqlite::params_from_iter(convert_param(param)), |row| {
-            row.get::<_, u64>(0)
-        })?;
-        let id = res.next().unwrap()?;
-        info!("Inserito materiale infisso con id {}", item.materiale);
-        Ok(MaterialeInfisso {
-            _id: Some(id),
-            ..item
-        })
+    ) -> Result<Self::Output, DomainError> {
+        diesel::insert_into(materiale_infisso::table)
+            .values(&item)
+            .get_result(conn)
+            .map_err(|e| match e {
+                Error::NotFound => DomainError::MaterialeInfissoNotFound,
+                Error::DatabaseError(kind, ref db_info) => {
+                    if matches!(kind, diesel::result::DatabaseErrorKind::UniqueViolation) {
+                        DomainError::MaterialeInfissoAlreadyExists
+                    } else {
+                        DomainError::from(e)
+                    }
+                }
+                _ => DomainError::Unexpected(e),
+            })
     }
 }
+
+ */

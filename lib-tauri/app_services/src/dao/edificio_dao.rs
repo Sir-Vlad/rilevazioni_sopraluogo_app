@@ -10,45 +10,41 @@ use diesel::{QueryDsl, RunQueryDsl};
 pub struct EdificioDAO;
 
 impl DAO for EdificioDAO {
-    type Item = Edificio;
 }
 
 impl GetAll<Edificio> for EdificioDAO {
-    fn get_all(conn: &mut PostgresPooled) -> Result<Vec<Self::Item>, DomainError> {
-        edificio::table.load::<Edificio>(conn).map_err(|e| match e {
-            Error::NotFound => DomainError::EdificioNotFound("Not find edificio".to_string()),
-            _ => DomainError::Unexpected(e),
-        })
+    type Output = Edificio;
+    fn get_all(conn: &mut PostgresPooled) -> Result<Vec<Self::Output>, DomainError> {
+        edificio::table.load::<Edificio>(conn).map_err(DomainError::from)
     }
 }
 
 impl Get<Edificio, String> for EdificioDAO {
-    fn get(conn: &mut PostgresPooled, id: String) -> Result<Self::Item, DomainError> {
+    type Output = Edificio;
+    fn get(conn: &mut PostgresPooled, id: String) -> Result<Self::Output, DomainError> {
         edificio::table
             .find(id)
             .first::<Edificio>(conn)
             .map_err(|e| match e {
-                Error::NotFound => DomainError::EdificioNotFound("Not find edificio".to_string()),
+                Error::NotFound => DomainError::EdificioNotFound,
                 _ => DomainError::Unexpected(e),
             })
     }
 }
 
 impl Insert<NewEdificio> for EdificioDAO {
-    fn insert(conn: &mut PostgresPooled, item: NewEdificio) -> Result<Self::Item, DomainError> {
+    type Output = Edificio;
+    fn insert(conn: &mut PostgresPooled, item: NewEdificio) -> Result<Self::Output, DomainError> {
         diesel::insert_into(edificio::table)
             .values(&item)
             .get_result(conn)
             .map_err(|e| match e {
-                Error::NotFound => DomainError::EdificioNotFound("Not find edificio".to_string()),
+                Error::NotFound => DomainError::EdificioNotFound,
                 Error::DatabaseError(kind, _) => {
                     if matches!(kind, diesel::result::DatabaseErrorKind::UniqueViolation) {
-                        DomainError::EdificioAlreadyExists(format!(
-                            "Edificio already exists: {}",
-                            item.chiave
-                        ))
+                        DomainError::EdificioAlreadyExists
                     } else {
-                        DomainError::Unexpected(e)
+                        DomainError::from(e)
                     }
                 }
                 _ => DomainError::Unexpected(e),
@@ -57,16 +53,17 @@ impl Insert<NewEdificio> for EdificioDAO {
 }
 
 impl Update<UpdateEdificio, String> for EdificioDAO {
+    type Output = Edificio;
     fn update(
         conn: &mut PostgresPooled,
         id: String,
         item: UpdateEdificio,
-    ) -> Result<Self::Item, DomainError> {
+    ) -> Result<Self::Output, DomainError> {
         diesel::update(edificio::table.find(id))
             .set(&item)
             .get_result(conn)
             .map_err(|e| match e {
-                Error::NotFound => DomainError::EdificioNotFound("Not find edificio".to_string()),
+                Error::NotFound => DomainError::EdificioNotFound,
                 _ => DomainError::Unexpected(e),
             })
     }
@@ -75,25 +72,7 @@ impl Update<UpdateEdificio, String> for EdificioDAO {
 #[cfg(test)]
 mod test {
     use super::*;
-    use diesel::r2d2::{ConnectionManager, Pool};
-    use diesel::PgConnection;
-    use std::sync::OnceLock;
-    use std::time::Duration;
-
-    static POOL_DB: OnceLock<Pool<ConnectionManager<PgConnection>>> = OnceLock::new();
-
-    async fn create_postgres_pool() -> &'static Pool<ConnectionManager<PgConnection>> {
-        POOL_DB.get_or_init(|| {
-            let connection_string =
-                "postgres://app_user:app_password@127.0.0.1:5432/app_development".to_string();
-            let manager = ConnectionManager::<PgConnection>::new(connection_string);
-            Pool::builder()
-                .max_size(1)
-                .connection_timeout(Duration::from_secs(1))
-                .build(manager)
-                .expect("Failed to create pool")
-        })
-    }
+    use app_utils::test::create_postgres_pool;
 
     #[tokio::test]
     async fn test_get_all() {

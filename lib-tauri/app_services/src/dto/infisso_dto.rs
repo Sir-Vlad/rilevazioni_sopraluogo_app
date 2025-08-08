@@ -1,5 +1,5 @@
-use crate::dao::entity::Infisso;
-use crate::dto::DTO;
+use app_interface::dto_interface::DTO;
+use app_models::models::{Infisso, NewInfisso, UpdateInfisso};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -21,10 +21,35 @@ impl From<&Infisso> for InfissoDTO {
             id: infisso.id.clone(),
             id_edificio: infisso.edificio_id.clone(),
             tipo: infisso.tipo.clone(),
-            altezza: infisso.altezza,
-            larghezza: infisso.larghezza,
+            altezza: infisso.altezza as u16,
+            larghezza: infisso.larghezza as u16,
             materiale: infisso.materiale.clone(),
             vetro: infisso.vetro.clone(),
+        }
+    }
+}
+
+impl From<InfissoDTO> for NewInfisso {
+    fn from(value: InfissoDTO) -> Self {
+        Self {
+            id: value.id,
+            edificio_id: value.id_edificio,
+            tipo: value.tipo,
+            altezza: value.altezza as i16,
+            larghezza: value.larghezza as i16,
+            materiale: value.materiale,
+            vetro: value.vetro,
+        }
+    }
+}
+
+impl From<InfissoDTO> for UpdateInfisso {
+    fn from(value: InfissoDTO) -> Self {
+        Self {
+            altezza: Some(value.altezza as i16),
+            larghezza: Some(value.larghezza as i16),
+            materiale: Some(value.materiale),
+            vetro: Some(value.vetro),
         }
     }
 }

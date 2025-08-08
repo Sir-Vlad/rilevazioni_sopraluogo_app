@@ -1,147 +1,63 @@
-use crate::dao::crud_operations::{GetAll, Insert, Update};
-use crate::dao::entity::Infisso;
-use crate::dao::utils::schema_operations::CreateTable;
-use crate::dao::utils::DAO;
-use crate::database::{
-    convert_param, DatabaseConnection, QueryBuilder, SqlQueryBuilder, WhereBuilder,
-};
-use crate::utils::AppError;
-use log::{error, info};
+use app_error::DomainError;
+use app_interface::dao_interface::crud_operations::{GetAll, Insert, Update};
+use app_interface::dao_interface::DAO;
+use app_interface::database_interface::PostgresPooled;
+use app_models::models::{Infisso, NewInfisso, UpdateInfisso};
+use app_models::schema::infisso;
+use diesel::result::Error;
+use diesel::{QueryDsl, RunQueryDsl};
 
 pub struct InfissoDAO;
 
 impl DAO for InfissoDAO {
-    fn table_name() -> &'static str {
-        "INFISSO"
-    }
-}
 
-impl CreateTable for InfissoDAO {
-    fn create_table<C: DatabaseConnection>(conn: &C) -> Result<(), AppError> {
-        conn.execute(
-            format!(
-                "CREATE TABLE IF NOT EXISTS {}
-                (
-                    ID        TEXT,
-                    EDIFICIO  TEXT    NOT NULL REFERENCES EDIFICIO (CHIAVE),
-                    TIPO      TEXT    NOT NULL REFERENCES TIPO_INFISSO (NOME),
-                    ALTEZZA   INTEGER NOT NULL CHECK ( ALTEZZA >= 0 ),
-                    LARGHEZZA INTEGER NOT NULL CHECK ( LARGHEZZA >= 0 ),
-                    MATERIALE TEXT    NOT NULL REFERENCES MATERIALE_INFISSO (MATERIALE),
-                    VETRO     TEXT    NOT NULL REFERENCES VETRO_INFISSO (VETRO),
-                    MQ        REAL GENERATED ALWAYS AS ((ALTEZZA * LARGHEZZA) / 10000.0) VIRTUAL,
-                    PRIMARY KEY (ID, EDIFICIO),
-                    UNIQUE (ID, EDIFICIO, TIPO, ALTEZZA, LARGHEZZA, MATERIALE, VETRO)
-                ) STRICT;",
-                Self::table_name()
-            )
-            .as_str(),
-            (),
-        )?;
-        info!("Tabella INFISSO creata");
-        Ok(())
-    }
 }
 
 impl GetAll<Infisso> for InfissoDAO {
-    fn get_all<C: DatabaseConnection>(conn: &C) -> Result<Vec<Infisso>, AppError> {
-        let (query, _) = QueryBuilder::select().table(Self::table_name()).build()?;
-
-        let mut stmt = conn.prepare(query.as_str())?;
-        let infissi: Result<Vec<Infisso>, rusqlite::Error> = stmt
-            .query_map([], |row| {
-                Ok(Infisso {
-                    id: row.get::<_, String>("ID")?,
-                    edificio_id: row.get::<_, String>("EDIFICIO")?,
-                    tipo: row.get::<_, String>("TIPO")?,
-                    altezza: row.get::<_, u16>("ALTEZZA")?,
-                    larghezza: row.get::<_, u16>("LARGHEZZA")?,
-                    materiale: row.get::<_, String>("MATERIALE")?,
-                    vetro: row.get::<_, String>("VETRO")?,
-                })
-            })?
-            .collect();
-
-        match infissi {
-            Ok(infissi) => Ok(infissi),
-            Err(e) => Err(AppError::from(e)),
-        }
+    type Output = Infisso;
+    fn get_all(conn: &mut PostgresPooled) -> Result<Vec<Self::Output>, DomainError> {
+        infisso::table.load(conn).map_err(DomainError::from)
     }
 }
 
-impl Insert<Infisso> for InfissoDAO {
-    fn insert<C: DatabaseConnection>(conn: &C, item: Infisso) -> Result<Infisso, AppError> {
-        let builder = QueryBuilder::insert()
-            .table(Self::table_name())
-            .columns(vec![
-                "ID",
-                "EDIFICIO",
-                "TIPO",
-                "ALTEZZA",
-                "LARGHEZZA",
-                "MATERIALE",
-                "VETRO",
-            ])
-            .values(vec![
-                item.id.clone().into(),
-                item.edificio_id.clone().into(),
-                item.tipo.clone().into(),
-                item.altezza.into(),
-                item.larghezza.into(),
-                item.materiale.clone().into(),
-                item.vetro.clone().into(),
-            ]);
-        let (query, params) = builder.build()?;
-
-        match conn.execute(
-            query.as_str(),
-            rusqlite::params_from_iter(convert_param(params)),
-        ) {
-            Ok(_) => {
-                info!("Infisso {} inserito con successo", item.id);
-                Ok(item)
-            }
-            Err(e) => {
-                error!(
-                    "Errore durante l'inserimento dell'infisso {}: {}",
-                    item.id, e
-                );
-                Err(e)
-            }
-        }
+impl Insert<NewInfisso> for InfissoDAO {
+    type Output = Infisso;
+    fn insert(conn: &mut PostgresPooled, item: NewInfisso) -> Result<Self::Output, DomainError> {
+        diesel::insert_into(infisso::table)
+            .values(&item)
+            .get_result(conn)
+            .map_err(|e| match e {
+                Error::NotFound => DomainError::InfissoNotFound,
+                Error::DatabaseError(kind, ref db_info) => {
+                    if matches!(kind, diesel::result::DatabaseErrorKind::UniqueViolation) {
+                        DomainError::InfissoAlreadyExists
+                    } else {
+                        DomainError::from(e)
+                    }
+                }
+                _ => DomainError::Unexpected(e),
+            })
     }
 }
 
-impl Update<Infisso> for InfissoDAO {
-    fn update<C: DatabaseConnection>(conn: &C, item: Infisso) -> Result<Infisso, AppError> {
-        let builder = QueryBuilder::update()
-            .table(Self::table_name())
-            .set("ALTEZZA", item.altezza)
-            .set("LARGHEZZA", item.larghezza)
-            .set("MATERIALE", item.materiale.clone())
-            .set("VETRO", item.vetro.clone())
-            .where_eq("ID", item.id.clone())
-            .where_eq("EDIFICIO", item.edificio_id.clone());
-        let (query, params) = builder.build()?;
+impl Update<UpdateInfisso, (String, String)> for InfissoDAO {
+    type Output = Infisso;
 
-        println!("{}", query);
-        println!("{:?}", params);
+    /// id -> (infisso, edificio)
+    fn update(
+        conn: &mut PostgresPooled,
+        id: (String, String),
+        item: UpdateInfisso,
+    ) -> Result<Self::Output, DomainError> {
+        let id_infisso = id.0;
+        let id_edificio = id.1;
 
-        match conn.execute(
-            query.as_str(),
-            rusqlite::params_from_iter(convert_param(params)),
-        ) {
-            Ok(_) => {
-                info!("Infisso {} aggiornato con successo", item.id);
-                Ok(item)
-            }
-            Err(e) => {
-                error!(
-                    "Errore durante l'aggiornamento dell'infisso {}: {}",
-                    item.id, e
-                );
-                Err(e)
-            }
-        }
+        diesel::update(infisso::table.find((id_infisso, id_edificio)))
+            .set(&item)
+            .get_result(conn)
+            .map_err(|e| match e {
+                Error::NotFound => DomainError::InfissoNotFound,
+                _ => DomainError::Unexpected(e),
+            })
     }
 }

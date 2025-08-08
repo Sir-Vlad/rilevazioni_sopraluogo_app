@@ -56,3 +56,43 @@ calamine = "0.29.0"
 # Testing
 testcontainers = "0.24.0"
 testcontainers-modules = { version = "0.12.1", features = ["postgres", "blocking"] }
+
+# Profilo di sviluppo (per debug e sviluppo generale)
+[profile.dev]
+opt-level = 0          # Nessuna ottimizzazione per compilazione veloce
+debug = true           # Include simboli di debug
+debug-assertions = true # Mantiene le assertion per debug
+overflow-checks = true # Controlla overflow in debug
+lto = false           # No Link Time Optimization
+codegen-units = 256   # Massima parallelizzazione per compilazione veloce
+incremental = true    # Compilazione incrementale abilitata
+
+# Profilo per test (veloce ma con alcune ottimizzazioni)
+[profile.test]
+opt-level = 1         # Ottimizzazione leggera per test più veloci
+debug = true          # Mantiene debug per analisi errori
+debug-assertions = true
+overflow-checks = true
+lto = false
+codegen-units = 256
+incremental = true
+
+# Profilo di release per produzione (massimamente ottimizzato)
+[profile.release]
+opt-level = 3         # Massima ottimizzazione
+debug = false         # Nessun simbolo di debug
+debug-assertions = false
+overflow-checks = false
+lto = "fat"          # Link Time Optimization completa
+codegen-units = 1    # Una sola unità per migliori ottimizzazioni
+panic = "abort"      # Abort invece di unwind per binari più piccoli
+strip = true         # Rimuove simboli per ridurre dimensione
+
+# Profilo personalizzato per test di performance
+[profile.bench]
+opt-level = 3
+debug = false
+debug-assertions = false
+overflow-checks = false
+lto = "thin"         # LTO leggera per bilanciare velocità compilazione/esecuzione
+codegen-units = 16

@@ -1,5 +1,5 @@
-use crate::dao::entity::Illuminazione;
-use crate::dto::DTO;
+use app_interface::dto_interface::DTO;
+use app_models::models::Illuminazione;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Deserialize, Serialize)]
@@ -14,7 +14,7 @@ impl From<Illuminazione> for IlluminazioneDTO {
     fn from(value: Illuminazione) -> Self {
         Self {
             lampadina: value.lampadina,
-            efficienza_energetica: value.efficienza_energetica,
+            efficienza_energetica: value.eff_energetica as u8,
         }
     }
 }

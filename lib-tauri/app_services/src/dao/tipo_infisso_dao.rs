@@ -1,56 +1,26 @@
-use crate::dao::crud_operations::{GetAll, Insert};
-use crate::dao::entity::TipoInfisso;
-use crate::dao::schema_operations::CreateTable;
-use crate::dao::utils::DAO;
-use crate::database::{DatabaseConnection, QueryBuilder, SqlQueryBuilder};
-use crate::utils::AppError;
-use log::info;
-use rusqlite::params;
+use app_error::DomainError;
+use app_interface::dao_interface::crud_operations::{GetAll, Insert};
+use app_interface::dao_interface::DAO;
+use app_interface::database_interface::PostgresPooled;
+use app_models::models::TipoInfisso;
+use app_models::schema::tipo_infisso;
+use diesel::RunQueryDsl;
 
 pub struct TipoInfissoDAO;
 
 impl DAO for TipoInfissoDAO {
-    fn table_name() -> &'static str {
-        "TIPO_INFISSO"
-    }
 }
 
-impl CreateTable for TipoInfissoDAO {
-    fn create_table<C: DatabaseConnection>(conn: &C) -> Result<(), AppError> {
-        conn.execute(
-            format!(
-                "CREATE TABLE IF NOT EXISTS {}
-                (
-                    ID   INTEGER PRIMARY KEY,
-                    NOME TEXT NOT NULL UNIQUE
-                )
-                ",
-                Self::table_name()
-            )
-            .as_str(),
-            (),
-        )?;
-        info!("Tabella TIPO_INFISSO creata");
-        Ok(())
-    }
-}
 
 impl GetAll<TipoInfisso> for TipoInfissoDAO {
-    fn get_all<C: DatabaseConnection>(conn: &C) -> Result<Vec<TipoInfisso>, AppError> {
-        let (query, _) = QueryBuilder::select().table(Self::table_name()).build()?;
-        let mut stmt = conn.prepare(query.as_str())?;
-        let results = stmt
-            .query_map([], |row| {
-                Ok(TipoInfisso {
-                    _id: row.get("ID")?,
-                    nome: row.get("NOME")?,
-                })
-            })?
-            .collect::<Result<Vec<_>, _>>();
-        results.map_err(AppError::from)
+    type Output = TipoInfisso;
+
+    fn get_all(conn: &mut PostgresPooled) -> Result<Vec<Self::Output>, DomainError> {
+        tipo_infisso::table.load(conn).map_err(DomainError::from)
     }
 }
 
+/*
 impl Insert<TipoInfisso> for TipoInfissoDAO {
     fn insert<C: DatabaseConnection>(conn: &C, item: TipoInfisso) -> Result<TipoInfisso, AppError> {
         let query = format!(
@@ -64,3 +34,4 @@ impl Insert<TipoInfisso> for TipoInfissoDAO {
         Ok(TipoInfisso { _id: id, ..item })
     }
 }
+*/

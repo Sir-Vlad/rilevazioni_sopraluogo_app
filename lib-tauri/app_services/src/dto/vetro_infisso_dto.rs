@@ -1,5 +1,5 @@
-use crate::dao::entity::VetroInfisso;
-use crate::dto::DTO;
+use app_interface::dto_interface::DTO;
+use app_models::models::VetroInfisso;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Deserialize, Serialize)]
@@ -14,7 +14,7 @@ impl From<VetroInfisso> for VetroInfissoDTO {
     fn from(value: VetroInfisso) -> Self {
         Self {
             vetro: value.vetro,
-            efficienza_energetica: value.efficienza_energetica,
+            efficienza_energetica: value.eff_energetica as u8,
         }
     }
 }

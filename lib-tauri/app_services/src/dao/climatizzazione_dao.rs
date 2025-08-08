@@ -1,162 +1,79 @@
-use crate::dao::crud_operations::{GetAll, Insert};
-use crate::dao::entity::Climatizzazione;
-use crate::dao::schema_operations::CreateTable;
-use crate::dao::utils::DAO;
-use crate::database::{convert_param, DatabaseConnection, QueryBuilder, SqlQueryBuilder};
-use crate::utils::AppError;
-use log::info;
+use app_error::DomainError;
+use app_interface::dao_interface::crud_operations::{GetAll, Insert};
+use app_interface::dao_interface::DAO;
+use app_interface::database_interface::PostgresPooled;
+use app_models::models::Climatizzazione;
+use app_models::schema::climatizzazione;
+use diesel::result::Error;
+use diesel::RunQueryDsl;
 
 pub struct ClimatizzazioneDAO;
 
 impl DAO for ClimatizzazioneDAO {
-    fn table_name() -> &'static str {
-        "CLIMATIZZAZIONE"
-    }
-}
-
-impl CreateTable for ClimatizzazioneDAO {
-    fn create_table<C: DatabaseConnection>(conn: &C) -> Result<(), AppError> {
-        conn.execute(
-            format!(
-                "CREATE TABLE IF NOT EXISTS {}
-                (
-                    ID                    INTEGER PRIMARY KEY AUTOINCREMENT,
-                    CLIMATIZZAZIONE       TEXT    NOT NULL UNIQUE COLLATE NOCASE,
-                    EFFICIENZA_ENERGETICA INTEGER NOT NULL
-                ) STRICT;",
-                Self::table_name()
-            )
-            .as_str(),
-            (),
-        )?;
-        info!("Tabella CLIMATIZZAZIONE creata");
-        Ok(())
-    }
 }
 
 impl GetAll<Climatizzazione> for ClimatizzazioneDAO {
-    fn get_all<C: DatabaseConnection>(conn: &C) -> Result<Vec<Climatizzazione>, AppError> {
-        let (query, _) = QueryBuilder::select().table(Self::table_name()).build()?;
-
-        let mut stmt = conn.prepare(query.as_str())?;
-
-        let result: Result<Vec<Climatizzazione>, rusqlite::Error> = stmt
-            .query_map([], |row| {
-                Ok(Climatizzazione {
-                    _id: Some(row.get::<_, u64>("ID")?),
-                    climatizzazione: row.get::<_, String>("CLIMATIZZAZIONE")?,
-                    efficienza_energetica: row.get::<_, u8>("EFFICIENZA_ENERGETICA")?,
-                })
-            })?
-            .collect();
-        result.map_err(AppError::from)
+    type Output = Climatizzazione;
+    fn get_all(conn: &mut PostgresPooled) -> Result<Vec<Self::Output>, DomainError> {
+        climatizzazione::table
+            .load::<Climatizzazione>(conn)
+            .map_err(|e| match e {
+                Error::NotFound => {
+                    DomainError::AnnotazioneNotFound
+                }
+                _ => DomainError::Unexpected(e),
+            })
     }
 }
-
-impl Insert<Climatizzazione> for ClimatizzazioneDAO {
-    fn insert<C: DatabaseConnection>(
-        conn: &C,
-        item: Climatizzazione,
-    ) -> Result<Climatizzazione, AppError> {
-        let builder = QueryBuilder::insert()
-            .table(Self::table_name())
-            .columns(vec!["CLIMATIZZAZIONE", "EFFICIENZA_ENERGETICA"])
-            .values(vec![
-                item.climatizzazione.clone().into(),
-                item.efficienza_energetica.into(),
-            ])
-            .returning("ID");
-        let (query, param) = builder.build()?;
-        let mut stmt = conn.prepare(query.as_str())?;
-        let mut res = stmt.query_map(rusqlite::params_from_iter(convert_param(param)), |row| {
-            row.get::<_, u64>(0)
-        })?;
-        let id = res.next().unwrap()?;
-        info!(
-            "Nuovo tipo di climatizzazione inserito con ID: {}",
-            item.climatizzazione
-        );
-        Ok(Climatizzazione {
-            _id: Some(id),
-            ..item
-        })
-    }
-}
+//
+// impl Insert<NewClima> for ClimatizzazioneDAO {
+//     fn insert(conn: &mut PostgresPooled, item: Climatizzazione) -> Result<Self::Output, DomainError> {
+//         diesel::insert_into(climatizzazione::table)
+//             .values()
+//     }
+//     // fn insert<C: DatabaseConnection>(
+//     //     conn: &C,
+//     //     item: Climatizzazione,
+//     // ) -> Result<Climatizzazione, AppError> {
+//     //     let builder = QueryBuilder::insert()
+//     //         .table(Self::table_name())
+//     //         .columns(vec!["CLIMATIZZAZIONE", "EFFICIENZA_ENERGETICA"])
+//     //         .values(vec![
+//     //             item.climatizzazione.clone().into(),
+//     //             item.efficienza_energetica.into(),
+//     //         ])
+//     //         .returning("ID");
+//     //     let (query, param) = builder.build()?;
+//     //     let mut stmt = conn.prepare(query.as_str())?;
+//     //     let mut res = stmt.query_map(rusqlite::params_from_iter(convert_param(param)), |row| {
+//     //         row.get::<_, u64>(0)
+//     //     })?;
+//     //     let id = res.next().unwrap()?;
+//     //     info!(
+//     //         "Nuovo tipo di climatizzazione inserito con ID: {}",
+//     //         item.climatizzazione
+//     //     );
+//     //     Ok(Climatizzazione {
+//     //         _id: Some(id),
+//     //         ..item
+//     //     })
+//     // }
+// }
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-    use rusqlite::Connection;
+    use crate::dao::climatizzazione_dao::ClimatizzazioneDAO;
+    use app_interface::dao_interface::crud_operations::GetAll;
+    use app_utils::test::create_postgres_pool;
 
-    fn setup_db() -> Connection {
-        let conn = Connection::open_in_memory().unwrap();
-        conn.execute(
-            "CREATE TABLE CLIMATIZZAZIONE (
-                ID INTEGER PRIMARY KEY,
-                CLIMATIZZAZIONE TEXT NOT NULL,
-                EFFICIENZA_ENERGETICA INTEGER NOT NULL
-            )",
-            [],
-        )
-        .unwrap();
+    #[tokio::test]
+    async fn get_all() {
+        let pool = create_postgres_pool().await;
+        let mut conn = pool.get().unwrap();
 
-        conn
-    }
-
-    fn insert_test_data(conn: &Connection) -> Vec<Climatizzazione> {
-        let test_data = vec![(1, "Neon", 4), (2, "Led", 3), (3, "Fluorescenza", 2)];
-
-        let mut expected_results = Vec::new();
-
-        for (id, climatizzazione, efficienza) in test_data {
-            conn.execute(
-                "INSERT INTO CLIMATIZZAZIONE (id, climatizzazione, efficienza_energetica) 
-                 VALUES (?1, ?2, ?3)",
-                [&id.to_string(), climatizzazione, &efficienza.to_string()],
-            )
-            .unwrap();
-
-            expected_results.push(Climatizzazione {
-                _id: Some(id),
-                climatizzazione: climatizzazione.to_string(),
-                efficienza_energetica: efficienza,
-            });
+        match ClimatizzazioneDAO::get_all(&mut conn) {
+            Ok(data) => assert_eq!(data.len(), 7),
+            Err(e) => panic!("Errore: {e}"),
         }
-
-        expected_results
-    }
-
-    #[test]
-    fn get_all() {
-        let conn = setup_db();
-        let excepted_data = insert_test_data(&conn);
-        let actual_data = ClimatizzazioneDAO::get_all(&conn).unwrap();
-
-        assert_eq!(actual_data.len(), excepted_data.len());
-
-        for (actual, expected) in actual_data.iter().zip(excepted_data.iter()) {
-            assert_eq!(actual, expected);
-        }
-    }
-    #[test]
-    fn get_all_empty_table() {
-        // Setup - solo creazione del database senza inserimento dati
-        let conn = setup_db();
-
-        // Test
-        let risultati = ClimatizzazioneDAO::get_all(&conn).unwrap();
-
-        // Verifica
-        assert!(risultati.is_empty());
-    }
-
-    #[test]
-    fn test_errore_tabella_non_esistente() {
-        // Creare un database in memoria senza creare la tabella CLIMATIZZAZIONE
-        let conn = Connection::open_in_memory().unwrap();
-
-        // Il metodo dovrebbe restituire un errore
-        let risultato = ClimatizzazioneDAO::get_all(&conn);
-        assert!(risultato.is_err());
     }
 }

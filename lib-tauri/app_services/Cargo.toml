@@ -12,7 +12,7 @@ rust-version.workspace = true
 app_database = { path = "../app_database" }
 app_models = { path = "../app_models" }
 app_error = { path = "../app_error" }
-app_interface = {path = "../app_interface", features = ["dao", "services"]}
+app_interface = { path = "../app_interface", features = ["dao", "services"] }
 
 serde = { workspace = true }
 chrono = { workspace = true }
@@ -20,6 +20,8 @@ diesel = { workspace = true }
 tauri = { workspace = true }
 async-trait = { workspace = true }
 tokio = { workspace = true }
+log = { workspace = true }
 
 [dev-dependencies]
 app_models = { path = "../app_models", features = ["test-models"] }
+app_utils = {path = "../app_utils", features = ["test-utils"]}

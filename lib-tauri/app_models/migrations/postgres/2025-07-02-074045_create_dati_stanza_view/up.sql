@@ -43,7 +43,7 @@ select s.id,
        s.riscaldamento,
        s.raffrescamento,
        s.illuminazione,
-       coalesce(round(dgs.mq_infissi::numeric, 2), 0) as mq_infissi,
+       coalesce(round(dgs.mq_infissi::numeric, 2), 0)::float as mq_infissi,
        dgs.materiale,
        dgs.vetro
 from stanza as s

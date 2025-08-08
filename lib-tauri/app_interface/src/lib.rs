@@ -23,9 +23,7 @@ pub mod database_interface {
 
 #[cfg(feature = "dao")]
 pub mod dao_interface {
-    pub trait DAO {
-        type Item;
-    }
+    pub trait DAO {}
 
     pub mod crud_operations {
         use crate::dao_interface::DAO;
@@ -33,24 +31,33 @@ pub mod dao_interface {
         use app_error::DomainError;
 
         pub trait Get<T, K>: DAO {
-            fn get(conn: &mut PostgresPooled, id: K) -> Result<Self::Item, DomainError>;
+            type Output;
+            fn get(conn: &mut PostgresPooled, id: K) -> Result<Self::Output, DomainError>;
         }
 
         pub trait GetAll<T>: DAO {
-            fn get_all(conn: &mut PostgresPooled) -> Result<Vec<Self::Item>, DomainError>;
+            type Output;
+            fn get_all(conn: &mut PostgresPooled) -> Result<Vec<Self::Output>, DomainError>;
         }
 
         pub trait Insert<T>: DAO {
-            fn insert(conn: &mut PostgresPooled, item: T) -> Result<Self::Item, DomainError>;
+            type Output;
+            fn insert(conn: &mut PostgresPooled, item: T) -> Result<Self::Output, DomainError>;
         }
 
         pub trait Update<T, Id>: DAO {
-            fn update(conn: &mut PostgresPooled, id: Id, item: T) -> Result<Self::Item, DomainError>;
+            type Output;
+            fn update(
+                conn: &mut PostgresPooled,
+                id: Id,
+                item: T,
+            ) -> Result<Self::Output, DomainError>;
         }
 
         #[allow(dead_code)]
         pub trait Delete<T, K>: DAO {
-            fn delete(conn: &mut PostgresPooled, item: K) -> Result<bool, DomainError>;
+            type Output;
+            fn delete(conn: &mut PostgresPooled, item: K) -> Result<Self::Output, DomainError>;
         }
     }
 }
@@ -73,7 +80,8 @@ pub mod service_interface {
     where
         T: DTO,
     {
-        async fn create(db: State<'_, impl DatabaseManager + Send + Sync>, item: T) -> AppResult<T>;
+        async fn create(db: State<'_, impl DatabaseManager + Send + Sync>, item: T)
+            -> AppResult<T>;
     }
 
     #[allow(dead_code)]
@@ -82,7 +90,10 @@ pub mod service_interface {
     where
         T: DTO,
     {
-        async fn retrieve_one(db: State<'_, impl DatabaseManager + Send + Sync>, id: K) -> AppResult<T>;
+        async fn retrieve_one(
+            db: State<'_, impl DatabaseManager + Send + Sync>,
+            id: K,
+        ) -> AppResult<T>;
     }
 
     #[async_trait]
@@ -90,7 +101,9 @@ pub mod service_interface {
     where
         T: DTO,
     {
-        async fn retrieve_many(db: State<'_, impl DatabaseManager + Send + Sync>) -> AppResult<Vec<T>>;
+        async fn retrieve_many(
+            db: State<'_, impl DatabaseManager + Send + Sync>,
+        ) -> AppResult<Vec<T>>;
     }
 
     #[async_trait]
@@ -98,7 +111,8 @@ pub mod service_interface {
     where
         T: DTO,
     {
-        async fn update(db: State<'_, impl DatabaseManager + Send + Sync>, item: T) -> AppResult<T>;
+        async fn update(db: State<'_, impl DatabaseManager + Send + Sync>, item: T)
+            -> AppResult<T>;
     }
 
     #[allow(dead_code)]
@@ -107,7 +121,9 @@ pub mod service_interface {
     where
         T: DTO,
     {
-        async fn delete(db: State<'_, impl DatabaseManager + Send + Sync>, id: K) -> AppResult<bool>;
+        async fn delete(
+            db: State<'_, impl DatabaseManager + Send + Sync>,
+            id: K,
+        ) -> AppResult<bool>;
     }
-
 }

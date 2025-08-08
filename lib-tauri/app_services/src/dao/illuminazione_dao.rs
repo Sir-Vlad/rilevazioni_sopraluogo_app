@@ -1,60 +1,29 @@
-use crate::dao::crud_operations::{GetAll, Insert};
-use crate::dao::entity::Illuminazione;
-use crate::dao::utils::schema_operations::CreateTable;
-use crate::dao::utils::DAO;
-use crate::database::{convert_param, DatabaseConnection, QueryBuilder, SqlQueryBuilder};
-use crate::utils::AppError;
-use log::info;
+use app_error::DomainError;
+use app_interface::dao_interface::crud_operations::{GetAll, Insert};
+use app_interface::dao_interface::DAO;
+use app_interface::database_interface::PostgresPooled;
+use app_models::models::Illuminazione;
+use app_models::schema::illuminazione;
+use diesel::result::Error;
+use diesel::RunQueryDsl;
 
 pub struct IlluminazioneDAO;
 
 impl DAO for IlluminazioneDAO {
-    fn table_name() -> &'static str {
-        "ILLUMINAZIONE"
-    }
-}
-
-impl CreateTable for IlluminazioneDAO {
-    fn create_table<C: DatabaseConnection>(conn: &C) -> Result<(), AppError> {
-        conn.execute(
-            format!(
-                "CREATE TABLE IF NOT EXISTS {}
-                    (
-                        ID                    INTEGER PRIMARY KEY AUTOINCREMENT,
-                        LAMPADINA             TEXT    NOT NULL UNIQUE COLLATE NOCASE,
-                        EFFICIENZA_ENERGETICA INTEGER NOT NULL
-                    ) STRICT;",
-                Self::table_name()
-            )
-            .as_str(),
-            (),
-        )?;
-        info!("Tabella ILLUMINAZIONE creata");
-        Ok(())
-    }
 }
 
 impl GetAll<Illuminazione> for IlluminazioneDAO {
-    fn get_all<C: DatabaseConnection>(conn: &C) -> Result<Vec<Illuminazione>, AppError> {
-        let (query, _) = QueryBuilder::select().table(Self::table_name()).build()?;
-
-        let mut stmt = conn.prepare(query.as_str())?;
-
-        let result: Result<Vec<Illuminazione>, rusqlite::Error> = stmt
-            .query_map([], |row| {
-                Ok(Illuminazione {
-                    _id: Some(row.get::<_, u64>("ID")?),
-                    lampadina: row.get::<_, String>("LAMPADINA")?,
-                    efficienza_energetica: row.get::<_, u8>("EFFICIENZA_ENERGETICA")?,
-                })
-            })
-            .expect("Errore nella lettura dei dati di tipo materiale")
-            .collect();
-        result.map_err(|e| AppError::from(e))
+    type Output = Illuminazione;
+    fn get_all(conn: &mut PostgresPooled) -> Result<Vec<Self::Output>, DomainError> {
+        illuminazione::table.load::<Illuminazione>(conn).map_err(|e| match e {
+            Error::NotFound => DomainError::IlluminazioneNotFound,
+            _ => DomainError::Unexpected(e),
+        })
     }
 }
 
-impl Insert<Illuminazione> for IlluminazioneDAO {
+/*
+impl Insert<NewIlluminazione> for IlluminazioneDAO {
     fn insert<C: DatabaseConnection>(
         conn: &C,
         item: Illuminazione,
@@ -80,3 +49,4 @@ impl Insert<Illuminazione> for IlluminazioneDAO {
         })
     }
 }
+ */

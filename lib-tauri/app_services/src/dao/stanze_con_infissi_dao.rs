@@ -1,47 +1,35 @@
-use crate::dao::crud_operations::{Get, GetAll, Insert, Update};
-use crate::dao::entity::StanzaConInfissi;
-use crate::dao::schema_operations::CreateTable;
-use crate::dao::utils::DAO;
-use crate::database::{
-    convert_param, DatabaseConnection, QueryBuilder, SqlQueryBuilder, WhereBuilder,
-};
-use crate::utils::AppError;
-use log::info;
-use rusqlite::{params, Error};
-use std::collections::{HashMap, HashSet};
+use app_error::DomainError;
+use app_interface::dao_interface::crud_operations::{Get, GetAll, Insert, Update};
+use app_interface::dao_interface::DAO;
+use app_interface::database_interface::PostgresPooled;
+use app_models::models::StanzaConInfissi;
+use app_models::schema::stanza_con_infissi;
+use diesel::associations::HasTable;
+use diesel::result::Error;
+use diesel::{EqAll, ExpressionMethods, QueryDsl, RunQueryDsl};
+use std::collections::HashSet;
 
 pub struct StanzaConInfissiDao;
 
 impl DAO for StanzaConInfissiDao {
-    fn table_name() -> &'static str {
-        "STANZA_CON_INFISSI"
-    }
+    
 }
 
-impl CreateTable for StanzaConInfissiDao {
-    fn create_table<C: DatabaseConnection>(conn: &C) -> Result<(), AppError> {
-        conn.execute(
-            format!(
-                "CREATE TABLE IF NOT EXISTS {}
-                (
-                    ID_STANZA      INTEGER NOT NULL REFERENCES STANZA (ID),
-                    ID_INFISSO     TEXT    NOT NULL,
-                    ID_EDIFICIO    TEXT    NOT NULL,
-                    NUM_INFISSI    INTEGER NOT NULL DEFAULT 1 CHECK ( NUM_INFISSI > 0 ),
-                    PRIMARY KEY (ID_INFISSO, ID_STANZA, ID_EDIFICIO),
-                    FOREIGN KEY (ID_INFISSO, ID_EDIFICIO) REFERENCES INFISSO (ID, EDIFICIO)
-                ) STRICT;",
-                Self::table_name()
-            )
-            .as_str(),
-            (),
-        )?;
-        info!("Tabella STANZA_CON_INFISSI creata");
-        Ok(())
+impl Get<StanzaConInfissi, (String, i32)> for StanzaConInfissiDao {
+    type Output = Vec<StanzaConInfissi>;
+    /// L'id è una tuple di id che corrispondono -> (edificio, stanza)
+    fn get(conn: &mut PostgresPooled, id: (String, i32)) -> Result<Self::Output, DomainError> {
+        stanza_con_infissi::table
+            .filter(stanza_con_infissi::edificio_id.eq(id.0))
+            .filter(stanza_con_infissi::stanza_id.eq(id.1))
+            .get_results(conn)
+            .map_err(|e| match e {
+                Error::NotFound => DomainError::StanzaConInfissiNotFound,
+                _ => DomainError::Unexpected(e),
+            })
     }
-}
 
-impl Get<StanzaConInfissi, (u64, String)> for StanzaConInfissiDao {
+    /*
     fn get<C: DatabaseConnection>(
         conn: &C,
         id: (u64, String),
@@ -76,43 +64,23 @@ impl Get<StanzaConInfissi, (u64, String)> for StanzaConInfissiDao {
             Err(e) => Err(AppError::from(e)),
         }
     }
-}
 
-impl GetAll<StanzaConInfissi> for StanzaConInfissiDao {
-    fn get_all<C: DatabaseConnection>(conn: &C) -> Result<Vec<StanzaConInfissi>, AppError> {
-        let (query, _) = QueryBuilder::select().table("STANZA_CON_INFISSI").build()?;
-        let mut stmt = conn.prepare(query.as_str())?;
-
-        let mut infissi: HashMap<(String, String), Vec<(String, u64)>> = HashMap::new();
-        let mut rows = stmt.query([])?;
-
-        while let Some(row) = rows.next()? {
-            let id_stanza: u64 = row.get("ID_STANZA")?;
-            let id_infisso: String = row.get("ID_INFISSO")?;
-            let id_edificio: String = row.get("ID_EDIFICIO")?;
-            let num_infissi: u64 = row.get("NUM_INFISSI")?;
-
-            let stanza_infissi = infissi
-                .entry((id_stanza.to_string(), id_edificio))
-                .or_default();
-
-            stanza_infissi.push((id_infisso, num_infissi));
-        }
-
-        let mut result = Vec::new();
-        for entry in infissi.into_iter() {
-            result.push(StanzaConInfissi::new(
-                entry.0 .0.parse::<u64>().unwrap(),
-                entry.1,
-                entry.0 .1,
-            ));
-        }
-        result.reverse();
-        Ok(result)
-    }
+     */
 }
 
 impl Insert<StanzaConInfissi> for StanzaConInfissiDao {
+    type Output = StanzaConInfissi;
+    fn insert(
+        conn: &mut PostgresPooled,
+        item: StanzaConInfissi,
+    ) -> Result<Self::Output, DomainError> {
+        diesel::insert_into(stanza_con_infissi::table)
+            .values(&item)
+            .get_result(conn)
+            .map_err(DomainError::from)
+    }
+
+    /*
     fn insert<C: DatabaseConnection>(
         conn: &C,
         item: StanzaConInfissi,
@@ -140,9 +108,20 @@ impl Insert<StanzaConInfissi> for StanzaConInfissiDao {
 
         Ok(item)
     }
+
+     */
 }
 
-impl Update<StanzaConInfissi> for StanzaConInfissiDao {
+impl Update<StanzaConInfissi, (String, String, i32)> for StanzaConInfissiDao {
+    type Output = StanzaConInfissi;
+    fn update(
+        conn: &mut PostgresPooled,
+        id: (String, String, i32),
+        item: StanzaConInfissi,
+    ) -> Result<Self::Output, DomainError> {
+        todo!()
+    }
+    /*
     fn update<C: DatabaseConnection>(
         conn: &C,
         item: StanzaConInfissi,
@@ -208,6 +187,8 @@ impl Update<StanzaConInfissi> for StanzaConInfissiDao {
         // Restituiamo l'item aggiornato
         Ok(item)
     }
+
+     */
 }
 
 fn find_common_and_unique(
@@ -233,77 +214,27 @@ fn find_common_and_unique(
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::dao::entity::{
-        Edificio, Infisso, MaterialeInfisso, Stanza, TipoInfisso, VetroInfisso,
-    };
-    use crate::dao::utils::create_types_tables;
-    use crate::dao::{
-        EdificioDAO, InfissoDAO, MaterialeInfissoDAO, StanzaDAO, TipoInfissoDAO, VetroInfissoDAO,
-    };
-    use once_cell::sync::Lazy;
-    use rusqlite::Connection;
-    use serial_test::serial;
-    use std::ops::Deref;
-    use std::sync::Mutex;
+    use app_utils::test::create_postgres_pool;
 
-    static DATABASE: Lazy<Mutex<Connection>> = Lazy::new(|| Mutex::new(setup()));
     static ID_EDIFICIO: &str = "PR01-25";
 
-    fn setup() -> Connection {
-        let conn = Connection::open_in_memory().unwrap();
-        create_types_tables(&conn).expect("Errore nella creazione delle tabelle dei tipi");
+    #[tokio::test]
+    async fn test_get_stanza_con_infissi() {
+        let pool = create_postgres_pool().await;
+        let mut conn = pool.get().unwrap();
 
-        let materiale = MaterialeInfisso::new("Legno", 1);
-        MaterialeInfissoDAO::insert(&conn, materiale)
-            .expect("Errore nella creazione del materiale");
-        let materiale = MaterialeInfisso::new("PVC", 2);
-        MaterialeInfissoDAO::insert(&conn, materiale)
-            .expect("Errore nella creazione del materiale");
-
-        let vetro = VetroInfisso::new("Singolo", 1);
-        VetroInfissoDAO::insert(&conn, vetro).expect("Errore nella creazione del materiale");
-        let vetro = VetroInfisso::new("Doppio", 2);
-        VetroInfissoDAO::insert(&conn, vetro).expect("Errore nella creazione del materiale");
-
-        let tipo_infisso = TipoInfisso {
-            _id: 0,
-            nome: "PORTA".to_string(),
-        };
-        TipoInfissoDAO::insert(&conn, tipo_infisso).expect("Errore nella creazione del tipo");
-        let tipo_infisso = TipoInfisso {
-            _id: 0,
-            nome: "FINESTRA".to_string(),
-        };
-        TipoInfissoDAO::insert(&conn, tipo_infisso).expect("Errore nella creazione del tipo");
-
-        EdificioDAO::create_table(&conn).unwrap();
-        StanzaDAO::create_table(&conn).unwrap();
-        InfissoDAO::create_table(&conn).unwrap();
-        StanzaConInfissiDao::create_table(&conn).unwrap();
-
-        let edificio = Edificio::new(ID_EDIFICIO, "00008545", "Via Pallone");
-        EdificioDAO::insert(&conn, edificio.clone()).expect("Errore nella creazione dell'edificio");
-
-        pretty_sqlite::print_table(&conn, EdificioDAO::table_name()).unwrap();
-
-        let stanza = Stanza::new("PR01-25", "T", "1250", "045", "Ufficio");
-        StanzaDAO::insert(&conn, stanza).expect("Errore nella creazione della stanza");
-        let stanza = Stanza::new("PR01-25", "T", "1250", "047", "Ufficio");
-        StanzaDAO::insert(&conn, stanza).expect("Errore nella creazione della stanza");
-
-        pretty_sqlite::print_table(&conn, StanzaDAO::table_name()).unwrap();
-
-        let infisso_a = Infisso::new("A", ID_EDIFICIO, "PORTA", 350, 450, "Legno", "Singolo");
-        InfissoDAO::insert(&conn, infisso_a).expect("Errore nella creazione dell'infisso");
-
-        let infisso_b = Infisso::new("B", ID_EDIFICIO, "FINESTRA", 350, 450, "PVC", "Doppio");
-        InfissoDAO::insert(&conn, infisso_b).expect("Errore nella creazione dell'infisso");
-
-        pretty_sqlite::print_table(&conn, InfissoDAO::table_name()).unwrap();
-
-        conn
+        match StanzaConInfissiDao::get(&mut conn, ("9338-14".to_string(), 30)) {
+            Ok(stanza_con_infissi) => {
+                assert_eq!(stanza_con_infissi.len(), 3);
+                println!("{stanza_con_infissi:#?}")
+            }
+            Err(e) => {
+                panic!("{e:?}")
+            }
+        }
     }
 
+    /*
     #[test]
     fn create_table() {
         let conn = Connection::open_in_memory().unwrap();
@@ -312,7 +243,6 @@ mod test {
     }
 
     #[test]
-    #[serial]
     fn insert_value() {
         let conn = DATABASE.lock().unwrap();
         let stanza_con_infissi = StanzaConInfissi {
@@ -428,4 +358,6 @@ mod test {
             }
         }
     }
+
+     */
 }
