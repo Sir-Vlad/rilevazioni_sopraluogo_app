@@ -2,6 +2,7 @@ use app_interface::database_interface::{DatabaseConnector, PostgresPool};
 use async_trait::async_trait;
 use diesel::r2d2::{ConnectionManager, Pool};
 use diesel::PgConnection;
+use diesel_migrations::{embed_migrations, EmbeddedMigrations, MigrationHarness};
 use std::error::Error;
 use std::sync::{Once, OnceLock};
 use std::time::Duration;
@@ -12,6 +13,8 @@ use tokio::sync::OnceCell;
 static CLEANUP_REGISTERED: Once = Once::new();
 
 static POSTGRES_CONTAINER: OnceCell<ContainerAsync<Postgres>> = OnceCell::const_new();
+
+const MIGRATIONS: EmbeddedMigrations = embed_migrations!("../app_models/migrations/postgres");
 
 extern "C" fn cleanup() {
     // creo un nuovo thread
@@ -60,22 +63,20 @@ impl DatabaseConnector for MockDatabaseConnector {
         if self.postgres_should_fail {
             panic!("Postgres should fail");
         }
-
         // Crea un pool di test (nota: richiede un DB PostgreSQL di test)
-        let container = get_postgres_container().await;
-        let connection_string = &format!(
-            "postgres://postgres:postgres@127.0.0.1:{}/postgres",
-            &container
-                .get_host_port_ipv4(5432)
-                .await
-                .expect("Docker container not running")
-        );
-        let manager = ConnectionManager::<PgConnection>::new(connection_string);
-        Pool::builder()
+        let manager = ConnectionManager::<PgConnection>::new(get_connection_string().await);
+        let pool = Pool::builder()
             .max_size(1)
             .connection_timeout(Duration::from_secs(1))
             .build(manager)
-            .expect("Failed to create pool")
+            .expect("Failed to create pool");
+
+        {
+            let mut conn = pool.get().unwrap();
+            conn.run_pending_migrations(MIGRATIONS).unwrap();
+        }
+
+        pool
     }
 
     //fn as_any(&self) -> &dyn std::any::Any {
@@ -85,6 +86,17 @@ impl DatabaseConnector for MockDatabaseConnector {
     fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
         self
     }
+}
+
+pub async fn get_connection_string() -> String {
+    let container = get_postgres_container().await;
+    format!(
+        "postgres://postgres:postgres@127.0.0.1:{}/postgres",
+        &container
+            .get_host_port_ipv4(5432)
+            .await
+            .expect("Docker container not running")
+    )
 }
 
 

@@ -13,6 +13,7 @@ app_interface = { path = "../app_interface", features = ["database"] }
 
 async-trait = { workspace = true }
 diesel = { workspace = true }
+diesel_migrations = { workspace = true }
 tokio = { workspace = true }
 libc = "0.2.174"
 testcontainers = { workspace = true }

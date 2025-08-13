@@ -1,12 +1,11 @@
 use app_error::DomainError;
-use app_interface::dao_interface::crud_operations::{Get, GetAll, Insert, Update};
+use app_interface::dao_interface::crud_operations::{Get, Insert, Update};
 use app_interface::dao_interface::DAO;
 use app_interface::database_interface::PostgresPooled;
-use app_models::models::StanzaConInfissi;
+use app_models::models::{StanzaConInfissi, UpdateStanzaConInfissi};
 use app_models::schema::stanza_con_infissi;
-use diesel::associations::HasTable;
 use diesel::result::Error;
-use diesel::{EqAll, ExpressionMethods, QueryDsl, RunQueryDsl};
+use diesel::{ExpressionMethods, QueryDsl, RunQueryDsl};
 use std::collections::HashSet;
 
 pub struct StanzaConInfissiDao;
@@ -15,9 +14,27 @@ impl DAO for StanzaConInfissiDao {
     
 }
 
+impl<'a> Get<StanzaConInfissi, &'a str> for StanzaConInfissiDao {
+    type Output = Vec<StanzaConInfissi>;
+
+    /// Recupera tutti gli infissi di un edificio
+    fn get(conn: &mut PostgresPooled, id: &'a str) -> Result<Self::Output, DomainError> {
+        stanza_con_infissi::table
+            .filter(stanza_con_infissi::edificio_id.eq(id))
+            .get_results(conn)
+            .map_err(|e| match e {
+                Error::NotFound => DomainError::StanzaConInfissiNotFound,
+                _ => DomainError::Unexpected(e),
+            })
+    }
+}
+
+
+
 impl Get<StanzaConInfissi, (String, i32)> for StanzaConInfissiDao {
     type Output = Vec<StanzaConInfissi>;
     /// L'id è una tuple di id che corrispondono -> (edificio, stanza)
+    /// Recupera tutti gli infissi che sono collegati a una stanza
     fn get(conn: &mut PostgresPooled, id: (String, i32)) -> Result<Self::Output, DomainError> {
         stanza_con_infissi::table
             .filter(stanza_con_infissi::edificio_id.eq(id.0))
@@ -112,12 +129,13 @@ impl Insert<StanzaConInfissi> for StanzaConInfissiDao {
      */
 }
 
-impl Update<StanzaConInfissi, (String, String, i32)> for StanzaConInfissiDao {
+impl Update<UpdateStanzaConInfissi, (String, i32, String)> for StanzaConInfissiDao {
     type Output = StanzaConInfissi;
+    /// id -> (edificio, stanza, infisso)
     fn update(
         conn: &mut PostgresPooled,
-        id: (String, String, i32),
-        item: StanzaConInfissi,
+        id: (String, i32, String),
+        item: UpdateStanzaConInfissi,
     ) -> Result<Self::Output, DomainError> {
         todo!()
     }

@@ -1,8 +1,9 @@
 use crate::constants::NAME_DIR_DATABASE;
-use app_api::command::command_tauri::*;
 use app_database::database::DatabaseManager;
+use app_services::service::EdificioSelected;
 use dirs_next::document_dir;
-use log::{error, info};
+use std::sync::Arc;
+use tauri::async_runtime::RwLock;
 use tauri::path::BaseDirectory;
 use tauri::{App, AppHandle, Builder, Manager, Wry};
 use tauri_plugin_log::{RotationStrategy, Target, TargetKind};
@@ -23,10 +24,16 @@ pub fn initialize_tauri() -> Builder<Wry> {
         .setup(|app: &mut App| {
             setup_logger(app)?;
 
+            // Manage Database
             tauri::async_runtime::block_on(async {
                 let database = DatabaseManager::new().await;
                 app.manage(database);
             });
+
+            // Manage Edificio Selected
+            let stato_edificio = Arc::new(RwLock::new(EdificioSelected::new()));
+            app.manage(stato_edificio);
+
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![

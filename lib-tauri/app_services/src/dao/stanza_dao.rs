@@ -1,21 +1,26 @@
 use app_error::DomainError;
-use app_interface::dao_interface::crud_operations::{GetAll, Insert, Update};
+use app_interface::dao_interface::crud_operations::{Get, GetAll, Insert, Update};
 use app_interface::dao_interface::DAO;
 use app_interface::database_interface::PostgresPooled;
 use app_models::models::{NewStanza, Stanza, UpdateStanza};
 use app_models::schema::stanza;
 use diesel::result::Error;
-use diesel::{QueryDsl, RunQueryDsl};
+use diesel::{ExpressionMethods, QueryDsl, RunQueryDsl};
 
 pub struct StanzaDAO;
 
-impl DAO for StanzaDAO {
-}
+impl DAO for StanzaDAO {}
 
-impl GetAll<Stanza> for StanzaDAO {
-    type Output = Stanza;
-    fn get_all(conn: &mut PostgresPooled) -> Result<Vec<Self::Output>, DomainError> {
-        stanza::table.load(conn).map_err(DomainError::from)
+impl Get<Stanza, &str> for StanzaDAO {
+    type Output = Vec<Stanza>;
+    fn get(conn: &mut PostgresPooled, edificio: &str) -> Result<Self::Output, DomainError> {
+        stanza::table
+            .filter(stanza::edificio_id.eq(edificio))
+            .get_results(conn)
+            .map_err(|e| match e {
+                Error::NotFound => DomainError::StanzaNotFound,
+                _ => DomainError::Unexpected(e)
+            })
     }
 }
 
@@ -57,6 +62,4 @@ impl Update<UpdateStanza, i32> for StanzaDAO {
 }
 
 #[cfg(test)]
-mod tests {
-
-}
+mod tests {}

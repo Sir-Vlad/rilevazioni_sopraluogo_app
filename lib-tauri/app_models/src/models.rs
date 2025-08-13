@@ -159,6 +159,12 @@ pub struct StanzaConInfissi {
     pub num_infisso: i32,
 }
 
+#[derive(AsChangeset, Debug, PartialEq)]
+#[diesel(table_name = stanza_con_infissi)]
+pub struct UpdateStanzaConInfissi {
+    pub num_infisso: i32
+}
+
 #[derive(Queryable, Selectable, Identifiable, Debug, PartialEq)]
 #[diesel(table_name = fotovoltaico)]
 pub struct Fotovoltaico {

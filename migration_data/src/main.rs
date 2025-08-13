@@ -2,9 +2,9 @@ use crate::migrations::ConnectionPool;
 use diesel::{PgConnection, SqliteConnection};
 use dirs_next::document_dir;
 use dotenvy::dotenv;
-use std::fs;
 use std::fs::File;
 use std::process::Stdio;
+use std::{env, fs};
 use tracing::{error, info, warn};
 use tracing_subscriber::layer::SubscriberExt;
 use tracing_subscriber::util::SubscriberInitExt;
@@ -33,6 +33,16 @@ fn main() {
         .with(EnvFilter::from_default_env())
         .with(tracing_subscriber::fmt::layer())
         .init();
+
+    let args: Vec<String> = env::args().collect();
+    let postgres_url = if args.len() > 1 {
+        args[1].clone()
+    } else {
+        warn!("Using default postgres url");
+        "postgresql://app_user:app_password@localhost:5432/app_development".to_string()
+    };
+
+
 
     let folder_document = document_dir();
     let db_path = if let Some(folder_document) = folder_document {
@@ -95,7 +105,6 @@ fn main() {
 
     warn!("Failed migrations: {failed_migrations:#?}");
 
-    let postgres_url = "postgresql://app_user:app_password@localhost:5432/app_development";
     let postgres_conn = diesel::r2d2::ConnectionManager::<PgConnection>::new(postgres_url);
     let postgres_pool = diesel::r2d2::Pool::builder().build(postgres_conn).unwrap();
     let postgres_pool = ConnectionPool::Postgres(postgres_pool);

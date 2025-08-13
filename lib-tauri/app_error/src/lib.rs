@@ -16,6 +16,8 @@ pub enum ApplicationError {
     Unknown,
     #[error("Unexpected error: {0}")]
     Unexpected(String),
+    #[error("Edificio not selected")]
+    EdificioNotSelected,
 }
 
 impl From<database_error::DbError> for ApplicationError {

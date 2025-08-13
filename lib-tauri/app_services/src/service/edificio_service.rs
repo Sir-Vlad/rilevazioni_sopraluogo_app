@@ -7,9 +7,31 @@ use app_interface::service_interface::{
     CreateService, RetrieveManyService, RetrieveOneService, UpdateService,
 };
 use async_trait::async_trait;
+use std::sync::Arc;
 use tauri::State;
+use tokio::sync::RwLock;
 
 pub struct EdificioService;
+
+impl EdificioService {
+    pub async fn select_edificio(
+        stato: State<'_, StateEdificioSelected>,
+        chiave: String,
+    ) {
+        let mut stato_lock = stato.write().await;
+        stato_lock.set_chiave(chiave);
+    }
+
+    pub async fn get_edificio(
+        stato: State<'_, StateEdificioSelected>,
+    ) -> AppResult<String> {
+        let stato_lock = stato.read().await;
+        match stato_lock.get_chiave() {
+            Some(stato) => Ok(stato),
+            None => Err(ApplicationError::EdificioNotSelected)
+        }
+    }
+}
 
 #[async_trait]
 impl RetrieveManyService<EdificioDTO> for EdificioService {
@@ -57,6 +79,31 @@ impl UpdateService<EdificioDTO> for EdificioService {
         Ok(EdificioDTO::from(&result))
     }
 }
+
+pub struct EdificioSelected {
+    chiave: Option<String>,
+}
+
+impl EdificioSelected {
+    pub fn new() -> Self {
+        Self { chiave: None }
+    }
+
+    pub fn set_chiave(&mut self, chiave: String) {
+        self.chiave = Some(chiave);
+    }
+
+    pub fn get_chiave(&self) -> Option<String> {
+        self.chiave.clone()
+    }
+
+    pub fn clear_edificio(&mut self) {
+        self.chiave = None;
+    }
+}
+
+pub type StateEdificioSelected = Arc<RwLock<EdificioSelected>>;
+
 
 #[cfg(test)]
 mod tests {
