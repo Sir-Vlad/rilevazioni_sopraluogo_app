@@ -241,6 +241,7 @@ dependencies = [
  "diesel",
  "log",
  "serde",
+ "serde_json",
  "tauri",
  "tokio",
 ]
@@ -254,6 +255,9 @@ dependencies = [
  "diesel",
  "diesel_migrations",
  "libc",
+ "serde",
+ "serde_json",
+ "tauri",
  "testcontainers",
  "testcontainers-modules",
  "tokio",

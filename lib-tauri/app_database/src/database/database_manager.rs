@@ -1,5 +1,5 @@
 use crate::database::DbError;
-use app_interface::database_interface::DatabaseManager as DatabaseManagerInterface;
+use app_interface::database_interface::{ConnectorDatabase, DatabaseManager as DatabaseManagerInterface};
 pub use app_interface::database_interface::{DatabaseConnector, PostgresPool, PostgresPooled};
 use async_trait::async_trait;
 use diesel::r2d2::{ConnectionManager, Pool};
@@ -37,7 +37,6 @@ impl DatabaseConnector for RealDatabaseConnector {
     }
 }
 
-pub type ConnectorDatabase = Box<dyn DatabaseConnector + Send + Sync>;
 
 /// A struct that manages database connections and operations in a thread-safe manner.
 ///
@@ -54,6 +53,15 @@ pub struct DatabaseManager {
 
 #[async_trait]
 impl DatabaseManagerInterface for DatabaseManager {
+    async fn with_connector(connector: ConnectorDatabase) -> Self {
+        let postgres_pool = connector.create_postgres_pool().await;
+
+        Self {
+            postgres_pool: Arc::new(Mutex::new(postgres_pool)),
+            connector: RwLock::new(connector),
+        }
+    }
+
     async fn get_connection(&self) -> Result<PostgresPooled, DbError> {
         let pool_guard = self.postgres_pool.lock().await;
         let conn = pool_guard
@@ -66,15 +74,6 @@ impl DatabaseManagerInterface for DatabaseManager {
 impl DatabaseManager {
     pub async fn new() -> Self {
         Self::with_connector(Box::new(RealDatabaseConnector)).await
-    }
-
-    pub async fn with_connector(connector: ConnectorDatabase) -> Self {
-        let postgres_pool = connector.create_postgres_pool().await;
-
-        Self {
-            postgres_pool: Arc::new(Mutex::new(postgres_pool)),
-            connector: RwLock::new(connector),
-        }
     }
 
     pub async fn get_connector(&self) -> RwLockReadGuard<'_, ConnectorDatabase> {
@@ -96,7 +95,7 @@ impl DatabaseManager {
                 "Failed to downcast connector to type: {}",
                 std::any::type_name::<T>()
             )
-            .into())
+                .into())
         }
     }
 }

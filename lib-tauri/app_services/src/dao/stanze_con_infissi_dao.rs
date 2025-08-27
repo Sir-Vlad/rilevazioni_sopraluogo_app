@@ -45,44 +45,6 @@ impl Get<StanzaConInfissi, (String, i32)> for StanzaConInfissiDao {
                 _ => DomainError::Unexpected(e),
             })
     }
-
-    /*
-    fn get<C: DatabaseConnection>(
-        conn: &C,
-        id: (u64, String),
-    ) -> Result<StanzaConInfissi, AppError> {
-        let (id, edificio) = id;
-        let builder = QueryBuilder::select()
-            .table(Self::table_name())
-            .where_eq("ID_STANZA", id)
-            .where_eq("ID_EDIFICIO", edificio.clone());
-        let (query, _) = builder.build()?;
-
-        let mut stmt = conn.prepare(query.as_str())?;
-        let result: Result<Vec<(String, u64)>, Error> = stmt
-            .query_map(params![id, edificio], |row| {
-                let id_infisso = row.get("ID_INFISSO")?;
-                let ripetizioni = row.get("NUM_INFISSI")?;
-                Ok((id_infisso, ripetizioni))
-            })?
-            .collect();
-
-        match result {
-            Ok(infissi) => {
-                if infissi.is_empty() {
-                    Err(AppError::NotFound(format!(
-                        "Stanza con ID {} non trovata",
-                        id
-                    )))
-                } else {
-                    Ok(StanzaConInfissi::new(id, infissi, edificio))
-                }
-            }
-            Err(e) => Err(AppError::from(e)),
-        }
-    }
-
-     */
 }
 
 impl Insert<StanzaConInfissi> for StanzaConInfissiDao {
@@ -96,37 +58,6 @@ impl Insert<StanzaConInfissi> for StanzaConInfissiDao {
             .get_result(conn)
             .map_err(DomainError::from)
     }
-
-    /*
-    fn insert<C: DatabaseConnection>(
-        conn: &C,
-        item: StanzaConInfissi,
-    ) -> Result<StanzaConInfissi, AppError> {
-        let builder = QueryBuilder::insert()
-            .table(Self::table_name())
-            .columns(vec![
-                "ID_STANZA",
-                "ID_INFISSO",
-                "ID_EDIFICIO",
-                "NUM_INFISSI",
-            ])
-            .values(vec![0.into(), "A".into(), "".into(), 0.into()]); // param fake
-        let (query, _) = builder.build()?;
-
-        let mut stmt = conn.prepare(query.as_str())?;
-        for (id_infisso, num_infisso) in item.id_infissi.clone() {
-            stmt.execute(params![
-                item.id_stanza,
-                id_infisso,
-                item.id_edificio,
-                num_infisso
-            ])?;
-        }
-
-        Ok(item)
-    }
-
-     */
 }
 
 impl Update<UpdateStanzaConInfissi, (String, i32, String)> for StanzaConInfissiDao {

@@ -9,6 +9,8 @@ pub mod database_interface {
     pub type PostgresPool = Pool<ConnectionManager<PgConnection>>;
     pub type PostgresPooled = PooledConnection<ConnectionManager<PgConnection>>;
 
+    pub type ConnectorDatabase = Box<dyn DatabaseConnector + Send + Sync>;
+
     #[async_trait]
     pub trait DatabaseConnector {
         async fn create_postgres_pool(&self) -> PostgresPool;
@@ -17,6 +19,7 @@ pub mod database_interface {
 
     #[async_trait]
     pub trait DatabaseManager {
+        async fn with_connector(connector: ConnectorDatabase) -> Self;
         async fn get_connection(&self) -> Result<PostgresPooled, DbError>;
     }
 }
@@ -81,7 +84,7 @@ pub mod service_interface {
         T: DTO,
     {
         async fn create(db: State<'_, impl DatabaseManager + Send + Sync>, item: T)
-            -> AppResult<T>;
+                        -> AppResult<T>;
     }
 
     #[allow(dead_code)]
@@ -112,7 +115,7 @@ pub mod service_interface {
         T: DTO,
     {
         async fn update(db: State<'_, impl DatabaseManager + Send + Sync>, item: T)
-            -> AppResult<T>;
+                        -> AppResult<T>;
     }
 
     #[allow(dead_code)]
