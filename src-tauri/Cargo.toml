@@ -19,9 +19,7 @@ tauri-build = { version = "2.0.5", features = [] }
 
 [dependencies]
 # Internal library
-app_models = { path = "../lib-tauri/app_models" }
 app_core = { path = "../lib-tauri/app_core" }
-app_database = { path = "../lib-tauri/app_database" }
 
 
 # Serialization

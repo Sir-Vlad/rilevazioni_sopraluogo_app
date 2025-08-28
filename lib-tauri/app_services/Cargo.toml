@@ -9,7 +9,7 @@ edition.workspace = true
 rust-version.workspace = true
 
 [dependencies]
-app_database = { path = "../app_database" }
+app_state = { path = "../app_state" }
 app_models = { path = "../app_models" }
 app_error = { path = "../app_error" }
 app_interface = { path = "../app_interface", features = ["dao", "services"] }

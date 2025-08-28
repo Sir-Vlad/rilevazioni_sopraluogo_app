@@ -1,11 +1,11 @@
 use crate::dao::{StanzaConInfissiDao, StanzaDAO};
 use crate::dto::StanzaDTO;
-use crate::service::{EdificioSelected, StateEdificioSelected};
 use app_error::{AppResult, ApplicationError, DomainError};
 use app_interface::dao_interface::crud_operations::{Get, Insert, Update};
 use app_interface::database_interface::DatabaseManager;
-use app_interface::service_interface::{CreateService, RetrieveManyService, UpdateService};
+use app_interface::service_interface::{CreateService, UpdateService};
 use app_models::models::{StanzaConInfissi, UpdateStanzaConInfissi};
+use app_state::selected_edificio::StateEdificioSelected;
 use async_trait::async_trait;
 use diesel::Connection;
 use std::collections::HashMap;
@@ -60,7 +60,7 @@ impl StanzaService {
 
             Ok(stanze_dto)
         })
-        .map_err(|e| e.into())
+            .map_err(|e| e.into())
     }
 }
 
@@ -123,11 +123,46 @@ impl UpdateService<StanzaDTO> for StanzaService {
 
             Ok(stanza_dto)
         })
-        .map_err(|e| e.into())
+            .map_err(|e| e.into())
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use crate::dao::StanzaDAO;
+    use crate::dto::StanzaDTO;
+    use app_interface::dao_interface::crud_operations::Insert;
+    use app_interface::database_interface::DatabaseManager as DatabaseManagerInterface;
+    use app_state::database::DatabaseManager;
+    use app_utils::test::{read_json_file, TestServiceEnvironment};
+    use std::error::Error;
+
+    const FILE_PATH_DATA_FAKE: &str = "../dataFake/stanzeFake.json";
+
+    async fn setup_env_stanze() -> Result<TestServiceEnvironment<DatabaseManager>, Box<dyn Error>> {
+        TestServiceEnvironment::new::<_, _>(|db_manager: DatabaseManager| async move {
+            let data = read_json_file::<StanzaDTO>(FILE_PATH_DATA_FAKE)?;
+            {
+                let mut pool = db_manager.get_connection().await?;
+                for stanza in data {
+                    // Ignora errori di duplicati nei test
+                    let _ = StanzaDAO::insert(&mut pool, stanza.into());
+                }
+            }
+            Ok(())
+        })
+            .await
+    }
+
+    #[tokio::test(flavor = "multi_thread", worker_threads = 1)]
+    async fn test_retrieve_stanze() -> Result<(), Box<dyn Error>> {
+        let env = setup_env_stanze().await?;
+        let state_db = env.database();
+
+
+        // match StanzaService::get_stanze_edificio(state_db) {}
+
+
+        Ok(())
+    }
 }

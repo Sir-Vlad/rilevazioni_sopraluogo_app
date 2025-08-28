@@ -1,14 +1,23 @@
 use crate::database::DbError;
-use app_interface::database_interface::{ConnectorDatabase, DatabaseManager as DatabaseManagerInterface};
-pub use app_interface::database_interface::{DatabaseConnector, PostgresPool, PostgresPooled};
+pub use app_interface::database_interface::{
+    ConnectorDatabase,
+    DatabaseConnector,
+    DatabaseManager as DatabaseManagerInterface,
+    PostgresPool,
+    PostgresPooled,
+};
 use async_trait::async_trait;
-use diesel::r2d2::{ConnectionManager, Pool};
-use diesel::PgConnection;
-use std::any::Any;
-use std::env;
-use std::fmt::{Debug, Formatter};
-use std::path::Path;
-use std::sync::Arc;
+use diesel::{
+    r2d2::{ConnectionManager, Pool},
+    PgConnection,
+};
+use std::{
+    any::Any,
+    env,
+    fmt::{Debug, Formatter},
+    path::Path,
+    sync::Arc,
+};
 use tokio::sync::{Mutex, RwLock, RwLockReadGuard};
 
 pub struct RealDatabaseConnector;
@@ -16,7 +25,7 @@ pub struct RealDatabaseConnector;
 #[async_trait]
 impl DatabaseConnector for RealDatabaseConnector {
     async fn create_postgres_pool(&self) -> PostgresPool {
-        dotenvy::from_path(Path::new("./lib-tauri/app_database/.env")).ok();
+        dotenvy::from_path(Path::new("../../.env")).ok();
 
         let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
 

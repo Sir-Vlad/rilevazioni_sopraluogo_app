@@ -5,9 +5,9 @@ edition = "2024"
 
 [dependencies]
 app_models = { path = "../app_models" }
-app_database = { path = "../app_database" }
-app_api = {path = "../app_api"}
-app_services = {path = "../app_services"}
+app_state = { path = "../app_state" }
+app_api = { path = "../app_api" }
+app_services = { path = "../app_services" }
 
 # Tauri e plagins
 tauri = { workspace = true }

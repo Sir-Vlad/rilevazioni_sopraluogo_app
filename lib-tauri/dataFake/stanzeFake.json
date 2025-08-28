@@ -1,0 +1,16 @@
+[
+  {
+    "id": 1,
+    "edificio_id": "",
+    "piano": "",
+    "id_spazio": "",
+    "cod_stanza": "",
+    "destinazione_uso": "",
+    "altezza": null,
+    "spessore_muro": null,
+    "riscaldamento": null,
+    "raffrescamento": null,
+    "illuminazione": null,
+    "infissi": null
+  }
+]

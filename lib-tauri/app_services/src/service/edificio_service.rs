@@ -8,10 +8,9 @@ use app_interface::{
         CreateService, RetrieveManyService, RetrieveOneService, UpdateService,
     },
 };
+use app_state::selected_edificio::StateEdificioSelected;
 use async_trait::async_trait;
-use std::sync::Arc;
 use tauri::State;
-use tokio::sync::RwLock;
 
 pub struct EdificioService;
 
@@ -77,44 +76,18 @@ impl UpdateService<EdificioDTO> for EdificioService {
     }
 }
 
-pub struct EdificioSelected {
-    chiave: Option<String>,
-}
-
-impl Default for EdificioSelected {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
-impl EdificioSelected {
-    pub fn new() -> Self {
-        Self { chiave: None }
-    }
-
-    pub fn set_chiave(&mut self, chiave: String) {
-        self.chiave = Some(chiave);
-    }
-
-    pub fn get_chiave(&self) -> Option<String> {
-        self.chiave.clone()
-    }
-
-    pub fn clear_edificio(&mut self) {
-        self.chiave = None;
-    }
-}
-
-pub type StateEdificioSelected = Arc<RwLock<EdificioSelected>>;
 
 #[cfg(test)]
 mod tests {
     //! The tests were created based on the data in the `dataFake` folder.
 
-    use super::*;
+    use crate::dao::EdificioDAO;
     use crate::dto::EdificioDTO;
-    use app_database::database::DatabaseManager;
+    use crate::service::EdificioService;
+    use app_interface::dao_interface::crud_operations::Insert;
     use app_interface::database_interface::DatabaseManager as DatabaseManagerInterface;
+    use app_interface::service_interface::{CreateService, RetrieveManyService, RetrieveOneService, UpdateService};
+    use app_state::database::DatabaseManager;
     use app_utils::test::{read_json_file, TestServiceEnvironment};
     use std::error::Error;
 

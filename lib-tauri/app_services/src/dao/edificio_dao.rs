@@ -1,16 +1,15 @@
-use app_database::database::database_manager::PostgresPooled;
 use app_error::DomainError;
 use app_interface::dao_interface::crud_operations::{Get, GetAll, Insert, Update};
 use app_interface::dao_interface::DAO;
 use app_models::models::{Edificio, NewEdificio, UpdateEdificio};
 use app_models::schema::edificio;
+use app_state::database::database_manager::PostgresPooled;
 use diesel::result::Error;
 use diesel::{QueryDsl, RunQueryDsl};
 
 pub struct EdificioDAO;
 
-impl DAO for EdificioDAO {
-}
+impl DAO for EdificioDAO {}
 
 impl GetAll<Edificio> for EdificioDAO {
     type Output = Edificio;

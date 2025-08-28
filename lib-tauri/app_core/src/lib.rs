@@ -1,6 +1,6 @@
 use crate::constants::NAME_DIR_DATABASE;
-use app_database::database::DatabaseManager;
-use app_services::service::EdificioSelected;
+use app_state::database::DatabaseManager;
+use app_state::selected_edificio::EdificioSelected;
 use dirs_next::document_dir;
 use std::sync::Arc;
 use tauri::async_runtime::RwLock;

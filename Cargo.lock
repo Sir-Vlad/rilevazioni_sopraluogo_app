@@ -114,8 +114,6 @@ name = "app"
 version = "0.1.0"
 dependencies = [
  "app_core",
- "app_database",
- "app_models",
  "async-trait",
  "calamine 0.27.0",
  "diesel",
@@ -150,8 +148,8 @@ dependencies = [
 name = "app_api"
 version = "0.1.0"
 dependencies = [
- "app_database",
  "app_services",
+ "app_state",
  "tauri",
 ]
 
@@ -160,9 +158,9 @@ name = "app_core"
 version = "0.1.0"
 dependencies = [
  "app_api",
- "app_database",
  "app_models",
  "app_services",
+ "app_state",
  "dirs-next",
  "log",
  "serde",
@@ -172,22 +170,6 @@ dependencies = [
  "tauri-plugin-fs",
  "tauri-plugin-log",
  "tauri-plugin-single-instance",
-]
-
-[[package]]
-name = "app_database"
-version = "0.1.0"
-dependencies = [
- "app_error",
- "app_interface",
- "app_utils",
- "async-trait",
- "diesel",
- "dotenvy",
- "serde",
- "testcontainers",
- "testcontainers-modules",
- "tokio",
 ]
 
 [[package]]
@@ -231,10 +213,10 @@ dependencies = [
 name = "app_services"
 version = "0.1.0"
 dependencies = [
- "app_database",
  "app_error",
  "app_interface",
  "app_models",
+ "app_state",
  "app_utils",
  "async-trait",
  "chrono",
@@ -243,6 +225,22 @@ dependencies = [
  "serde",
  "serde_json",
  "tauri",
+ "tokio",
+]
+
+[[package]]
+name = "app_state"
+version = "0.1.0"
+dependencies = [
+ "app_error",
+ "app_interface",
+ "app_utils",
+ "async-trait",
+ "diesel",
+ "dotenvy",
+ "serde",
+ "testcontainers",
+ "testcontainers-modules",
  "tokio",
 ]
 

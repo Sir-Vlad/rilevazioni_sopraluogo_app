@@ -1,5 +1,5 @@
 [package]
-name = "app_database"
+name = "app_state"
 version = "0.1.0"
 edition = "2024"
 

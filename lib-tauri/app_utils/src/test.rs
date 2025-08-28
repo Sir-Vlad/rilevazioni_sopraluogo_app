@@ -21,6 +21,7 @@ use testcontainers::ContainerAsync;
 use testcontainers_modules::postgres::Postgres;
 use tokio::sync::{OnceCell, RwLock};
 
+
 static CLEANUP_REGISTERED: Once = Once::new();
 
 static POSTGRES_CONTAINER: OnceCell<ContainerAsync<Postgres>> = OnceCell::const_new();

@@ -114,7 +114,7 @@ pub mod command_tauri {
             Ok(())
         }
     */
-    use app_database::database::DatabaseManager;
+    use app_state::database::DatabaseManager;
     use tauri::State;
 
     #[tauri::command]

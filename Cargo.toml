@@ -1,14 +1,7 @@
 [workspace]
-members = ["src-tauri",
-    "lib-tauri/app_core",
-    "lib-tauri/app_database",
-    "lib-tauri/app_models",
-    "lib-tauri/app_api",
-    "lib-tauri/app_services",
-    "lib-tauri/app_error", "lib-tauri/app_utils", "lib-tauri/app_interface",
-]
+members = ["src-tauri", "lib-tauri/*"]
 resolver = "3"
-exclude = ["migration_data"]
+exclude = ["migration_data", "lib-tauri/dataFake"]
 
 [workspace.package]
 name = "app"
