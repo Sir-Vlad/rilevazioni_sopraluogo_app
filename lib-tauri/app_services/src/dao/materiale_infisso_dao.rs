@@ -1,15 +1,14 @@
-use app_error::DomainError;
-use app_interface::dao_interface::crud_operations::GetAll;
-use app_interface::dao_interface::DAO;
-use app_interface::database_interface::PostgresPooled;
+use app_utils::app_error::DomainError;
+use app_utils::app_interface::dao_interface::crud_operations::GetAll;
+use app_utils::app_interface::dao_interface::DAO;
+use app_utils::app_interface::database_interface::PostgresPooled;
 use app_models::models::MaterialeInfisso;
 use app_models::schema::materiale_infisso;
 use diesel::RunQueryDsl;
 
 pub struct MaterialeInfissoDAO;
 
-impl DAO for MaterialeInfissoDAO {
-}
+impl DAO for MaterialeInfissoDAO {}
 
 impl GetAll<MaterialeInfisso> for MaterialeInfissoDAO {
     type Output = MaterialeInfisso;

@@ -213,8 +213,6 @@ dependencies = [
 name = "app_services"
 version = "0.1.0"
 dependencies = [
- "app_error",
- "app_interface",
  "app_models",
  "app_state",
  "app_utils",
@@ -232,8 +230,6 @@ dependencies = [
 name = "app_state"
 version = "0.1.0"
 dependencies = [
- "app_error",
- "app_interface",
  "app_utils",
  "async-trait",
  "diesel",
@@ -248,6 +244,7 @@ dependencies = [
 name = "app_utils"
 version = "0.1.0"
 dependencies = [
+ "app_error",
  "app_interface",
  "async-trait",
  "diesel",

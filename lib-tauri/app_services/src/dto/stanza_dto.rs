@@ -1,4 +1,4 @@
-use app_interface::dto_interface::DTO;
+use app_utils::app_interface::dto_interface::DTO;
 use app_models::models::{NewStanza, Stanza, UpdateStanza};
 use serde::{Deserialize, Serialize};
 
@@ -41,7 +41,7 @@ impl From<&Stanza> for StanzaDTO {
 
 impl From<StanzaDTO> for NewStanza {
     fn from(value: StanzaDTO) -> Self {
-        Self{
+        Self {
             edificio_id: value.edificio_id,
             piano: value.piano,
             id_spazio: value.id_spazio,

@@ -1,7 +1,7 @@
-use app_error::DomainError;
-use app_interface::dao_interface::crud_operations::{Get, Insert, Update};
-use app_interface::dao_interface::DAO;
-use app_interface::database_interface::PostgresPooled;
+use app_utils::app_error::DomainError;
+use app_utils::app_interface::dao_interface::crud_operations::{Get, Insert, Update};
+use app_utils::app_interface::dao_interface::DAO;
+use app_utils::app_interface::database_interface::PostgresPooled;
 use app_models::models::{StanzaConInfissi, UpdateStanzaConInfissi};
 use app_models::schema::stanza_con_infissi;
 use diesel::result::Error;
@@ -10,9 +10,7 @@ use std::collections::HashSet;
 
 pub struct StanzaConInfissiDao;
 
-impl DAO for StanzaConInfissiDao {
-    
-}
+impl DAO for StanzaConInfissiDao {}
 
 impl<'a> Get<StanzaConInfissi, &'a str> for StanzaConInfissiDao {
     type Output = Vec<StanzaConInfissi>;
@@ -28,7 +26,6 @@ impl<'a> Get<StanzaConInfissi, &'a str> for StanzaConInfissiDao {
             })
     }
 }
-
 
 
 impl Get<StanzaConInfissi, (String, i32)> for StanzaConInfissiDao {

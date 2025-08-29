@@ -1,6 +1,6 @@
-use app_error::DomainError;
-use app_interface::dao_interface::crud_operations::{Get, GetAll, Insert, Update};
-use app_interface::dao_interface::DAO;
+use app_utils::app_error::DomainError;
+use app_utils::app_interface::dao_interface::crud_operations::{Get, GetAll, Insert, Update};
+use app_utils::app_interface::dao_interface::DAO;
 use app_models::models::{Edificio, NewEdificio, UpdateEdificio};
 use app_models::schema::edificio;
 use app_state::database::database_manager::PostgresPooled;

@@ -1,7 +1,7 @@
-use app_error::DomainError;
-use app_interface::dao_interface::crud_operations::{GetAll, Insert, Update};
-use app_interface::dao_interface::DAO;
-use app_interface::database_interface::PostgresPooled;
+use app_utils::app_error::DomainError;
+use app_utils::app_interface::dao_interface::crud_operations::{GetAll, Insert, Update};
+use app_utils::app_interface::dao_interface::DAO;
+use app_utils::app_interface::database_interface::PostgresPooled;
 use app_models::models::{Infisso, NewInfisso, UpdateInfisso};
 use app_models::schema::infisso;
 use diesel::result::Error;
@@ -9,9 +9,7 @@ use diesel::{QueryDsl, RunQueryDsl};
 
 pub struct InfissoDAO;
 
-impl DAO for InfissoDAO {
-
-}
+impl DAO for InfissoDAO {}
 
 impl GetAll<Infisso> for InfissoDAO {
     type Output = Infisso;

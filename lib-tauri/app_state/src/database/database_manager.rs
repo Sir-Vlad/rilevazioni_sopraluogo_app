@@ -1,5 +1,5 @@
-use crate::database::DbError;
-pub use app_interface::database_interface::{
+use app_utils::app_error::database_error::DbError;
+pub use app_utils::app_interface::database_interface::{
     ConnectorDatabase,
     DatabaseConnector,
     DatabaseManager as DatabaseManagerInterface,

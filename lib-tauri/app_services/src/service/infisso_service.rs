@@ -1,9 +1,9 @@
 use crate::dao::InfissoDAO;
 use crate::dto::InfissoDTO;
-use app_error::AppResult;
-use app_interface::dao_interface::crud_operations::{GetAll, Insert, Update};
-use app_interface::database_interface::DatabaseManager;
-use app_interface::service_interface::{CreateService, RetrieveManyService, UpdateService};
+use app_utils::app_error::AppResult;
+use app_utils::app_interface::dao_interface::crud_operations::{GetAll, Insert, Update};
+use app_utils::app_interface::database_interface::DatabaseManager;
+use app_utils::app_interface::service_interface::{CreateService, RetrieveManyService, UpdateService};
 use async_trait::async_trait;
 use tauri::State;
 

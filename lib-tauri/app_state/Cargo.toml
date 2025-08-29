@@ -4,8 +4,7 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-app_error = { path = "../app_error" }
-app_interface = { path = "../app_interface", features = ["database"] }
+app_utils = { path = "../app_utils", features = ["database", "error"] }
 
 serde = { workspace = true }
 diesel = { workspace = true }

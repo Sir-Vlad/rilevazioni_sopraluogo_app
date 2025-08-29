@@ -1,4 +1,4 @@
-use app_error::{ApplicationError, DomainError};
+use app_utils::app_error::{ApplicationError, DomainError};
 use chrono::{DateTime, Local, NaiveDateTime, TimeZone, Utc};
 use diesel::result::Error;
 

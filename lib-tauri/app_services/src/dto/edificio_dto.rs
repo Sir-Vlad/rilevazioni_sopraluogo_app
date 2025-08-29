@@ -1,6 +1,6 @@
 use app_models::models::{Edificio, NewEdificio, UpdateEdificio};
 use serde::{Deserialize, Serialize};
-use app_interface::dto_interface::DTO;
+use app_utils::app_interface::dto_interface::DTO;
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct EdificioDTO {

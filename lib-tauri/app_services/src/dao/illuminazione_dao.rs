@@ -1,7 +1,7 @@
-use app_error::DomainError;
-use app_interface::dao_interface::crud_operations::{GetAll, Insert};
-use app_interface::dao_interface::DAO;
-use app_interface::database_interface::PostgresPooled;
+use app_utils::app_error::DomainError;
+use app_utils::app_interface::dao_interface::crud_operations::{GetAll, Insert};
+use app_utils::app_interface::dao_interface::DAO;
+use app_utils::app_interface::database_interface::PostgresPooled;
 use app_models::models::Illuminazione;
 use app_models::schema::illuminazione;
 use diesel::result::Error;
@@ -9,8 +9,7 @@ use diesel::RunQueryDsl;
 
 pub struct IlluminazioneDAO;
 
-impl DAO for IlluminazioneDAO {
-}
+impl DAO for IlluminazioneDAO {}
 
 impl GetAll<Illuminazione> for IlluminazioneDAO {
     type Output = Illuminazione;

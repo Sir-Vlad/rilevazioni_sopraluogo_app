@@ -1,7 +1,7 @@
-use app_error::DomainError;
-use app_interface::dao_interface::crud_operations::{GetAll, Insert};
-use app_interface::dao_interface::DAO;
-use app_interface::database_interface::PostgresPooled;
+use app_utils::app_error::DomainError;
+use app_utils::app_interface::dao_interface::crud_operations::{GetAll, Insert};
+use app_utils::app_interface::dao_interface::DAO;
+use app_utils::app_interface::database_interface::PostgresPooled;
 use app_models::models::Climatizzazione;
 use app_models::schema::climatizzazione;
 use diesel::result::Error;
@@ -9,8 +9,7 @@ use diesel::RunQueryDsl;
 
 pub struct ClimatizzazioneDAO;
 
-impl DAO for ClimatizzazioneDAO {
-}
+impl DAO for ClimatizzazioneDAO {}
 
 impl GetAll<Climatizzazione> for ClimatizzazioneDAO {
     type Output = Climatizzazione;
@@ -63,7 +62,7 @@ impl GetAll<Climatizzazione> for ClimatizzazioneDAO {
 #[cfg(test)]
 mod tests {
     use crate::dao::climatizzazione_dao::ClimatizzazioneDAO;
-    use app_interface::dao_interface::crud_operations::GetAll;
+    use app_utils::app_interface::dao_interface::crud_operations::GetAll;
     use app_utils::test::create_postgres_pool;
 
     #[tokio::test]

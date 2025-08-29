@@ -1,5 +1,4 @@
-use app_interface::database_interface::DatabaseManager;
-use app_interface::database_interface::{DatabaseConnector, PostgresPool};
+use app_interface::database_interface::{DatabaseConnector, DatabaseManager, PostgresPool};
 use async_trait::async_trait;
 use diesel::{
     r2d2::{ConnectionManager, Pool},
@@ -20,7 +19,6 @@ use tauri::{App, Manager, State};
 use testcontainers::ContainerAsync;
 use testcontainers_modules::postgres::Postgres;
 use tokio::sync::{OnceCell, RwLock};
-
 
 static CLEANUP_REGISTERED: Once = Once::new();
 
@@ -258,6 +256,20 @@ where
 
     pub fn database(&self) -> State<'_, D> {
         self.app.state::<D>()
+    }
+
+    pub fn set_state_app<T>(&self, state: T) -> bool
+    where
+        T: Send + Sync + 'static,
+    {
+        self.app.manage(state)
+    }
+
+    pub fn state_app<T>(&self) -> State<'_, T>
+    where
+        T: Send + Sync + 'static,
+    {
+        self.app.state::<T>()
     }
 }
 

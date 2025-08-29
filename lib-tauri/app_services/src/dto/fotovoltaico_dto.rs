@@ -1,4 +1,4 @@
-use app_interface::dto_interface::DTO;
+use app_utils::app_interface::dto_interface::DTO;
 use app_models::models::{Fotovoltaico, NewFotovoltaico};
 use serde::{Deserialize, Serialize};
 
@@ -14,7 +14,7 @@ impl DTO for FotovoltaicoDTO {}
 
 impl From<&Fotovoltaico> for FotovoltaicoDTO {
     fn from(value: &Fotovoltaico) -> Self {
-        Self{
+        Self {
             id: Some(value.id as u64),
             id_edificio: value.edificio_id.clone(),
             potenza: value.potenza,
@@ -25,7 +25,7 @@ impl From<&Fotovoltaico> for FotovoltaicoDTO {
 
 impl From<FotovoltaicoDTO> for NewFotovoltaico {
     fn from(value: FotovoltaicoDTO) -> Self {
-        Self{
+        Self {
             edificio_id: value.id_edificio,
             potenza: value.potenza,
             proprietario: value.proprietario,

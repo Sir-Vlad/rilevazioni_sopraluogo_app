@@ -1,7 +1,7 @@
-use app_error::DomainError;
-use app_interface::dao_interface::crud_operations::{GetAll, Insert, Update};
-use app_interface::dao_interface::DAO;
-use app_interface::database_interface::PostgresPooled;
+use app_utils::app_error::DomainError;
+use app_utils::app_interface::dao_interface::crud_operations::{GetAll, Insert, Update};
+use app_utils::app_interface::dao_interface::DAO;
+use app_utils::app_interface::database_interface::PostgresPooled;
 use app_models::models::{NewUtenza, UpdateUtenza, Utenza};
 use app_models::schema::utenze;
 use diesel::result::Error;
@@ -80,7 +80,7 @@ mod tests {
     use crate::dao::crud_operations::{Insert, Update};
     use crate::dao::entity::{Edificio, TipoUtenza, Utenza};
     use crate::dao::utils::schema_operations::CreateTable;
-    use app_interface::dao_interface::crud_operations::Insert;
+    use app_utils::app_interface::dao_interface::crud_operations::Insert;
     use app_models::models::{Edificio, Utenza};
     use diesel::Connection;
     use once_cell::sync::Lazy;

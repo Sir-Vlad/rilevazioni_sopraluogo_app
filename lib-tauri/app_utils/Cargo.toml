@@ -9,7 +9,8 @@ edition.workspace = true
 rust-version.workspace = true
 
 [dependencies]
-app_interface = { path = "../app_interface", features = ["database"] }
+app_interface = { path = "../app_interface" }
+app_error = { path = "../app_error" }
 
 serde = { workspace = true }
 serde_json = { workspace = true }
@@ -26,4 +27,22 @@ tauri = { workspace = true }
 
 [features]
 default = []
+interface = []
+database = [
+    "interface",
+    "app_interface/database"
+]
+dao = [
+    "interface",
+    "app_interface/dao"
+]
+dto = [
+    "interface",
+    "app_interface/dto"
+]
+service = [
+    "interface",
+    "app_interface/services"
+]
+error = []
 test-utils = []

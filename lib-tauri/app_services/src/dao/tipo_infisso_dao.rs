@@ -1,15 +1,14 @@
-use app_error::DomainError;
-use app_interface::dao_interface::crud_operations::{GetAll, Insert};
-use app_interface::dao_interface::DAO;
-use app_interface::database_interface::PostgresPooled;
+use app_utils::app_error::DomainError;
+use app_utils::app_interface::dao_interface::crud_operations::{GetAll, Insert};
+use app_utils::app_interface::dao_interface::DAO;
+use app_utils::app_interface::database_interface::PostgresPooled;
 use app_models::models::TipoInfisso;
 use app_models::schema::tipo_infisso;
 use diesel::RunQueryDsl;
 
 pub struct TipoInfissoDAO;
 
-impl DAO for TipoInfissoDAO {
-}
+impl DAO for TipoInfissoDAO {}
 
 
 impl GetAll<TipoInfisso> for TipoInfissoDAO {

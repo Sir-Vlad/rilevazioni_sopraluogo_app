@@ -1,4 +1,4 @@
-use app_interface::dto_interface::DTO;
+use app_utils::app_interface::dto_interface::DTO;
 use app_models::models::MaterialeInfisso;
 use serde::{Deserialize, Serialize};
 

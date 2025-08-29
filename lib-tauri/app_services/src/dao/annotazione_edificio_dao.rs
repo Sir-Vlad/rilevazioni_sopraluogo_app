@@ -1,8 +1,8 @@
 use crate::dao::utils::map_error_annotazione;
-use app_error::DomainError;
-use app_interface::dao_interface::crud_operations::{GetAll, Insert};
-use app_interface::dao_interface::DAO;
-use app_interface::database_interface::PostgresPooled;
+use app_utils::app_error::DomainError;
+use app_utils::app_interface::dao_interface::crud_operations::{GetAll, Insert};
+use app_utils::app_interface::dao_interface::DAO;
+use app_utils::app_interface::database_interface::PostgresPooled;
 use app_models::models::{AnnotazioneEdificio, NewAnnotazioneEdificio};
 use app_models::schema::annotazione_edificio;
 use diesel::result::Error;
@@ -10,8 +10,7 @@ use diesel::RunQueryDsl;
 
 pub struct AnnotazioneEdificioDAO;
 
-impl DAO for AnnotazioneEdificioDAO {
-}
+impl DAO for AnnotazioneEdificioDAO {}
 
 impl GetAll<AnnotazioneEdificio> for AnnotazioneEdificioDAO {
     type Output = AnnotazioneEdificio;

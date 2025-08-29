@@ -1,7 +1,7 @@
 use crate::dao::EdificioDAO;
 use crate::dto::EdificioDTO;
-use app_error::{AppResult, ApplicationError};
-use app_interface::{
+use app_utils::app_error::{AppResult, ApplicationError};
+use app_utils::app_interface::{
     dao_interface::crud_operations::{Get, GetAll, Insert, Update},
     database_interface::DatabaseManager,
     service_interface::{
@@ -84,9 +84,9 @@ mod tests {
     use crate::dao::EdificioDAO;
     use crate::dto::EdificioDTO;
     use crate::service::EdificioService;
-    use app_interface::dao_interface::crud_operations::Insert;
-    use app_interface::database_interface::DatabaseManager as DatabaseManagerInterface;
-    use app_interface::service_interface::{CreateService, RetrieveManyService, RetrieveOneService, UpdateService};
+    use app_utils::app_interface::dao_interface::crud_operations::Insert;
+    use app_utils::app_interface::database_interface::DatabaseManager as DatabaseManagerInterface;
+    use app_utils::app_interface::service_interface::{CreateService, RetrieveManyService, RetrieveOneService, UpdateService};
     use app_state::database::DatabaseManager;
     use app_utils::test::{read_json_file, TestServiceEnvironment};
     use std::error::Error;

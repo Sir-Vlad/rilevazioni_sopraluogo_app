@@ -1,7 +1,7 @@
-use app_error::DomainError;
-use app_interface::dao_interface::crud_operations::{GetAll, Insert, Update};
-use app_interface::dao_interface::DAO;
-use app_interface::database_interface::PostgresPooled;
+use app_utils::app_error::DomainError;
+use app_utils::app_interface::dao_interface::crud_operations::{GetAll, Insert, Update};
+use app_utils::app_interface::dao_interface::DAO;
+use app_utils::app_interface::database_interface::PostgresPooled;
 use app_models::models::{Fotovoltaico, NewFotovoltaico, UpdateFotovoltaico};
 use app_models::schema::fotovoltaico;
 use diesel::result::Error;
@@ -9,8 +9,7 @@ use diesel::{QueryDsl, RunQueryDsl};
 
 pub struct FotovoltaicoDAO;
 
-impl DAO for FotovoltaicoDAO {
-}
+impl DAO for FotovoltaicoDAO {}
 
 impl GetAll<Fotovoltaico> for FotovoltaicoDAO {
     type Output = Fotovoltaico;
@@ -59,7 +58,7 @@ impl Update<UpdateFotovoltaico, i32> for FotovoltaicoDAO {
 #[cfg(test)]
 mod test {
     use super::super::*;
-    use app_interface::dao_interface::crud_operations::{Insert, Update};
+    use app_utils::app_interface::dao_interface::crud_operations::{Insert, Update};
     use app_models::models::{NewFotovoltaico, UpdateFotovoltaico};
     use app_utils::test::create_postgres_pool;
     use diesel::RunQueryDsl;
