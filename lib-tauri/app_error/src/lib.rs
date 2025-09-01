@@ -88,7 +88,7 @@ impl From<diesel::result::Error> for DomainError {
                 if msg.message() == "Field content cannot be empty or contain only whitespace" {
                     DomainError::InvalidInput(ErrorKind::EmptyField, msg.message().to_string())
                 } else {
-                    DomainError::from(value)
+                    DomainError::Unexpected(value)
                 }
             }
             _ => DomainError::Unexpected(value),
@@ -109,7 +109,6 @@ impl Display for ErrorKind {
         }
     }
 }
-
 
 #[derive(Error, Debug)]
 pub enum InfrastructureError {

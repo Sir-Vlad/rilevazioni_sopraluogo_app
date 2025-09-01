@@ -1,9 +1,9 @@
-use app_utils::app_error::DomainError;
-use app_utils::app_interface::dao_interface::crud_operations::{Get, GetAll, Insert, Update};
-use app_utils::app_interface::dao_interface::DAO;
 use app_models::models::{Edificio, NewEdificio, UpdateEdificio};
 use app_models::schema::edificio;
 use app_state::database::database_manager::PostgresPooled;
+use app_utils::app_error::DomainError;
+use app_utils::app_interface::dao_interface::crud_operations::{Get, GetAll, Insert, Update};
+use app_utils::app_interface::dao_interface::DAO;
 use diesel::result::Error;
 use diesel::{QueryDsl, RunQueryDsl};
 
@@ -14,7 +14,9 @@ impl DAO for EdificioDAO {}
 impl GetAll<Edificio> for EdificioDAO {
     type Output = Edificio;
     fn get_all(conn: &mut PostgresPooled) -> Result<Vec<Self::Output>, DomainError> {
-        edificio::table.load::<Edificio>(conn).map_err(DomainError::from)
+        edificio::table
+            .load::<Edificio>(conn)
+            .map_err(DomainError::from)
     }
 }
 

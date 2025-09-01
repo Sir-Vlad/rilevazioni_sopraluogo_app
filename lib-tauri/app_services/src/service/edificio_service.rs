@@ -1,14 +1,12 @@
 use crate::dao::EdificioDAO;
 use crate::dto::EdificioDTO;
+use app_state::selected_edificio::StateEdificioSelected;
 use app_utils::app_error::{AppResult, ApplicationError};
 use app_utils::app_interface::{
     dao_interface::crud_operations::{Get, GetAll, Insert, Update},
     database_interface::DatabaseManager,
-    service_interface::{
-        CreateService, RetrieveManyService, RetrieveOneService, UpdateService,
-    },
+    service_interface::{CreateService, RetrieveManyService, RetrieveOneService, UpdateService},
 };
-use app_state::selected_edificio::StateEdificioSelected;
 use async_trait::async_trait;
 use tauri::State;
 
@@ -76,7 +74,6 @@ impl UpdateService<EdificioDTO> for EdificioService {
     }
 }
 
-
 #[cfg(test)]
 mod tests {
     //! The tests were created based on the data in the `dataFake` folder.
@@ -84,16 +81,18 @@ mod tests {
     use crate::dao::EdificioDAO;
     use crate::dto::EdificioDTO;
     use crate::service::EdificioService;
+    use app_state::database::DatabaseManager;
     use app_utils::app_interface::dao_interface::crud_operations::Insert;
     use app_utils::app_interface::database_interface::DatabaseManager as DatabaseManagerInterface;
-    use app_utils::app_interface::service_interface::{CreateService, RetrieveManyService, RetrieveOneService, UpdateService};
-    use app_state::database::DatabaseManager;
-    use app_utils::test::{read_json_file, TestServiceEnvironment};
-    use std::error::Error;
+    use app_utils::app_interface::service_interface::{
+        CreateService, RetrieveManyService, RetrieveOneService, UpdateService,
+    };
+    use app_utils::test::utils::read_json_file;
+    use app_utils::test::{ResultTest, TestServiceEnvironment};
 
     const FILE_PATH_DATA_FAKE: &str = "../dataFake/edificiFake.json";
 
-    async fn setup_env_edifici() -> Result<TestServiceEnvironment<DatabaseManager>, Box<dyn Error>> {
+    async fn setup_env_edifici() -> ResultTest<TestServiceEnvironment<DatabaseManager>> {
         TestServiceEnvironment::new::<_, _>(|db_manager: DatabaseManager| async move {
             let data = read_json_file::<EdificioDTO>(FILE_PATH_DATA_FAKE)?;
             {
@@ -104,19 +103,22 @@ mod tests {
                 }
             }
             Ok(())
-        }).await
+        })
+        .await
     }
 
-
     #[tokio::test(flavor = "multi_thread", worker_threads = 1)]
-    async fn test_retrieve_many() -> Result<(), Box<dyn Error>> {
+    async fn test_retrieve_many() -> ResultTest {
         let env = setup_env_edifici().await?; // Setup automatico
         let state = env.database();
 
         match EdificioService::retrieve_many(state).await {
             Ok(result) => {
                 assert!(!result.is_empty(), "Dovrebbero esserci degli edifici");
-                println!("Test retrieve_many passed: {} edifici trovati", result.len());
+                println!(
+                    "Test retrieve_many passed: {} edifici trovati",
+                    result.len()
+                );
             }
             Err(e) => panic!("Errore durante il recupero degli edifici: {}", e),
         }
@@ -125,9 +127,8 @@ mod tests {
         Ok(())
     }
 
-
     #[tokio::test(flavor = "multi_thread", worker_threads = 1)]
-    async fn test_retrieve_one() -> Result<(), Box<dyn Error>> {
+    async fn test_retrieve_one() -> ResultTest {
         let env = setup_env_edifici().await?;
         let state = env.database();
 
@@ -147,7 +148,7 @@ mod tests {
     }
 
     #[tokio::test(flavor = "multi_thread", worker_threads = 1)]
-    async fn test_create() -> Result<(), Box<dyn Error>> {
+    async fn test_create() -> ResultTest {
         let env = setup_env_edifici().await?;
         let state = env.database();
 
@@ -182,7 +183,7 @@ mod tests {
     }
 
     #[tokio::test(flavor = "multi_thread", worker_threads = 1)]
-    async fn test_update() -> Result<(), Box<dyn Error>> {
+    async fn test_update() -> ResultTest {
         let env = setup_env_edifici().await?;
         let state = env.database();
 

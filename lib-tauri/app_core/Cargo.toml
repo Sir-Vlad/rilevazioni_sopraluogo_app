@@ -21,8 +21,5 @@ dirs-next = { workspace = true }
 # Logging
 log = { workspace = true }
 
-serde = { workspace = true }
-serde_json = { workspace = true }
-
 [target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
 tauri-plugin-single-instance = "2"

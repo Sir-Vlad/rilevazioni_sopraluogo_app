@@ -1,6 +1,6 @@
-use serde::{Deserialize, Serialize};
-use app_utils::app_interface::dto_interface::DTO;
 use app_models::models::{TipoUtenza, Utenza};
+use app_utils::app_interface::dto_interface::DTO;
+use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Clone)]
 pub struct UtenzaDTO {

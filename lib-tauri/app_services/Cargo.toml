@@ -24,4 +24,3 @@ log = { workspace = true }
 [dev-dependencies]
 app_models = { path = "../app_models", features = ["test-models"] }
 app_utils = { path = "../app_utils", features = ["test-utils"] }
-serde_json = { workspace = true }

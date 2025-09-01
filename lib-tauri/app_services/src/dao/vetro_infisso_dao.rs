@@ -1,9 +1,9 @@
+use app_models::models::VetroInfisso;
+use app_models::schema::vetro_infisso;
 use app_utils::app_error::DomainError;
 use app_utils::app_interface::dao_interface::crud_operations::{GetAll, Insert};
 use app_utils::app_interface::dao_interface::DAO;
 use app_utils::app_interface::database_interface::PostgresPooled;
-use app_models::models::VetroInfisso;
-use app_models::schema::vetro_infisso;
 use diesel::RunQueryDsl;
 
 pub struct VetroInfissoDAO;

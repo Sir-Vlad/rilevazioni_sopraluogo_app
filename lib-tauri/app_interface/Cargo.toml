@@ -12,7 +12,6 @@ rust-version.workspace = true
 app_error = { path = "../app_error" }
 
 async-trait = { workspace = true }
-tokio = { workspace = true }
 diesel = { workspace = true }
 tauri = { workspace = true }
 

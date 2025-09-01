@@ -7,12 +7,12 @@ mod edificio_dao;
 mod fotovoltaico_dao;
 mod illuminazione_dao;
 mod infisso_dao;
-mod utils;
 mod materiale_infisso_dao;
 mod stanza_dao;
 mod stanze_con_infissi_dao;
 mod tipo_infisso_dao;
 mod utenze_dao;
+mod utils;
 mod vetro_infisso_dao;
 
 pub use annotazione_edificio_dao::*;

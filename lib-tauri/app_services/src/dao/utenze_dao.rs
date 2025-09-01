@@ -1,9 +1,9 @@
+use app_models::models::{NewUtenza, UpdateUtenza, Utenza};
+use app_models::schema::utenze;
 use app_utils::app_error::DomainError;
 use app_utils::app_interface::dao_interface::crud_operations::{GetAll, Insert, Update};
 use app_utils::app_interface::dao_interface::DAO;
 use app_utils::app_interface::database_interface::PostgresPooled;
-use app_models::models::{NewUtenza, UpdateUtenza, Utenza};
-use app_models::schema::utenze;
 use diesel::result::Error;
 use diesel::RunQueryDsl;
 
@@ -154,6 +154,6 @@ mod tests {
             Err(e) => panic!("{}", e),
         }
     }
-    
+
      */
 }

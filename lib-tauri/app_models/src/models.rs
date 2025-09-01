@@ -4,7 +4,9 @@ use crate::schema::{
     tipo_infisso, utenze, vetro_infisso,
 };
 use chrono::NaiveDateTime;
-use diesel::{AsChangeset, Associations, Identifiable, Insertable, Queryable, QueryableByName, Selectable};
+use diesel::{
+    AsChangeset, Associations, Identifiable, Insertable, Queryable, QueryableByName, Selectable,
+};
 use serde::{Deserialize, Serialize};
 use std::fmt::Debug;
 
@@ -148,10 +150,13 @@ pub struct UpdateInfisso {
     pub vetro: Option<String>,
 }
 
-#[derive(Queryable, Selectable, Identifiable, Associations, Insertable, Debug, PartialEq)]
+#[derive(
+    Queryable, Selectable, Identifiable, Associations, Insertable, Debug, PartialEq, Clone,
+)]
 #[diesel(table_name = stanza_con_infissi)]
 #[diesel(primary_key(infisso_id, edificio_id, stanza_id))]
 #[diesel(belongs_to(Stanza, foreign_key = stanza_id))]
+#[cfg_attr(test, derive(Deserialize))]
 pub struct StanzaConInfissi {
     pub infisso_id: String,
     pub edificio_id: String,
@@ -162,7 +167,7 @@ pub struct StanzaConInfissi {
 #[derive(AsChangeset, Debug, PartialEq)]
 #[diesel(table_name = stanza_con_infissi)]
 pub struct UpdateStanzaConInfissi {
-    pub num_infisso: i32
+    pub num_infisso: i32,
 }
 
 #[derive(Queryable, Selectable, Identifiable, Debug, PartialEq)]
@@ -218,8 +223,7 @@ pub struct UpdateUtenza {
     pub indirizzo_contatore: Option<String>,
 }
 
-#[derive(Serialize, Deserialize)]
-#[derive(diesel_derive_enum::DbEnum, Debug, PartialEq, Clone)]
+#[derive(Serialize, Deserialize, diesel_derive_enum::DbEnum, Debug, PartialEq, Clone)]
 #[ExistingTypePath = "crate::schema::sql_types::TipoUtenza"]
 pub enum TipoUtenza {
     Acqua,
@@ -327,10 +331,10 @@ pub struct DatiStanza {
 #[cfg(test)]
 mod test {
     use super::*;
-    use diesel::{dsl::sql, prelude::*, sql_types::Integer, PgConnection, RunQueryDsl};
-    use diesel_migrations::{embed_migrations, EmbeddedMigrations, MigrationHarness};
+    use diesel::{PgConnection, RunQueryDsl, dsl::sql, prelude::*, sql_types::Integer};
+    use diesel_migrations::{EmbeddedMigrations, MigrationHarness, embed_migrations};
     use std::error::Error;
-    use testcontainers::{runners::SyncRunner, Container};
+    use testcontainers::{Container, runners::SyncRunner};
     use testcontainers_modules::postgres::Postgres;
 
     fn setup_postgresql_database() -> Result<(PgConnection, Container<Postgres>), Box<dyn Error>> {

@@ -1,9 +1,9 @@
+use app_models::models::{NewStanza, Stanza, UpdateStanza};
+use app_models::schema::stanza;
 use app_utils::app_error::DomainError;
 use app_utils::app_interface::dao_interface::crud_operations::{Get, GetAll, Insert, Update};
 use app_utils::app_interface::dao_interface::DAO;
 use app_utils::app_interface::database_interface::PostgresPooled;
-use app_models::models::{NewStanza, Stanza, UpdateStanza};
-use app_models::schema::stanza;
 use diesel::result::Error;
 use diesel::{ExpressionMethods, QueryDsl, RunQueryDsl};
 
@@ -19,7 +19,7 @@ impl Get<Stanza, &str> for StanzaDAO {
             .get_results(conn)
             .map_err(|e| match e {
                 Error::NotFound => DomainError::StanzaNotFound,
-                _ => DomainError::Unexpected(e)
+                _ => DomainError::Unexpected(e),
             })
     }
 }

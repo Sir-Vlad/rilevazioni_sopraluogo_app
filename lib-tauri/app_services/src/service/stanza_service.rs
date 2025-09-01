@@ -134,39 +134,49 @@ impl UpdateService<StanzaDTO> for StanzaService {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::dao::{EdificioDAO, StanzaDAO};
-    use crate::dto::{EdificioDTO, StanzaDTO};
-    use app_state::database::DatabaseManager;
-    use app_state::selected_edificio::{EdificioSelected, StateEdificioSelected};
-    use app_utils::app_interface::dao_interface::crud_operations::Insert;
-    use app_utils::app_interface::database_interface::DatabaseManager as DatabaseManagerInterface;
-    use app_utils::test::{read_json_file, TestServiceEnvironment};
-    use std::error::Error;
+    use crate::dao::InfissoDAO;
+    use crate::dto::InfissoDTO;
+    use crate::{
+        dao::{EdificioDAO, StanzaDAO},
+        dto::{EdificioDTO, StanzaDTO},
+    };
+    use app_state::{
+        database::DatabaseManager,
+        selected_edificio::{EdificioSelected, StateEdificioSelected},
+    };
+    use app_utils::test::utils::read_json_file;
+    use app_utils::test::ResultTest;
+    use app_utils::{
+        app_interface::{
+            dao_interface::crud_operations::Insert,
+            database_interface::DatabaseManager as DatabaseManagerInterface,
+        },
+        path_data_fake,
+        test::TestServiceEnvironment,
+    };
     use tokio::sync::RwLock;
 
     const SELECTED_EDIFICIO_ID: &str = "6192-81";
 
-    macro_rules! path_data_fake {
-        ($filename:expr) => {
-            format!("../dataFake/{}.json", $filename)
-        };
-    }
-
-    async fn setup_env_stanze() -> Result<TestServiceEnvironment<DatabaseManager>, Box<dyn Error>> {
+    async fn setup_env_stanze() -> ResultTest<TestServiceEnvironment<DatabaseManager>> {
         let test_service_environment =
             TestServiceEnvironment::new::<_, _>(|db_manager: DatabaseManager| async move {
-                let edifici_data =
+                let edifici_dto =
                     read_json_file::<EdificioDTO>(path_data_fake!("edificiFake").as_str())?;
-                let stanze_data =
+                let stanze_dto =
                     read_json_file::<StanzaDTO>(path_data_fake!("stanzeFake").as_str())?;
+                let infissi_dto =
+                    read_json_file::<InfissoDTO>(path_data_fake!("infissiFake").as_str())?;
                 {
                     let mut pool = db_manager.get_connection().await?;
-                    for edificio_dto in edifici_data {
+                    for edificio_dto in edifici_dto {
                         let _ = EdificioDAO::insert(&mut pool, edificio_dto.into());
                     }
-
-                    for stanza in stanze_data {
-                        let _ = StanzaDAO::insert(&mut pool, stanza.into());
+                    for stanza_dto in stanze_dto {
+                        let _ = StanzaDAO::insert(&mut pool, stanza_dto.into());
+                    }
+                    for infisso_dto in infissi_dto {
+                        let _ = InfissoDAO::insert(&mut pool, infisso_dto.into());
                     }
                 }
                 Ok(())
@@ -185,7 +195,7 @@ mod tests {
     }
 
     #[tokio::test(flavor = "multi_thread", worker_threads = 1)]
-    async fn test_retrieve_stanze() -> Result<(), Box<dyn Error>> {
+    async fn test_retrieve_stanze() -> ResultTest {
         let env = setup_env_stanze().await?;
         let state_db = env.database();
         let selected_edificio = env.state_app::<StateEdificioSelected>();
@@ -201,7 +211,7 @@ mod tests {
     }
 
     #[tokio::test(flavor = "multi_thread", worker_threads = 1)]
-    async fn test_create_stanza() -> Result<(), Box<dyn Error>> {
+    async fn test_create_stanza() -> ResultTest {
         let env = setup_env_stanze().await?;
         let state_db = env.database();
 
@@ -232,7 +242,7 @@ mod tests {
     }
 
     #[tokio::test(flavor = "multi_thread", worker_threads = 1)]
-    async fn test_update_stanza() -> Result<(), Box<dyn Error>> {
+    async fn test_update_stanza() -> ResultTest {
         let env = setup_env_stanze().await?;
         let state_db = env.database();
 
@@ -256,6 +266,51 @@ mod tests {
                 assert_eq!(result.id, 50);
                 assert_eq!(result.altezza.unwrap(), 25);
                 assert_eq!(result.riscaldamento.unwrap(), "Ventilconvettori");
+            }
+            Err(e) => panic!("{:?}", e),
+        }
+
+        Ok(())
+    }
+
+    #[tokio::test(flavor = "multi_thread", worker_threads = 1)]
+    async fn test_update_stanza_with_infissi() -> ResultTest {
+        let env = setup_env_stanze().await?;
+        let state_db = env.database();
+
+        let stanza_dto = StanzaDTO {
+            id: 50,
+            edificio_id: "6192-81".to_string(),
+            piano: "1".to_string(),
+            id_spazio: "SP050".to_string(),
+            cod_stanza: "ST050".to_string(),
+            destinazione_uso: "Bagno d'epoca".to_string(),
+            altezza: Some(25u16),
+            spessore_muro: None,
+            riscaldamento: Some("Ventilconvettori".to_string()),
+            raffrescamento: None,
+            illuminazione: None,
+            infissi: Some(vec![
+                "A".to_string(),
+                "A".to_string(),
+                "B".to_string(),
+                "B".to_string(),
+            ]),
+        };
+
+        match StanzaService::update(state_db, stanza_dto).await {
+            Ok(result) => {
+                assert_eq!(result.id, 50);
+                assert_eq!(
+                    result.infissi,
+                    Some(vec![
+                        "A".to_string(),
+                        "A".to_string(),
+                        "B".to_string(),
+                        "B".to_string()
+                    ])
+                );
+                println!("{:#?}", result);
             }
             Err(e) => panic!("{:?}", e),
         }

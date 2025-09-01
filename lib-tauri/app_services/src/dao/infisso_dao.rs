@@ -1,9 +1,9 @@
+use app_models::models::{Infisso, NewInfisso, UpdateInfisso};
+use app_models::schema::infisso;
 use app_utils::app_error::DomainError;
 use app_utils::app_interface::dao_interface::crud_operations::{GetAll, Insert, Update};
 use app_utils::app_interface::dao_interface::DAO;
 use app_utils::app_interface::database_interface::PostgresPooled;
-use app_models::models::{Infisso, NewInfisso, UpdateInfisso};
-use app_models::schema::infisso;
 use diesel::result::Error;
 use diesel::{QueryDsl, RunQueryDsl};
 

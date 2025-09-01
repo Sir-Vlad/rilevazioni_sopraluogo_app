@@ -1,5 +1,8 @@
+use app_models::models::{
+    AnnotazioneEdificio, AnnotazioneInfisso, AnnotazioneStanza, NewAnnotazioneEdificio,
+    NewAnnotazioneInfisso, NewAnnotazioneStanza,
+};
 use app_utils::app_interface::dto_interface::DTO;
-use app_models::models::{AnnotazioneEdificio, AnnotazioneInfisso, AnnotazioneStanza, NewAnnotazioneEdificio, NewAnnotazioneInfisso, NewAnnotazioneStanza};
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize)]
@@ -82,7 +85,6 @@ impl From<AnnotazioneEdificioDTO> for NewAnnotazioneEdificio {
         }
     }
 }
-
 
 impl From<AnnotazioneDTO> for AnnotazioneEdificioDTO {
     fn from(dto: AnnotazioneDTO) -> Self {

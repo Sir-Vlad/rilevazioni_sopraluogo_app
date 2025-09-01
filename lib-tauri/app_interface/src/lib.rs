@@ -84,7 +84,7 @@ pub mod service_interface {
         T: DTO,
     {
         async fn create(db: State<'_, impl DatabaseManager + Send + Sync>, item: T)
-                        -> AppResult<T>;
+            -> AppResult<T>;
     }
 
     #[allow(dead_code)]
@@ -115,7 +115,7 @@ pub mod service_interface {
         T: DTO,
     {
         async fn update(db: State<'_, impl DatabaseManager + Send + Sync>, item: T)
-                        -> AppResult<T>;
+            -> AppResult<T>;
     }
 
     #[allow(dead_code)]

@@ -1,11 +1,11 @@
-mod edificio_service;
 mod annotazione_service;
+mod edificio_service;
 mod fotovoltaico_service;
 mod infisso_service;
 mod stanza_service;
 
-pub use edificio_service::*;
 pub use annotazione_service::*;
+pub use edificio_service::*;
 pub use fotovoltaico_service::*;
 pub use infisso_service::*;
 pub use stanza_service::*;

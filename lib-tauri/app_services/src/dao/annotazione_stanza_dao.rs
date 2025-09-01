@@ -1,10 +1,10 @@
 use crate::dao::utils::map_error_annotazione;
+use app_models::models::{AnnotazioneStanza, NewAnnotazioneStanza};
+use app_models::schema::annotazione_stanza;
 use app_utils::app_error::DomainError;
 use app_utils::app_interface::dao_interface::crud_operations::{GetAll, Insert};
 use app_utils::app_interface::dao_interface::DAO;
 use app_utils::app_interface::database_interface::PostgresPooled;
-use app_models::models::{AnnotazioneStanza, NewAnnotazioneStanza};
-use app_models::schema::annotazione_stanza;
 use diesel::RunQueryDsl;
 
 pub struct AnnotazioneStanzaDAO;
@@ -14,7 +14,9 @@ impl DAO for AnnotazioneStanzaDAO {}
 impl GetAll<AnnotazioneStanza> for AnnotazioneStanzaDAO {
     type Output = AnnotazioneStanza;
     fn get_all(conn: &mut PostgresPooled) -> Result<Vec<Self::Output>, DomainError> {
-        annotazione_stanza::table.load(conn).map_err(DomainError::from)
+        annotazione_stanza::table
+            .load(conn)
+            .map_err(DomainError::from)
     }
 }
 
@@ -34,10 +36,10 @@ impl Insert<NewAnnotazioneStanza> for AnnotazioneStanzaDAO {
 #[cfg(test)]
 mod test {
     use crate::dao::AnnotazioneStanzaDAO;
+    use app_models::models::NewAnnotazioneStanza;
     use app_utils::app_error::DomainError;
     use app_utils::app_error::ErrorKind::EmptyField;
     use app_utils::app_interface::dao_interface::crud_operations::Insert;
-    use app_models::models::NewAnnotazioneStanza;
     use app_utils::test::create_postgres_pool;
 
     #[tokio::test]

@@ -1,5 +1,5 @@
-use app_utils::app_interface::dto_interface::DTO;
 use app_models::models::Illuminazione;
+use app_utils::app_interface::dto_interface::DTO;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Deserialize, Serialize)]

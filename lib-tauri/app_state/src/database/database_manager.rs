@@ -1,15 +1,12 @@
 use app_utils::app_error::database_error::DbError;
 pub use app_utils::app_interface::database_interface::{
-    ConnectorDatabase,
-    DatabaseConnector,
-    DatabaseManager as DatabaseManagerInterface,
-    PostgresPool,
-    PostgresPooled,
+    ConnectorDatabase, DatabaseConnector, DatabaseManager as DatabaseManagerInterface,
+    PostgresPool, PostgresPooled,
 };
 use async_trait::async_trait;
 use diesel::{
-    r2d2::{ConnectionManager, Pool},
     PgConnection,
+    r2d2::{ConnectionManager, Pool},
 };
 use std::{
     any::Any,
@@ -45,7 +42,6 @@ impl DatabaseConnector for RealDatabaseConnector {
         self
     }
 }
-
 
 /// A struct that manages database connections and operations in a thread-safe manner.
 ///
@@ -104,7 +100,7 @@ impl DatabaseManager {
                 "Failed to downcast connector to type: {}",
                 std::any::type_name::<T>()
             )
-                .into())
+            .into())
         }
     }
 }
@@ -129,7 +125,7 @@ impl Debug for DatabaseManager {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use app_utils::test::{get_postgres_container, MockDatabaseConnector};
+    use app_utils::test::{get_postgres_container, impl_database_connector::MockDatabaseConnector};
     use async_trait::async_trait;
     use diesel::r2d2::R2D2Connection;
     use std::any::Any;
