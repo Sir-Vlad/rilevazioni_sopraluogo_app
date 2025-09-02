@@ -6,6 +6,38 @@ pub mod database_error;
 
 pub type AppResult<T> = Result<T, ApplicationError>;
 
+macro_rules! define_domain_errors {
+    (
+        entities: [$(($entity:ident, $display_name:literal)),* $(,)?],
+        singles: [$(($single:ident, $single_display:literal)),* $(,)?],
+        custom: [$($variant:ident $( ( $($field:ty),* ) )? => $msg:literal),* $(,)?]
+    ) => {
+        paste::paste! {
+        #[derive(Error, Debug, PartialEq)]
+        pub enum DomainError {
+            $(
+                #[error("{} not found", $display_name)]
+                [<$entity NotFound>],
+                #[error("{} already exists", $display_name)]
+                [<$entity AlreadyExists>],
+            )*
+
+            $(
+                #[error("{} not found", $single_display)]
+                [<$single NotFound>],
+            )*
+
+            $(
+                #[error($msg)]
+                $variant $( ( $($field), * ), )?
+            )*
+        }
+        }
+    };
+}
+
+
+
 #[derive(Error, Debug)]
 pub enum ApplicationError {
     #[error("Domain error: {0}")]
@@ -26,65 +58,28 @@ impl From<DbError> for ApplicationError {
     }
 }
 
-#[derive(Error, Debug, PartialEq)]
-pub enum DomainError {
-    #[error("Edificio not found")]
-    EdificioNotFound,
-    #[error("Edificio already exists")]
-    EdificioAlreadyExists,
-
-    #[error("Infisso not found")]
-    InfissoNotFound,
-    #[error("Infisso already exists")]
-    InfissoAlreadyExists,
-
-    #[error("Stanza not found")]
-    StanzaNotFound,
-    #[error("Stanza already exists")]
-    StanzaAlreadyExists,
-
-    #[error("Annotazione not found")]
-    AnnotazioneNotFound,
-    #[error("Annotazione already exists")]
-    AnnotazioneAlreadyExists,
-
-    #[error("Fotovoltaico not found")]
-    FotovoltaicoNotFound,
-    #[error("Fotovoltaico already exists")]
-    FotovoltaicoAlreadyExists,
-
-    #[error("Illuminazione not found")]
-    IlluminazioneNotFound,
-    #[error("Illuminazione already exists")]
-    IlluminazioneAlreadyExists,
-
-    #[error("Climatizzazione not found")]
-    ClimatizzazioneNotFound,
-    #[error("Climatizzazione already exists")]
-    ClimatizzazioneAlreadyExists,
-    
-    #[error("Materiale Infisso not found")]
-    MaterialeInfissoNotFound,
-    #[error("Materiale Infisso already exists")]
-    MaterialeInfissoAlreadyExists,
-
-    #[error("Stanza con infissi not found")]
-    StanzaConInfissiNotFound,
-
-    #[error("Utenza not found")]
-    UtenzaNotFound,
-    #[error("Utenza already exists")]
-    UtenzaAlreadyExists,
-    
-    #[error("Tipo invalid: {0}")]
-    TipoInvalid(String),
-    
-    #[error("Invalid input: {0}")]
-    InvalidInput(ErrorKind, String),
-
-    #[error("Unexpected error: {0}")]
-    Unexpected(diesel::result::Error),
+define_domain_errors! {
+    entities: [
+        (Edificio, "Edificio"),
+        (Infisso, "Infisso"),
+        (Stanza, "Stanza"),
+        (Annotazione, "Annotazione"),
+        (Fotovoltaico, "Fotovoltaico"),
+        (Illuminazione, "Illuminazione"),
+        (Climatizzazione, "Climatizzazione"),
+        (MaterialeInfisso, "Materiale Infisso"),
+        (Utenza, "Utenza"),
+    ],
+    singles: [
+        (StanzaConInfissi, "Stanza con infissi"),
+    ],
+    custom: [
+        TipoInvalid(String) => "Tipo invalid: {0}",
+        InvalidInput(ErrorKind, String) => "Invalid input: {0}",
+        Unexpected(diesel::result::Error) => "Unexpected error: {0}",
+    ]
 }
+
 
 impl From<diesel::result::Error> for DomainError {
     fn from(value: diesel::result::Error) -> Self {
@@ -121,7 +116,7 @@ impl Display for ErrorKind {
 #[derive(Error, Debug)]
 pub enum InfrastructureError {
     #[error("Database error: {0}")]
-    DatabaseError(#[from] crate::database_error::DbError),
+    DatabaseError(#[from] DbError),
     #[error("Connection pool error: {0}")]
     ConnectionPool(String),
     #[error("Connection timeout")]
