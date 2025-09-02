@@ -6,7 +6,7 @@ use crate::dto::{
     VetroInfissoDTO,
 };
 use crate::service::DomainError;
-use app_utils::app_error::ApplicationError;
+use app_utils::app_error::{AppResult, ApplicationError};
 use app_utils::app_interface::dao_interface::crud_operations::{GetAll, Insert};
 use app_utils::app_interface::database_interface::DatabaseManager;
 use app_utils::app_interface::dto_interface::DTO;
@@ -71,7 +71,7 @@ pub struct TypeServiceImpl;
 impl TypeService for TypeServiceImpl {
     async fn retrieve_all(
         db: State<'_, impl DatabaseManager + Send + Sync>,
-    ) -> Result<HashMap<String, Vec<Value>>, ApplicationError> {
+    ) -> AppResult<HashMap<String, Vec<Value>>> {
         let mut result_map: HashMap<String, Vec<Value>> = HashMap::new();
 
         let materiali: Vec<Value> =

@@ -5,8 +5,8 @@ pub use app_utils::app_interface::database_interface::{
 };
 use async_trait::async_trait;
 use diesel::{
-    PgConnection,
     r2d2::{ConnectionManager, Pool},
+    PgConnection,
 };
 use std::{
     any::Any,
@@ -15,6 +15,7 @@ use std::{
     path::Path,
     sync::Arc,
 };
+use log::debug;
 use tokio::sync::{Mutex, RwLock, RwLockReadGuard};
 
 pub struct RealDatabaseConnector;
@@ -22,7 +23,16 @@ pub struct RealDatabaseConnector;
 #[async_trait]
 impl DatabaseConnector for RealDatabaseConnector {
     async fn create_postgres_pool(&self) -> PostgresPool {
-        dotenvy::from_path(Path::new("../../.env")).ok();
+        let possible_paths = vec![
+            "../lib-tauri/app_state/.env",
+        ];
+
+        for path in possible_paths {
+            if Path::new(path).exists() {
+                debug!("Loading .env from: {}", path);
+                dotenvy::from_path(Path::new(path)).expect("Failed to load .env file");
+            }
+        }
 
         let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
 
@@ -100,7 +110,7 @@ impl DatabaseManager {
                 "Failed to downcast connector to type: {}",
                 std::any::type_name::<T>()
             )
-            .into())
+                .into())
         }
     }
 }

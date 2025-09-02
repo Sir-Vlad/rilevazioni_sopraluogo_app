@@ -32,7 +32,7 @@ static CLEANUP_REGISTERED: Once = Once::new();
 
 static POSTGRES_CONTAINER: OnceCell<ContainerAsync<Postgres>> = OnceCell::const_new();
 
-pub const MIGRATIONS: EmbeddedMigrations = embed_migrations!("../app_models/migrations/postgres");
+pub const MIGRATIONS: EmbeddedMigrations = embed_migrations!("../app_models/migrations/");
 
 pub mod impl_database_connector {
     use crate::test::{create_test_postgres_container, get_connection_string, MIGRATIONS};

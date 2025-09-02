@@ -150,6 +150,8 @@ version = "0.1.0"
 dependencies = [
  "app_services",
  "app_state",
+ "app_utils",
+ "serde_json",
  "tauri",
 ]
 
@@ -228,6 +230,7 @@ dependencies = [
  "async-trait",
  "diesel",
  "dotenvy",
+ "log",
  "serde",
  "testcontainers",
  "testcontainers-modules",

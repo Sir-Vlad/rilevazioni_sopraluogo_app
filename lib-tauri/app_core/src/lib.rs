@@ -7,8 +7,8 @@ use tauri::async_runtime::RwLock;
 use tauri::path::BaseDirectory;
 use tauri::{App, AppHandle, Builder, Manager, Wry};
 use tauri_plugin_log::{RotationStrategy, Target, TargetKind};
+use app_api::command::command_tauri::*;
 
-// mod dao;
 mod constants;
 
 pub fn initialize_tauri() -> Builder<Wry> {
@@ -37,39 +37,37 @@ pub fn initialize_tauri() -> Builder<Wry> {
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
-            /*
-                // miscellaneous
-                export_data_to_excel,
-                init_to_excel,
-                // database
-                set_database,
-                switch_database,
-                close_database,
-                get_all_name_database,
-                // tipi
-                get_all_tipi,
-                insert_tipo,
-                // stanza
-                get_stanze,
-                insert_stanza,
-                update_stanza,
-                // infisso
-                get_infissi,
-                insert_infisso,
-                update_infisso,
-                // edificio
-                get_edifici,
-                update_edificio,
-                // utenze
-                get_utenze,
-                insert_utenza,
-                // fotovoltaico
-                get_fotovoltaico,
-                insert_fotovoltaico,
-                // annotazioni
-                get_annotazioni,
-                insert_annotazione
-            */
+            // miscellaneous
+            //export_data_to_excel,
+            //init_to_excel,
+            // database
+            //set_database,
+            //switch_database,
+            close_database,
+            get_all_name_database,
+            // tipi
+            get_all_tipi,
+            insert_tipo,
+            // stanza
+            get_stanze,
+            insert_stanza,
+            update_stanza,
+            // infisso
+            get_infissi,
+            insert_infisso,
+            update_infisso,
+            // edificio
+            get_edifici,
+            update_edificio,
+            // utenze
+            get_utenze,
+            insert_utenza,
+            // fotovoltaico
+            get_fotovoltaico,
+            insert_fotovoltaico,
+            // annotazioni
+            get_annotazioni,
+            insert_annotazione
         ])
         .on_window_event(handle_window_events)
 }

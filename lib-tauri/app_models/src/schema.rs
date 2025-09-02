@@ -9,7 +9,7 @@ pub mod sql_types {
 diesel::table! {
     annotazione_edificio (id) {
         id -> Int4,
-        #[max_length = 7]
+        #[max_length = 10]
         edificio_id -> Varchar,
         content -> Text,
         data -> Timestamp,
@@ -21,7 +21,7 @@ diesel::table! {
         id -> Int4,
         #[max_length = 4]
         infisso_id -> Varchar,
-        #[max_length = 7]
+        #[max_length = 10]
         edificio_id -> Varchar,
         content -> Text,
         data -> Timestamp,
@@ -47,8 +47,8 @@ diesel::table! {
 
 diesel::table! {
     edificio (chiave) {
-        #[max_length = 7]
-        chiave -> Bpchar,
+        #[max_length = 10]
+        chiave -> Varchar,
         fascicolo -> Int4,
         indirizzo -> Text,
         anno_costruzione -> Nullable<Int4>,
@@ -62,8 +62,8 @@ diesel::table! {
 diesel::table! {
     fotovoltaico (id) {
         id -> Int4,
-        #[max_length = 7]
-        edificio_id -> Bpchar,
+        #[max_length = 10]
+        edificio_id -> Varchar,
         potenza -> Float4,
         #[max_length = 50]
         proprietario -> Varchar,
@@ -82,8 +82,8 @@ diesel::table! {
     infisso (id, edificio_id) {
         #[max_length = 4]
         id -> Bpchar,
-        #[max_length = 7]
-        edificio_id -> Bpchar,
+        #[max_length = 10]
+        edificio_id -> Varchar,
         #[max_length = 20]
         tipo -> Varchar,
         altezza -> Int2,
@@ -107,14 +107,14 @@ diesel::table! {
 diesel::table! {
     stanza (id) {
         id -> Int4,
-        #[max_length = 7]
-        edificio_id -> Bpchar,
-        #[max_length = 1]
+        #[max_length = 10]
+        edificio_id -> Varchar,
+        #[max_length = 2]
         piano -> Bpchar,
         id_spazio -> Text,
         #[max_length = 10]
         cod_stanza -> Varchar,
-        #[max_length = 15]
+        #[max_length = 20]
         destinazione_uso -> Varchar,
         altezza -> Nullable<Int2>,
         spessore_muro -> Nullable<Int2>,
@@ -131,8 +131,8 @@ diesel::table! {
     stanza_con_infissi (infisso_id, edificio_id, stanza_id) {
         #[max_length = 4]
         infisso_id -> Bpchar,
-        #[max_length = 7]
-        edificio_id -> Bpchar,
+        #[max_length = 10]
+        edificio_id -> Varchar,
         stanza_id -> Int4,
         num_infisso -> Int4,
     }
@@ -151,8 +151,8 @@ diesel::table! {
 
     utenze (id) {
         id -> Int4,
-        #[max_length = 7]
-        edificio_id -> Bpchar,
+        #[max_length = 10]
+        edificio_id -> Varchar,
         tipo -> TipoUtenza,
         #[max_length = 20]
         cod_contatore -> Varchar,

@@ -331,10 +331,10 @@ pub struct DatiStanza {
 #[cfg(test)]
 mod test {
     use super::*;
-    use diesel::{PgConnection, RunQueryDsl, dsl::sql, prelude::*, sql_types::Integer};
-    use diesel_migrations::{EmbeddedMigrations, MigrationHarness, embed_migrations};
+    use diesel::{dsl::sql, prelude::*, sql_types::Integer, PgConnection, RunQueryDsl};
+    use diesel_migrations::{embed_migrations, EmbeddedMigrations, MigrationHarness};
     use std::error::Error;
-    use testcontainers::{Container, runners::SyncRunner};
+    use testcontainers::{runners::SyncRunner, Container};
     use testcontainers_modules::postgres::Postgres;
 
     fn setup_postgresql_database() -> Result<(PgConnection, Container<Postgres>), Box<dyn Error>> {
@@ -354,7 +354,7 @@ mod test {
         conn: &mut PgConnection,
         retries: u32,
     ) -> Result<(), Box<dyn Error>> {
-        const MIGRATIONS: EmbeddedMigrations = embed_migrations!("migrations/postgres");
+        const MIGRATIONS: EmbeddedMigrations = embed_migrations!("migrations/");
 
         for attempt in 0..retries {
             match conn.run_pending_migrations(MIGRATIONS) {

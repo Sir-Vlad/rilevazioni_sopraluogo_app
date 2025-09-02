@@ -11,5 +11,7 @@ rust-version.workspace = true
 [dependencies]
 app_state = { path = "../app_state" }
 app_services = { path = "../app_services" }
+app_utils = { path = "../app_utils", features = ["interface"], default-features = false }
 
+serde_json = { workspace = true }
 tauri = { workspace = true }

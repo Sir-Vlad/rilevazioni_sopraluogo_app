@@ -16,11 +16,17 @@ enum PrimaryKey {
 pub struct AnnotazioneDTO {
     id: u64,
     /// tabella specifica della annotazione
-    pub(crate) ref_table: String,
+    ref_table: String,
     /// riferimento alla colonna della tabella
     id_ref_table: PrimaryKey,
     /// contenuto dell'annotazione
     content: String,
+}
+
+impl AnnotazioneDTO {
+    pub fn get_ref_table(&self) -> &str {
+        &self.ref_table
+    }
 }
 
 impl DTO for AnnotazioneDTO {}
