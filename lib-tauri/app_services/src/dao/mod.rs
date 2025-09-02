@@ -29,3 +29,4 @@ pub use stanze_con_infissi_dao::*;
 pub use tipo_infisso_dao::*;
 pub use utenze_dao::*;
 pub use vetro_infisso_dao::*;
+pub use illuminazione_dao::*;

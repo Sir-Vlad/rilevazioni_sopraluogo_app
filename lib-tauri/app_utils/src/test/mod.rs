@@ -5,7 +5,7 @@ use crate::test::impl_database_connector::IsolatedTestDatabaseConnector;
 use crate::test::utils::read_json_file;
 use app_interface::dao_interface::crud_operations::Insert;
 use app_interface::dao_interface::DAO as DAOTrait;
-use app_interface::database_interface::{DatabaseConnector, DatabaseManager, PostgresPooled};
+use app_interface::database_interface::{DatabaseManager, PostgresPooled};
 use diesel::{
     r2d2::{ConnectionManager, Pool},
     PgConnection,
@@ -174,8 +174,8 @@ extern "C" fn cleanup() {
             }
         });
     })
-    .join() // aspetta che il thread finisca prima di ritornare
-    .expect("Cleanup thread panicked");
+        .join() // aspetta che il thread finisca prima di ritornare
+        .expect("Cleanup thread panicked");
 }
 
 pub async fn get_postgres_container() -> &'static ContainerAsync<Postgres> {
@@ -259,7 +259,7 @@ where
     pub async fn new<T, F>(insert_data: T) -> ResultTest<Self>
     where
         T: Fn(D) -> F + Send + 'static,
-        F: std::future::Future<Output = ResultTest<()>> + Send + 'static,
+        F: std::future::Future<Output=ResultTest<()>> + Send + 'static,
         D: Clone,
     {
         let connector = Box::new(IsolatedTestDatabaseConnector::new().await);

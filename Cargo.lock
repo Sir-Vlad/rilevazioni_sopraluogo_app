@@ -214,6 +214,7 @@ dependencies = [
  "diesel",
  "log",
  "serde",
+ "serde_json",
  "tauri",
  "tokio",
 ]

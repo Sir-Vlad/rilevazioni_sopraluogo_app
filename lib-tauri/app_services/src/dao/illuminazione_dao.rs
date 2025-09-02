@@ -1,5 +1,5 @@
 use app_models::models::Illuminazione;
-use app_models::schema::illuminazione;
+use app_models::schema::{climatizzazione, illuminazione};
 use app_utils::app_error::DomainError;
 use app_utils::app_interface::dao_interface::crud_operations::{GetAll, Insert};
 use app_utils::app_interface::dao_interface::DAO;
@@ -16,6 +16,20 @@ impl GetAll<Illuminazione> for IlluminazioneDAO {
     fn get_all(conn: &mut PostgresPooled) -> Result<Vec<Self::Output>, DomainError> {
         illuminazione::table
             .load::<Illuminazione>(conn)
+            .map_err(|e| match e {
+                Error::NotFound => DomainError::IlluminazioneNotFound,
+                _ => DomainError::Unexpected(e),
+            })
+    }
+}
+
+impl Insert<Illuminazione> for IlluminazioneDAO {
+    type Output = Illuminazione;
+
+    fn insert(conn: &mut PostgresPooled, item: Illuminazione) -> Result<Self::Output, DomainError> {
+        diesel::insert_into(illuminazione::table)
+            .values(&item)
+            .get_result(conn)
             .map_err(|e| match e {
                 Error::NotFound => DomainError::IlluminazioneNotFound,
                 _ => DomainError::Unexpected(e),

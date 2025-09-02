@@ -8,6 +8,8 @@ mod materiali_infisso_dto;
 mod stanza_dto;
 mod utenze_dto;
 mod vetro_infisso_dto;
+mod tipo_dto;
+mod tipo_infisso_dto;
 
 pub use annotazione_dto::*;
 pub use climatizzazione_dto::*;
@@ -19,3 +21,5 @@ pub use materiali_infisso_dto::*;
 pub use stanza_dto::*;
 pub use utenze_dto::*;
 pub use vetro_infisso_dto::*;
+pub use tipo_dto::*;
+pub use tipo_infisso_dto::*;

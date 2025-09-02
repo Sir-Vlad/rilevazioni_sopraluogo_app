@@ -3,6 +3,7 @@ use app_utils::app_interface::dto_interface::DTO;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
+#[cfg_attr(test, derive(PartialEq))]
 pub struct InfissoDTO {
     pub id: String,
     pub id_edificio: String,
@@ -18,7 +19,7 @@ impl DTO for InfissoDTO {}
 impl From<&Infisso> for InfissoDTO {
     fn from(infisso: &Infisso) -> Self {
         InfissoDTO {
-            id: infisso.id.clone(),
+            id: infisso.id.trim().to_string(),
             id_edificio: infisso.edificio_id.clone(),
             tipo: infisso.tipo.clone(),
             altezza: infisso.altezza as u16,

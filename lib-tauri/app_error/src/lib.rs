@@ -20,7 +20,7 @@ pub enum ApplicationError {
     EdificioNotSelected,
 }
 
-impl From<database_error::DbError> for ApplicationError {
+impl From<DbError> for ApplicationError {
     fn from(value: DbError) -> Self {
         ApplicationError::Infrastructure(InfrastructureError::DatabaseError(value))
     }
@@ -58,6 +58,11 @@ pub enum DomainError {
     #[error("Illuminazione already exists")]
     IlluminazioneAlreadyExists,
 
+    #[error("Climatizzazione not found")]
+    ClimatizzazioneNotFound,
+    #[error("Climatizzazione already exists")]
+    ClimatizzazioneAlreadyExists,
+    
     #[error("Materiale Infisso not found")]
     MaterialeInfissoNotFound,
     #[error("Materiale Infisso already exists")]
@@ -70,7 +75,10 @@ pub enum DomainError {
     UtenzaNotFound,
     #[error("Utenza already exists")]
     UtenzaAlreadyExists,
-
+    
+    #[error("Tipo invalid: {0}")]
+    TipoInvalid(String),
+    
     #[error("Invalid input: {0}")]
     InvalidInput(ErrorKind, String),
 

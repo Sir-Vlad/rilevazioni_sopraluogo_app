@@ -1,14 +1,17 @@
-use crate::dao::crud_operations::{GetAll, Insert};
 use crate::dao::{
     ClimatizzazioneDAO, IlluminazioneDAO, MaterialeInfissoDAO, TipoInfissoDAO, VetroInfissoDAO,
 };
-use crate::database::Database;
 use crate::dto::{
     ClimatizzazioneDTO, IlluminazioneDTO, MaterialeInfissoDTO, TipoDTO, TipoInfissiDTO,
-    VetroInfissoDTO, DTO,
+    VetroInfissoDTO,
 };
-use crate::service::utils::RetrieveManyService;
-use crate::utils::AppError;
+use crate::service::DomainError;
+use app_utils::app_error::ApplicationError;
+use app_utils::app_interface::dao_interface::crud_operations::{GetAll, Insert};
+use app_utils::app_interface::database_interface::DatabaseManager;
+use app_utils::app_interface::dto_interface::DTO;
+use app_utils::app_interface::service_interface::RetrieveManyService;
+use async_trait::async_trait;
 use serde::{Deserialize, Deserializer, Serialize};
 use serde_json::Value;
 use std::collections::HashMap;
@@ -20,17 +23,13 @@ pub enum TypeDTO {
     Illuminazione,
 }
 
-#[derive(Debug, thiserror::Error)]
-#[error("Tipo non valido: {0}")]
-pub struct InvalidTypeError(pub String);
-
 impl TryFrom<String> for TypeDTO {
-    type Error = InvalidTypeError;
+    type Error = DomainError;
     fn try_from(value: String) -> Result<Self, Self::Error> {
         match value.to_ascii_lowercase().as_str() {
             "climatizzazione" | "riscaldamento" | "raffrescamento" => Ok(TypeDTO::Climatizzazione),
             "illuminazione" => Ok(TypeDTO::Illuminazione),
-            _ => Err(InvalidTypeError(value)),
+            _ => Err(DomainError::TipoInvalid(value)),
         }
     }
 }
@@ -55,191 +54,236 @@ fn convert_to_json<T: DTO + Serialize>(items: Vec<T>) -> Vec<Value> {
         .collect()
 }
 
+#[async_trait]
 pub trait TypeService {
-    fn retrieve_all(db: State<'_, Database>) -> Result<HashMap<String, Vec<Value>>, AppError>;
-    fn insert_type(db: State<'_, Database>, dto: TipoDTO) -> Result<TipoDTO, AppError>;
+    async fn retrieve_all(
+        db: State<'_, impl DatabaseManager + Send + Sync>,
+    ) -> Result<HashMap<String, Vec<Value>>, ApplicationError>;
+    async fn insert_type(
+        db: State<'_, impl DatabaseManager + Send + Sync>,
+        dto: TipoDTO,
+    ) -> Result<TipoDTO, ApplicationError>;
 }
 
 pub struct TypeServiceImpl;
 
+#[async_trait]
 impl TypeService for TypeServiceImpl {
-    fn retrieve_all(db: State<'_, Database>) -> Result<HashMap<String, Vec<Value>>, AppError> {
+    async fn retrieve_all(
+        db: State<'_, impl DatabaseManager + Send + Sync>,
+    ) -> Result<HashMap<String, Vec<Value>>, ApplicationError> {
         let mut result_map: HashMap<String, Vec<Value>> = HashMap::new();
 
         let materiali: Vec<Value> =
-            convert_to_json(MaterialeInfissoService::retrieve_many(db.clone())?);
+            convert_to_json(MaterialeInfissoService::retrieve_many(db.clone()).await?);
         result_map.insert("materiale_infissi".to_string(), materiali);
 
-        let vetro = convert_to_json(VetroInfissoService::retrieve_many(db.clone())?);
+        let vetro = convert_to_json(VetroInfissoService::retrieve_many(db.clone()).await?);
         result_map.insert("vetro_infissi".to_string(), vetro);
 
-        let climatizzazione = convert_to_json(ClimatizzazioneService::retrieve_many(db.clone())?);
+        let climatizzazione =
+            convert_to_json(ClimatizzazioneService::retrieve_many(db.clone()).await?);
         result_map.insert("climatizzazione".to_string(), climatizzazione);
 
-        let illuminazione = convert_to_json(IlluminazioneService::retrieve_many(db.clone())?);
+        let illuminazione = convert_to_json(IlluminazioneService::retrieve_many(db.clone()).await?);
         result_map.insert("illuminazione".to_string(), illuminazione);
 
-        let tipo_infissi = convert_to_json(TipoInfissoService::retrieve_many(db.clone())?);
+        let tipo_infissi = convert_to_json(TipoInfissoService::retrieve_many(db.clone()).await?);
         result_map.insert("tipo_infissi".to_string(), tipo_infissi);
 
         Ok(result_map)
     }
 
-    fn insert_type(db: State<'_, Database>, dto: TipoDTO) -> Result<TipoDTO, AppError> {
-        let conn = db.get_conn();
-        if let Some(conn) = conn.as_ref() {
-            match dto.tipo {
-                TypeDTO::Climatizzazione => {
-                    let res = ClimatizzazioneDAO::insert(conn, dto.into())?;
-                    Ok(TipoDTO::from(res))
-                }
-                TypeDTO::Illuminazione => {
-                    let res = IlluminazioneDAO::insert(conn, dto.into())?;
-                    Ok(TipoDTO::from(res))
-                }
+    async fn insert_type(
+        db: State<'_, impl DatabaseManager + Send + Sync>,
+        dto: TipoDTO,
+    ) -> Result<TipoDTO, ApplicationError> {
+        let mut conn = db.get_connection().await?;
+        match dto.tipo {
+            TypeDTO::Climatizzazione => {
+                let res = ClimatizzazioneDAO::insert(&mut conn, dto.into())?;
+                Ok(TipoDTO::from(res))
             }
-        } else {
-            Err(AppError::DatabaseNotInitialized)
+            TypeDTO::Illuminazione => {
+                let res = IlluminazioneDAO::insert(&mut conn, dto.into())?;
+                Ok(TipoDTO::from(res))
+            }
         }
     }
 }
 
 struct MaterialeInfissoService;
-impl RetrieveManyService<MaterialeInfissoDTO> for MaterialeInfissoService {
-    fn retrieve_many(db: State<'_, Database>) -> Result<Vec<MaterialeInfissoDTO>, AppError> {
-        let conn = db.get_conn();
-        if let Some(conn) = conn.as_ref() {
-            let result = MaterialeInfissoDAO::get_all(conn)?;
 
-            Ok(result
-                .iter()
-                .map(|x| MaterialeInfissoDTO {
-                    materiale: x.materiale.clone(),
-                    efficienza_energetica: x.efficienza_energetica,
-                })
-                .collect())
-        } else {
-            Err(AppError::DatabaseNotInitialized)
-        }
+#[async_trait]
+impl RetrieveManyService<MaterialeInfissoDTO> for MaterialeInfissoService {
+    async fn retrieve_many(
+        db: State<'_, impl DatabaseManager + Send + Sync>,
+    ) -> Result<Vec<MaterialeInfissoDTO>, ApplicationError> {
+        let mut conn = db.get_connection().await?;
+        let result = MaterialeInfissoDAO::get_all(&mut conn)?;
+
+        Ok(result
+            .iter()
+            .map(|x| MaterialeInfissoDTO {
+                materiale: x.materiale.clone(),
+                efficienza_energetica: x.eff_energetica as u8,
+            })
+            .collect())
     }
 }
 
 struct VetroInfissoService;
 
+#[async_trait]
 impl RetrieveManyService<VetroInfissoDTO> for VetroInfissoService {
-    fn retrieve_many(db: State<'_, Database>) -> Result<Vec<VetroInfissoDTO>, AppError> {
-        let conn = db.get_conn();
-        if let Some(conn) = conn.as_ref() {
-            let result = VetroInfissoDAO::get_all(conn)?;
+    async fn retrieve_many(
+        db: State<'_, impl DatabaseManager + Send + Sync>,
+    ) -> Result<Vec<VetroInfissoDTO>, ApplicationError> {
+        let mut conn = db.get_connection().await?;
+        let result = VetroInfissoDAO::get_all(&mut conn)?;
 
-            Ok(result
-                .iter()
-                .map(|x| VetroInfissoDTO {
-                    vetro: x.vetro.clone(),
-                    efficienza_energetica: x.efficienza_energetica,
-                })
-                .collect())
-        } else {
-            Err(AppError::DatabaseNotInitialized)
-        }
+        Ok(result
+            .iter()
+            .map(|x| VetroInfissoDTO {
+                vetro: x.vetro.clone(),
+                efficienza_energetica: x.eff_energetica as u8,
+            })
+            .collect())
     }
 }
 
 struct ClimatizzazioneService;
 
+#[async_trait]
 impl RetrieveManyService<ClimatizzazioneDTO> for ClimatizzazioneService {
-    fn retrieve_many(db: State<'_, Database>) -> Result<Vec<ClimatizzazioneDTO>, AppError> {
-        let conn = db.get_conn();
-        if let Some(conn) = conn.as_ref() {
-            let result = ClimatizzazioneDAO::get_all(conn)?;
+    async fn retrieve_many(
+        db: State<'_, impl DatabaseManager + Send + Sync>,
+    ) -> Result<Vec<ClimatizzazioneDTO>, ApplicationError> {
+        let mut conn = db.get_connection().await?;
+        let result = ClimatizzazioneDAO::get_all(&mut conn)?;
 
-            Ok(result
-                .iter()
-                .map(|x| ClimatizzazioneDTO {
-                    climatizzazione: x.climatizzazione.clone(),
-                    efficienza_energetica: x.efficienza_energetica,
-                })
-                .collect())
-        } else {
-            Err(AppError::DatabaseNotInitialized)
-        }
+        Ok(result
+            .iter()
+            .map(|x| ClimatizzazioneDTO {
+                climatizzazione: x.nome.clone(),
+                efficienza_energetica: x.eff_energetica as u8,
+            })
+            .collect())
     }
 }
 
 struct IlluminazioneService;
 
+#[async_trait]
 impl RetrieveManyService<IlluminazioneDTO> for IlluminazioneService {
-    fn retrieve_many(db: State<'_, Database>) -> Result<Vec<IlluminazioneDTO>, AppError> {
-        let conn = db.get_conn();
-        if let Some(conn) = conn.as_ref() {
-            let result = IlluminazioneDAO::get_all(conn)?;
+    async fn retrieve_many(
+        db: State<'_, impl DatabaseManager + Send + Sync>,
+    ) -> Result<Vec<IlluminazioneDTO>, ApplicationError> {
+        let mut conn = db.get_connection().await?;
+        let result = IlluminazioneDAO::get_all(&mut conn)?;
 
-            Ok(result
-                .iter()
-                .map(|x| IlluminazioneDTO {
-                    lampadina: x.lampadina.clone(),
-                    efficienza_energetica: x.efficienza_energetica,
-                })
-                .collect())
-        } else {
-            Err(AppError::DatabaseNotInitialized)
-        }
+        Ok(result
+            .iter()
+            .map(|x| IlluminazioneDTO {
+                lampadina: x.lampadina.clone(),
+                efficienza_energetica: x.eff_energetica as u8,
+            })
+            .collect())
     }
 }
 
 struct TipoInfissoService;
 
+#[async_trait]
 impl RetrieveManyService<TipoInfissiDTO> for TipoInfissoService {
-    fn retrieve_many(db: State<'_, Database>) -> Result<Vec<TipoInfissiDTO>, AppError> {
-        let conn = db.get_conn();
-        if let Some(conn) = conn.as_ref() {
-            let result = TipoInfissoDAO::get_all(conn)?;
+    async fn retrieve_many(
+        db: State<'_, impl DatabaseManager + Send + Sync>,
+    ) -> Result<Vec<TipoInfissiDTO>, ApplicationError> {
+        let mut conn = db.get_connection().await?;
+        let result = TipoInfissoDAO::get_all(&mut conn)?;
 
-            Ok(result
-                .iter()
-                .map(|x| TipoInfissiDTO {
-                    nome: x.nome.clone(),
-                })
-                .collect())
-        } else {
-            Err(AppError::DatabaseNotInitialized)
-        }
+        Ok(result
+            .iter()
+            .map(|x| TipoInfissiDTO {
+                nome: x.nome.clone(),
+            })
+            .collect())
     }
 }
 
 #[cfg(test)]
 mod test {
-    use crate::database::Database;
     use crate::dto::TipoDTO;
     use crate::service::{TypeDTO, TypeService, TypeServiceImpl};
-    use tauri::test::MockRuntime;
-    use tauri::{App, Manager};
+    use app_state::database::DatabaseManager;
+    use app_utils::test::{ResultTest, TestServiceEnvironment};
 
-    fn setup() -> App<MockRuntime> {
-        let app = tauri::test::mock_app();
-        let db = Database::open_in_memory();
-        crate::dao::create_tables(db.get_conn().as_ref().unwrap()).expect("create tables");
-        app.manage(db);
-        app
+    async fn setup_env_type() -> ResultTest<TestServiceEnvironment<DatabaseManager>> {
+        TestServiceEnvironment::new::<_, _>(|_db_manager: DatabaseManager| async { Ok(()) }).await
     }
 
-    #[test]
-    fn test_insert_type() {
-        let app = setup();
-        let dto = TipoDTO {
+    #[tokio::test(flavor = "multi_thread", worker_threads = 1)]
+    async fn test_retrieve_type() -> ResultTest {
+        let env = setup_env_type().await?;
+        let state_db = env.database();
+
+        match TypeServiceImpl::retrieve_all(state_db).await {
+            Ok(result) => {
+                println!("{:?}", result);
+            }
+            Err(e) => panic!("{:?}", e),
+        }
+        Ok(())
+    }
+
+    #[tokio::test(flavor = "multi_thread", worker_threads = 1)]
+    async fn test_insert_new_climatizzazione_type() -> ResultTest {
+        let env = setup_env_type().await?;
+        let state_db = env.database();
+
+        let insert_type = TipoDTO {
             tipo: TypeDTO::Climatizzazione,
-            name: "Vetro".to_string(),
-            efficienza_energetica: 1,
+            name: "TEST".to_string(),
+            eff_energetica: 100,
         };
 
-        let res = TypeServiceImpl::insert_type(app.state::<Database>(), dto);
-        match res {
-            Ok(r) => {
-                println!("{:?}", r)
+        match TypeServiceImpl::insert_type(state_db, insert_type).await {
+            Ok(result) => {
+                println!("{:?}", result);
             }
-            Err(e) => {
-                panic!("{}", e)
-            }
+            Err(e) => panic!("{:?}", e),
         }
+
+        Ok(())
+    }
+
+
+    #[tokio::test(flavor = "multi_thread", worker_threads = 1)]
+    async fn test_insert_new_illuminazione_type() -> ResultTest {
+        let env = setup_env_type().await?;
+        let state_db = env.database();
+
+        let insert_type = TipoDTO {
+            tipo: TypeDTO::Illuminazione,
+            name: "TEST".to_string(),
+            eff_energetica: 100,
+        };
+
+        match TypeServiceImpl::insert_type(state_db, insert_type).await {
+            Ok(result) => {
+                println!("{:?}", result);
+            }
+            Err(e) => panic!("{:?}", e),
+        }
+
+        Ok(())
+    }
+
+
+    #[test]
+    #[should_panic(expected = "TipoInvalid(\"MaterialeInfisso\")")]
+    fn test_type_not_support() {
+        let type_str = "MaterialeInfisso".to_string();
+        TypeDTO::try_from(type_str).unwrap();
     }
 }

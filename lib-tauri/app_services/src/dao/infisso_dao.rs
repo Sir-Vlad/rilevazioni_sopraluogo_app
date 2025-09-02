@@ -1,11 +1,11 @@
 use app_models::models::{Infisso, NewInfisso, UpdateInfisso};
 use app_models::schema::infisso;
 use app_utils::app_error::DomainError;
-use app_utils::app_interface::dao_interface::crud_operations::{GetAll, Insert, Update};
+use app_utils::app_interface::dao_interface::crud_operations::{Get, GetAll, Insert, Update};
 use app_utils::app_interface::dao_interface::DAO;
 use app_utils::app_interface::database_interface::PostgresPooled;
 use diesel::result::Error;
-use diesel::{QueryDsl, RunQueryDsl};
+use diesel::{ExpressionMethods, QueryDsl, RunQueryDsl};
 
 pub struct InfissoDAO;
 
@@ -15,6 +15,16 @@ impl GetAll<Infisso> for InfissoDAO {
     type Output = Infisso;
     fn get_all(conn: &mut PostgresPooled) -> Result<Vec<Self::Output>, DomainError> {
         infisso::table.load(conn).map_err(DomainError::from)
+    }
+}
+
+impl Get<Infisso, String> for InfissoDAO {
+    type Output = Vec<Infisso>;
+
+    fn get(conn: &mut PostgresPooled, id_edificio: String) -> Result<Self::Output, DomainError> {
+        infisso::table.filter(
+            infisso::edificio_id.eq(&id_edificio)
+        ).load(conn).map_err(DomainError::from)
     }
 }
 

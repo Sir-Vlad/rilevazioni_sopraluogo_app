@@ -22,40 +22,20 @@ impl GetAll<Climatizzazione> for ClimatizzazioneDAO {
             })
     }
 }
-//
-// impl Insert<NewClima> for ClimatizzazioneDAO {
-//     fn insert(conn: &mut PostgresPooled, item: Climatizzazione) -> Result<Self::Output, DomainError> {
-//         diesel::insert_into(climatizzazione::table)
-//             .values()
-//     }
-//     // fn insert<C: DatabaseConnection>(
-//     //     conn: &C,
-//     //     item: Climatizzazione,
-//     // ) -> Result<Climatizzazione, AppError> {
-//     //     let builder = QueryBuilder::insert()
-//     //         .table(Self::table_name())
-//     //         .columns(vec!["CLIMATIZZAZIONE", "EFFICIENZA_ENERGETICA"])
-//     //         .values(vec![
-//     //             item.climatizzazione.clone().into(),
-//     //             item.efficienza_energetica.into(),
-//     //         ])
-//     //         .returning("ID");
-//     //     let (query, param) = builder.build()?;
-//     //     let mut stmt = conn.prepare(query.as_str())?;
-//     //     let mut res = stmt.query_map(rusqlite::params_from_iter(convert_param(param)), |row| {
-//     //         row.get::<_, u64>(0)
-//     //     })?;
-//     //     let id = res.next().unwrap()?;
-//     //     info!(
-//     //         "Nuovo tipo di climatizzazione inserito con ID: {}",
-//     //         item.climatizzazione
-//     //     );
-//     //     Ok(Climatizzazione {
-//     //         _id: Some(id),
-//     //         ..item
-//     //     })
-//     // }
-// }
+
+impl Insert<Climatizzazione> for ClimatizzazioneDAO {
+    type Output = Climatizzazione;
+
+    fn insert(conn: &mut PostgresPooled, item: Climatizzazione) -> Result<Self::Output, DomainError> {
+        diesel::insert_into(climatizzazione::table)
+            .values(&item)
+            .get_result(conn)
+            .map_err(|e| match e {
+                Error::NotFound => DomainError::ClimatizzazioneNotFound,
+                _ => DomainError::Unexpected(e),
+            })
+    }
+}
 
 #[cfg(test)]
 mod tests {

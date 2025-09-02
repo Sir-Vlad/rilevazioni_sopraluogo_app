@@ -1,4 +1,4 @@
-use crate::dto::DTO;
+use app_utils::app_interface::dto_interface::DTO;
 use serde::Serialize;
 
 #[derive(Serialize)]

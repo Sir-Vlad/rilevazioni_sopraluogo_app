@@ -10,14 +10,14 @@ use diesel::{
 use serde::{Deserialize, Serialize};
 use std::fmt::Debug;
 
-#[derive(Queryable, Selectable, Debug, PartialEq)]
+#[derive(Queryable, Selectable, Insertable, Debug, PartialEq)]
 #[diesel(table_name = illuminazione)]
 pub struct Illuminazione {
     pub lampadina: String,
     pub eff_energetica: i16,
 }
 
-#[derive(Queryable, Selectable, Identifiable, Debug, PartialEq)]
+#[derive(Queryable, Selectable, Identifiable, Insertable, Debug, PartialEq)]
 #[diesel(table_name = climatizzazione)]
 #[diesel(primary_key(nome))]
 pub struct Climatizzazione {
@@ -681,10 +681,10 @@ mod test {
             update.edificio_id,
             update.stanza_id,
         )))
-        .set(stanza_con_infissi::num_infisso.eq(
-            sql::<Integer>("COALESCE(num_infisso, 0) + ").bind::<Integer, _>(update.num_infisso),
-        ))
-        .get_result(&mut conn)?;
+            .set(stanza_con_infissi::num_infisso.eq(
+                sql::<Integer>("COALESCE(num_infisso, 0) + ").bind::<Integer, _>(update.num_infisso),
+            ))
+            .get_result(&mut conn)?;
         assert_eq!(updated.num_infisso, 20);
         println!("{updated:#?}");
 
