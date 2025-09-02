@@ -1,0 +1,23 @@
+[
+  {
+    "id": 1,
+    "edificio_id": "8361-122",
+    "tipo": "Acqua",
+    "cod_contatore": "COD-TEST-ACQUA",
+    "indirizzo_contatore": "Via Test, 15"
+  },
+  {
+    "id": 2,
+    "edificio_id": "8361-122",
+    "tipo": "Elettricità",
+    "cod_contatore": "COD-TEST-ELETTRICA",
+    "indirizzo_contatore": "Via Test, 15"
+  },
+  {
+    "id": 3,
+    "edificio_id": "8361-122",
+    "tipo": "Riscaldamento",
+    "cod_contatore": "COD-TEST-CALORE",
+    "indirizzo_contatore": "Via Test, 15"
+  }
+]

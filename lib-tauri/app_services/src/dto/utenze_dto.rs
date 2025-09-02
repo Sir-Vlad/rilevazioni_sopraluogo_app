@@ -1,4 +1,4 @@
-use app_models::models::{TipoUtenza, Utenza};
+use app_models::models::{NewUtenza, TipoUtenza, Utenza};
 use app_utils::app_interface::dto_interface::DTO;
 use serde::{Deserialize, Serialize};
 
@@ -21,6 +21,17 @@ impl From<&Utenza> for UtenzaDTO {
             tipo: value.tipo.clone(),
             cod_contatore: value.cod_contatore.clone(),
             indirizzo_contatore: value.indirizzo_contatore.clone(),
+        }
+    }
+}
+
+impl From<UtenzaDTO> for NewUtenza {
+    fn from(value: UtenzaDTO) -> Self {
+        Self {
+            edificio_id: value.edificio_id,
+            tipo: value.tipo,
+            cod_contatore: value.cod_contatore,
+            indirizzo_contatore: value.indirizzo_contatore,
         }
     }
 }
