@@ -4,29 +4,32 @@ use app_models::models::{
 };
 use app_utils::app_interface::dto_interface::DTO;
 use serde::{Deserialize, Serialize};
+use std::fmt::{Display, Formatter};
 
 #[derive(Serialize, Deserialize)]
-enum PrimaryKey {
+pub enum TableWithPrimaryKey {
     Edificio(String),
     Stanza(u64),
     Infisso((String, String)),
+}
+
+impl Display for TableWithPrimaryKey {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        match self {
+            TableWithPrimaryKey::Edificio(_) => f.write_str("Edificio"),
+            TableWithPrimaryKey::Stanza(_) => f.write_str("Stanza"),
+            TableWithPrimaryKey::Infisso(_) => f.write_str("Infisso"),
+        }
+    }
 }
 
 #[derive(Serialize, Deserialize)]
 pub struct AnnotazioneDTO {
     id: u64,
     /// tabella specifica della annotazione
-    ref_table: String,
-    /// riferimento alla colonna della tabella
-    id_ref_table: PrimaryKey,
+    pub ref_table: TableWithPrimaryKey,
     /// contenuto dell'annotazione
     content: String,
-}
-
-impl AnnotazioneDTO {
-    pub fn get_ref_table(&self) -> &str {
-        &self.ref_table
-    }
 }
 
 impl DTO for AnnotazioneDTO {}
@@ -35,8 +38,7 @@ impl From<AnnotazioneEdificioDTO> for AnnotazioneDTO {
     fn from(dto: AnnotazioneEdificioDTO) -> Self {
         Self {
             id: dto.id,
-            ref_table: "edificio".to_string(),
-            id_ref_table: PrimaryKey::Edificio(dto.edificio_id),
+            ref_table: TableWithPrimaryKey::Edificio(dto.edificio_id),
             content: dto.content,
         }
     }
@@ -46,8 +48,7 @@ impl From<AnnotazioneStanzaDTO> for AnnotazioneDTO {
     fn from(dto: AnnotazioneStanzaDTO) -> Self {
         Self {
             id: dto.id,
-            ref_table: "stanza".to_string(),
-            id_ref_table: PrimaryKey::Stanza(dto.stanza_id),
+            ref_table: TableWithPrimaryKey::Stanza(dto.stanza_id),
             content: dto.content,
         }
     }
@@ -57,14 +58,14 @@ impl From<AnnotazioneInfissoDTO> for AnnotazioneDTO {
     fn from(dto: AnnotazioneInfissoDTO) -> Self {
         Self {
             id: dto.id,
-            ref_table: "infisso".to_string(),
-            id_ref_table: PrimaryKey::Infisso((dto.infisso_id, dto.edificio_id)),
+            ref_table: TableWithPrimaryKey::Infisso((dto.infisso_id, dto.edificio_id)),
             content: dto.content,
         }
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
+#[cfg_attr(test, derive(Deserialize))]
 pub struct AnnotazioneEdificioDTO {
     pub(crate) id: u64,
     pub(crate) edificio_id: String,
@@ -94,7 +95,7 @@ impl From<AnnotazioneEdificioDTO> for NewAnnotazioneEdificio {
 
 impl From<AnnotazioneDTO> for AnnotazioneEdificioDTO {
     fn from(dto: AnnotazioneDTO) -> Self {
-        if let PrimaryKey::Edificio(id_edificio) = dto.id_ref_table {
+        if let TableWithPrimaryKey::Edificio(id_edificio) = dto.ref_table {
             Self {
                 id: dto.id,
                 edificio_id: id_edificio,
@@ -111,7 +112,8 @@ impl From<AnnotazioneDTO> for AnnotazioneEdificioDTO {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
+#[cfg_attr(test, derive(Deserialize))]
 pub struct AnnotazioneStanzaDTO {
     pub(crate) id: u64,
     pub(crate) stanza_id: u64,
@@ -141,7 +143,7 @@ impl From<AnnotazioneStanzaDTO> for NewAnnotazioneStanza {
 
 impl From<AnnotazioneDTO> for AnnotazioneStanzaDTO {
     fn from(dto: AnnotazioneDTO) -> Self {
-        if let PrimaryKey::Stanza(id_stanza) = dto.id_ref_table {
+        if let TableWithPrimaryKey::Stanza(id_stanza) = dto.ref_table {
             Self {
                 id: dto.id,
                 stanza_id: id_stanza,
@@ -158,7 +160,8 @@ impl From<AnnotazioneDTO> for AnnotazioneStanzaDTO {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
+#[cfg_attr(test, derive(Deserialize))]
 pub struct AnnotazioneInfissoDTO {
     pub(crate) id: u64,
     pub(crate) infisso_id: String,
@@ -191,7 +194,7 @@ impl From<AnnotazioneInfissoDTO> for NewAnnotazioneInfisso {
 
 impl From<AnnotazioneDTO> for AnnotazioneInfissoDTO {
     fn from(dto: AnnotazioneDTO) -> Self {
-        if let PrimaryKey::Infisso((id_infisso, edificio)) = dto.id_ref_table {
+        if let TableWithPrimaryKey::Infisso((id_infisso, edificio)) = dto.ref_table {
             Self {
                 id: dto.id,
                 infisso_id: id_infisso,

@@ -1,20 +1,13 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card.tsx";
-
-import { z } from "zod";
-import { ControllerRenderProps, FieldPath, useForm, UseFormReturn } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { Button } from "@/components/ui/button";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import DynamicSelect from "@/components/dynamic-select.tsx";
-import { Input } from "@/components/ui/input.tsx";
-import { Pencil, PlusIcon, Trash } from "lucide-react";
 import AnnotazioneButton from "@/components/annotazione-button.tsx";
-import { useDatabase, useEdifici, useStanze, useTypes } from "@/context/UseProvider.tsx";
-import { handleInputNumericChange } from "@/helpers/helpers";
-import { IAnnotazione, IStanza, NuovoTipo, TipoKey } from "@/models/models.tsx";
-import { toast } from "sonner";
-import TitleCard from "@/components/title-card";
 import ClearableSelect from "@/components/clearable-select.tsx";
+import DynamicSelect from "@/components/dynamic-select.tsx";
+import InputWithMeasureUnit from "@/components/input-with-measure-unit.tsx";
+import TitleCard from "@/components/title-card";
+import {Button} from "@/components/ui/button";
+import {Card, CardContent, CardHeader, CardTitle} from "@/components/ui/card.tsx";
+import {Form, FormControl, FormField, FormItem, FormLabel, FormMessage} from "@/components/ui/form";
+import {Input} from "@/components/ui/input.tsx";
+import {Label} from "@/components/ui/label";
 import {
     Sheet,
     SheetClose,
@@ -25,12 +18,20 @@ import {
     SheetTitle,
     SheetTrigger
 } from "@/components/ui/sheet.tsx";
-import { Label } from "@/components/ui/label";
-import { useState } from "react";
-import { invoke } from "@tauri-apps/api/core";
-import { useNotification } from "@/context/NotificationProvider.tsx";
-import InputWithMeasureUnit from "@/components/input-with-measure-unit.tsx";
-import { getSavedFormData, useLocalStorageForm } from "@/hooks/useLocalStorageForm.ts";
+import {useNotification} from "@/context/NotificationProvider.tsx";
+import {useSelectedEdificio} from "@/context/SelectedEdificioProvider.tsx";
+import {useDatabase, useStanze, useTypes} from "@/context/UseProvider.tsx";
+import {handleInputNumericChange} from "@/helpers/helpers";
+import {getSavedFormData, useLocalStorageForm} from "@/hooks/useLocalStorageForm.ts";
+import {IAnnotazione, IStanza, NuovoTipo, TipoKey} from "@/models/models.tsx";
+import {zodResolver} from "@hookform/resolvers/zod";
+import {invoke} from "@tauri-apps/api/core";
+import {Pencil, PlusIcon, Trash} from "lucide-react";
+import {useMemo, useState} from "react";
+import {ControllerRenderProps, FieldPath, useForm, UseFormReturn} from "react-hook-form";
+import {toast} from "sonner";
+
+import {z} from "zod";
 
 
 const FormSchema = z.object({
@@ -53,7 +54,7 @@ const FormSchema = z.object({
 
 
 const CardFormStanza = () => {
-    const [ annotazioni, setAnnotazioni ] = useState<string[]>([]);
+    const [annotazioni, setAnnotazioni] = useState<string[]>([]);
 
     const stanzaContext = useStanze();
     const {
@@ -61,11 +62,10 @@ const CardFormStanza = () => {
         climatizzazioneType
     } = useTypes();
     const {
-        error,
-        databaseName
+        error
     } = useDatabase();
-    const { selectedEdificio } = useEdifici();
     const {addNotification} = useNotification();
+    const {edificio} = useSelectedEdificio();
     const savedValues = getSavedFormData<typeof FormSchema>("stanzaFormData");
 
     const form = useForm<z.infer<typeof FormSchema>>({
@@ -78,30 +78,39 @@ const CardFormStanza = () => {
     });
     useLocalStorageForm(form, "stanzaFormData");
 
-    const stanzeOptions = [ ...[ ...new Set(stanzaContext.data
-        .filter(value => value.chiave === selectedEdificio)
-        .map((item) => item.stanza)) ]
-        .sort((a, b) => {
-            if (a.startsWith("_") && !b.startsWith("_")) return -1;
-            if (!a.startsWith("_") && b.startsWith("_")) return 1;
-            const aNum = Number(a);
-            const bNum = Number(b);
-            const aIsNum = !isNaN(aNum);
-            const bIsNum = !isNaN(bNum);
-            if (aIsNum && bIsNum) return aNum - bNum;
-            if (aIsNum) return -1;
-            if (bIsNum) return 1;
-            return a.localeCompare(b);
-        }) ];
-    const destinazioneUsoOptions = [ ...[ ...new Set(stanzaContext.data.filter(value => value.chiave === selectedEdificio)
-        .map((item) => item.destinazione_uso)) ] ];
-    const pianoOptions = [ ...[ ...new Set(stanzaContext.data
-        .filter(value => value.chiave === selectedEdificio)
-        .map((item) => item.piano)) ] ];
+    const stanzeOptions = useMemo(() => (
+        stanzaContext.data.map((item) => item.cod_stanza)
+                     .sort((a, b) => {
+                         if (a.startsWith("_") && !b.startsWith("_")) return -1;
+                         if (!a.startsWith("_") && b.startsWith("_")) return 1;
+                         const aNum = Number(a);
+                         const bNum = Number(b);
+                         const aIsNum = !isNaN(aNum);
+                         const bIsNum = !isNaN(bNum);
+                         if (aIsNum && bIsNum) return aNum - bNum;
+                         if (aIsNum) return -1;
+                         if (bIsNum) return 1;
+                         return a.localeCompare(b);
+                     })), [stanzaContext.data]);
+
+
+    const destinazioneUsoOptions = [
+        ...[
+            ...new Set(stanzaContext.data.filter(value => value.edificio_id === edificio?.chiave)
+                                    .map((item) => item.destinazione_uso))
+        ]
+    ];
+    const pianoOptions = [
+        ...[
+            ...new Set(stanzaContext.data
+                                    .filter(value => value.edificio_id === edificio?.chiave)
+                                    .map((item) => item.piano))
+        ]
+    ];
 
     function handleChangeStanza(newValue: string, field: ControllerRenderProps<z.infer<typeof FormSchema>>) {
         field.onChange(newValue);
-        const stanzaSelezionata = stanzaContext.data.find((item) => item.stanza === newValue);
+        const stanzaSelezionata = stanzaContext.data.find((item) => item.cod_stanza === newValue);
         if (stanzaSelezionata) {
             form.setValue("destinazione_uso", stanzaSelezionata.destinazione_uso);
             form.setValue("piano", stanzaSelezionata.piano);
@@ -115,7 +124,8 @@ const CardFormStanza = () => {
         }
 
         const stanze = stanzaContext.data.filter((item) => {
-            return item.chiave === selectedEdificio && item.stanza === data.stanza && item.destinazione_uso === data.destinazione_uso && item.piano === data.piano;
+            return item.edificio_id === edificio?.chiave && item.cod_stanza === data.stanza && item.destinazione_uso ===
+                   data.destinazione_uso && item.piano === data.piano;
         });
         if (stanze.length === 0) {
             toast.error("Stanza non trovata");
@@ -144,19 +154,19 @@ const CardFormStanza = () => {
                 const annotazione = {
                     id          : 0,
                     ref_table   : "stanza",
-                    id_ref_table: { Stanza: stanza.id },
-                    content     : content,
+                    id_ref_table: {Stanza: stanza.id},
+                    content     : content
                 } as IAnnotazione;
 
                 await invoke("insert_annotazione", {
-                    annotazione: annotazione,
-                })
+                    annotazione: annotazione
+                });
             } catch (e) {
                 addNotification(e as string, "error");
             }
         }
         setAnnotazioni([]);
-        addNotification("Annotazioni inserite", "success")
+        addNotification("Annotazioni inserite", "success");
     }
 
     function clearForm() {
@@ -181,9 +191,9 @@ const CardFormStanza = () => {
                 <CardTitle>
                     <div className="flex gap-5 items-center">
                         <TitleCard title="Modifica Stanza"/>
-                        <AnnotazioneButton setAnnotazione={ setAnnotazioni } disabled={ databaseName === null }/>
+                        <AnnotazioneButton setAnnotazione={setAnnotazioni} disabled={edificio === undefined}/>
                         <div className="flex flex-1 justify-end">
-                            <Button type="button" className="dark:text-white" variant="secondary" onClick={ clearForm }>
+                            <Button type="button" className="dark:text-white" variant="secondary" onClick={clearForm}>
                                 <Trash/> Pulisci Form
                             </Button>
                         </div>
@@ -191,151 +201,157 @@ const CardFormStanza = () => {
                 </CardTitle>
             </CardHeader>
             <CardContent>
-                <Form { ...form }>
-                    <form onSubmit={ form.handleSubmit(onSubmit) } className="">
+                <Form {...form}>
+                    <form onSubmit={form.handleSubmit(onSubmit)} className="">
                         <div className="grid grid-cols-12 gap-5">
                             <div className="row-start-1 col-span-12">
                                 <div className="grid grid-cols-12 gap-5">
                                     <FormField
-                                        control={ form.control }
+                                        control={form.control}
                                         name="stanza"
-                                        render={ ({ field }) => (<div className="col-span-4">
+                                        render={({field}) => (
+                                            <div className="col-span-4">
                                             <FormItem>
                                                 <FormLabel>Stanza</FormLabel>
                                                 <ClearableSelect
-                                                    onChange={ (value) => handleChangeStanza(value, field) }
-                                                    options={ stanzeOptions }
-                                                    value={ field.value }
-                                                    onClear={ () => {
+                                                    onChange={(value) => handleChangeStanza(value, field)}
+                                                    options={stanzeOptions}
+                                                    value={field.value}
+                                                    onClear={() => {
                                                         form.reset({
                                                             stanza          : "",
                                                             destinazione_uso: "",
                                                             piano           : ""
                                                         });
-                                                    } }
+                                                    }}
                                                 />
                                                 <FormMessage/>
                                             </FormItem>
-                                        </div>) }
+                                        </div>)}
                                     />
                                     <FormField
-                                        control={ form.control }
+                                        control={form.control}
                                         name="destinazione_uso"
-                                        render={ ({ field }) => (<div className="col-span-4">
+                                        render={({field}) => (
+                                            <div className="col-span-4">
                                             <FormItem>
                                                 <FormLabel>Destinazione Uso</FormLabel>
-                                                <ClearableSelect onChange={ field.onChange }
-                                                                 options={ destinazioneUsoOptions }
-                                                                 value={ field.value }
-                                                                 disabled={ true }
-                                                                 placeholder={ "" }
+                                                <ClearableSelect onChange={field.onChange}
+                                                                 options={destinazioneUsoOptions}
+                                                                 value={field.value}
+                                                                 disabled={true}
+                                                                 placeholder={""}
                                                 />
                                                 <FormMessage/>
                                             </FormItem>
-                                        </div>) }
+                                        </div>)}
                                     />
                                     <FormField
-                                        control={ form.control }
+                                        control={form.control}
                                         name="piano"
-                                        render={ ({ field }) => (<div className="col-span-4">
+                                        render={({field}) => (
+                                            <div className="col-span-4">
                                             <FormItem>
                                                 <FormLabel>Piano</FormLabel>
-                                                <ClearableSelect onChange={ field.onChange }
-                                                                 options={ pianoOptions }
-                                                                 value={ field.value }
-                                                                 disabled={ true }
-                                                                 placeholder={ "" }
+                                                <ClearableSelect onChange={field.onChange}
+                                                                 options={pianoOptions}
+                                                                 value={field.value}
+                                                                 disabled={true}
+                                                                 placeholder={""}
                                                 />
                                                 <FormMessage/>
                                             </FormItem>
-                                        </div>) }
+                                        </div>)}
                                     />
                                 </div>
                             </div>
-                            {/* Altezza e Spessore Muro */ }
+                            {/* Altezza e Spessore Muro */}
                             <div className="row-start-2 col-span-12">
                                 <div className="grid grid-cols-12 gap-5">
                                     <FormField
-                                        control={ form.control }
+                                        control={form.control}
                                         name="altezza"
-                                        render={ ({ field }) => (<div className="col-span-6">
+                                        render={({field}) => (
+                                            <div className="col-span-6">
                                             <FormItem>
                                                 <FormLabel className="flex items-center">
                                                     <p>Altezza</p>
                                                 </FormLabel>
                                                 <InputWithMeasureUnit
-                                                    value={ field.value }
-                                                    onChange={ e => handleInputNumericChange(e, field.onChange) }
-                                                    disabled={ databaseName === null }
+                                                    value={field.value}
+                                                    onChange={e => handleInputNumericChange(e, field.onChange)}
+                                                    disabled={edificio === undefined}
                                                     unitLabel="cm"
                                                 />
                                                 <FormMessage/>
                                             </FormItem>
-                                        </div>) }
+                                        </div>)}
                                     />
                                     <FormField
-                                        control={ form.control }
+                                        control={form.control}
                                         name="spessore_muro"
-                                        render={ ({ field }) => (<div className="col-span-6">
+                                        render={({field}) => (
+                                            <div className="col-span-6">
                                             <FormItem>
                                                 <FormLabel className="flex items-center">
                                                     <p>Spessore Muro</p>
                                                 </FormLabel>
                                                 <InputWithMeasureUnit
-                                                    value={ field.value }
-                                                    onChange={ e => handleInputNumericChange(e, field.onChange) }
-                                                    disabled={ databaseName === null }
+                                                    value={field.value}
+                                                    onChange={e => handleInputNumericChange(e, field.onChange)}
+                                                    disabled={edificio === undefined}
                                                     unitLabel="cm"
                                                 />
                                                 <FormMessage/>
                                             </FormItem>
-                                        </div>) }
+                                        </div>)}
                                     />
                                 </div>
                             </div>
-                            {/* Riscaldamento e Raffrescamento */ }
+                            {/* Riscaldamento e Raffrescamento */}
                             <div className="row-start-3 col-span-12">
                                 <div className="grid grid-cols-12 gap-5">
-                                    <SelectWithOtherField form={ form } name="riscaldamento"
+                                    <SelectWithOtherField form={form} name="riscaldamento"
                                                           label="Riscaldamento"
-                                                          options={ climatizzazioneType }
-                                                          tipo={ "riscaldamento" }
-                                                          disabled={ databaseName === null }
+                                                          options={climatizzazioneType}
+                                                          tipo={"riscaldamento"}
+                                                          disabled={edificio === undefined}
                                     />
-                                    <SelectWithOtherField form={ form } name="raffrescamento"
+                                    <SelectWithOtherField form={form} name="raffrescamento"
                                                           label="Raffrescamento"
-                                                          options={ climatizzazioneType }
-                                                          tipo={ "raffrescamento" }
-                                                          disabled={ databaseName === null }
+                                                          options={climatizzazioneType}
+                                                          tipo={"raffrescamento"}
+                                                          disabled={edificio === undefined}
                                     />
                                 </div>
                             </div>
-                            {/* Illuminazione e altro */ }
+                            {/* Illuminazione e altro */}
                             <div className="row-start-4 col-span-6">
-                                <SelectWithOtherField form={ form } name="illuminazione"
+                                <SelectWithOtherField form={form} name="illuminazione"
                                                       label="Illuminazione"
-                                                      options={ illuminazioneType }
-                                                      tipo={ "illuminazione" }
+                                                      options={illuminazioneType}
+                                                      tipo={"illuminazione"}
                                 />
                             </div>
-                            {/* Infissi */ }
+                            {/* Infissi */}
                             <div className="row-start-6 col-span-12">
                                 <FormField
-                                    control={ form.control }
+                                    control={form.control}
                                     name="infissi"
-                                    render={ ({ field }) => (<FormItem>
+                                    render={({field}) => (
+                                        <FormItem>
                                         <FormLabel>Infissi</FormLabel>
                                         <FormControl>
-                                            <DynamicSelect onChange={ field.onChange } values={ field.value }
-                                                           disabled={ databaseName === null }/>
+                                            <DynamicSelect onChange={field.onChange} values={field.value}
+                                                           disabled={edificio === undefined}/>
                                         </FormControl>
                                         <FormMessage/>
-                                    </FormItem>) }
+                                    </FormItem>)}
                                 />
                             </div>
                         </div>
                         <div className="flex justify-end pt-4">
-                            <Button type="submit" className="text-white" disabled={ databaseName === null }>
+                            <Button type="submit" className="text-white" disabled={edificio === undefined}>
                                 <Pencil/> <span>Modifica Stanza</span>
                             </Button>
                         </div>
@@ -364,43 +380,45 @@ const SelectWithOtherField = <TFormValues extends Record<string, unknown>>({
                                                                                tipo,
                                                                                disabled
                                                                            }: SelectWithOtherFieldProps<TFormValues>) => {
-    return (<FormField
-        control={ form.control }
-        name={ name }
-        render={ ({ field }) => (<div className="col-span-6">
+    return (
+        <FormField
+            control={form.control}
+            name={name}
+            render={({field}) => (
+                <div className="col-span-6">
             <FormItem>
                 <div className="flex justify-between">
-                    <FormLabel>{ label }</FormLabel>
-                    <SheetAddNewTipo tipo={ tipo }></SheetAddNewTipo>
+                    <FormLabel>{label}</FormLabel>
+                    <SheetAddNewTipo tipo={tipo}></SheetAddNewTipo>
                 </div>
-                <ClearableSelect onChange={ field.onChange } options={ options }
-                                 value={ field.value as string }
-                                 disabled={ disabled }
-                                 onClear={ () => {
+                <ClearableSelect onChange={field.onChange} options={options}
+                                 value={field.value as string}
+                                 disabled={disabled}
+                                 onClear={() => {
                                      form.resetField(field.name);
-                                 } }/>
+                                 }}/>
                 <FormMessage/>
             </FormItem>
-        </div>) }
-    />);
+        </div>)}
+        />);
 };
 
-const SheetAddNewTipo = ({ tipo }: { tipo: TipoKey }) => {
-    const [ newNameTipo, setNewNameTipo ] = useState("");
-    const [ effEnergetica, setEffEnergetica ] = useState(0);
-    const { insertType } = useTypes();
-    const { addNotification } = useNotification();
-    const { databaseName } = useDatabase();
+const SheetAddNewTipo = ({tipo}: { tipo: TipoKey }) => {
+    const [newNameTipo, setNewNameTipo] = useState("");
+    const [effEnergetica, setEffEnergetica] = useState(0);
+    const {insertType} = useTypes();
+    const {addNotification} = useNotification();
+    const {edificio} = useSelectedEdificio();
 
     const handleSubmit = async () => {
         try {
             const insertTipo: NuovoTipo = {
-                tipo                 : tipo,
-                name                 : newNameTipo,
-                efficienza_energetica: effEnergetica,
+                tipo          : tipo,
+                name          : newNameTipo,
+                eff_energetica: effEnergetica
             };
             await insertType(insertTipo);
-            addNotification(`Tipo ${ newNameTipo } inserito`, "success");
+            addNotification(`Tipo ${newNameTipo} inserito`, "success");
         } catch (e) {
             addNotification(e as string, "error");
         } finally {
@@ -412,13 +430,13 @@ const SheetAddNewTipo = ({ tipo }: { tipo: TipoKey }) => {
 
     return <Sheet>
         <SheetTrigger asChild>
-            <Button variant="ghost" size={ "sm" } disabled={ databaseName === null }><PlusIcon/></Button>
+            <Button variant="ghost" size={"sm"} disabled={edificio === undefined}><PlusIcon/></Button>
         </SheetTrigger>
         <SheetContent className="w-[400px]">
             <SheetHeader>
-                <SheetTitle>Aggiungi { tipo }</SheetTitle>
+                <SheetTitle>Aggiungi {tipo}</SheetTitle>
                 <SheetDescription>
-                    Compila il form per aggiungere un nuovo tipo a { tipo.toLowerCase() }
+                    Compila il form per aggiungere un nuovo tipo a {tipo.toLowerCase()}
                 </SheetDescription>
             </SheetHeader>
             <div className="grid gap-4 p-4">
@@ -427,8 +445,8 @@ const SheetAddNewTipo = ({ tipo }: { tipo: TipoKey }) => {
                         Nuovo Tipo
                     </Label>
                     <Input id="name" className="col-span-3" placeholder="Inserisci il nome del nuovo tipo"
-                           onChange={ (e) => setNewNameTipo(e.target.value) }
-                           value={ newNameTipo }
+                           onChange={(e) => setNewNameTipo(e.target.value)}
+                           value={newNameTipo}
                     />
                 </div>
                 <div className="grid grid-cols-4 items-center gap-4">
@@ -436,14 +454,14 @@ const SheetAddNewTipo = ({ tipo }: { tipo: TipoKey }) => {
                         Efficienza energetica
                     </Label>
                     <Input id="username" className="col-span-3" placeholder="Inserisci l'efficienza energetica"
-                           onChange={ (e) => handleInputNumericChange(e, setEffEnergetica) }
-                           value={ effEnergetica }
+                           onChange={(e) => handleInputNumericChange(e, setEffEnergetica)}
+                           value={effEnergetica}
                     />
                 </div>
             </div>
             <SheetFooter className="mt-0">
                 <SheetClose asChild>
-                    <Button type="button" className="text-white" onClick={ handleSubmit }>
+                    <Button type="button" className="text-white" onClick={handleSubmit}>
                         <Pencil/>Aggiungi
                     </Button>
                 </SheetClose>

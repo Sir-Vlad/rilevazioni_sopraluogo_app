@@ -1,26 +1,27 @@
+import {useNotification} from "@/context/NotificationProvider.tsx";
+import {useSelectedEdificio} from "@/context/SelectedEdificioProvider.tsx";
+import {invoke} from "@tauri-apps/api/core";
 import * as React from "react";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useDatabase, useEdifici } from "./UseProvider.tsx";
-import { IStanza } from "../models/models.tsx";
-import { IStanzaContext, StanzeContext } from "./Context.tsx";
-import { invoke } from "@tauri-apps/api/core";
-import { toast } from "sonner";
-import { useNotification } from "@/context/NotificationProvider.tsx";
+import {useCallback, useEffect, useMemo, useRef, useState} from "react";
+import {toast} from "sonner";
+import {IStanza} from "../models/models.tsx";
+import {IStanzaContext, StanzeContext} from "./Context.tsx";
+import {useDatabase} from "./UseProvider.tsx";
 
-const StanzeProvider = ({ children }: { children: React.ReactNode }) => {
+const StanzeProvider = ({children}: { children: React.ReactNode }) => {
     const {
         needReload,
         registerProvider
     } = useDatabase();
     const providerRef = useRef<{ notifyReloadComplete: () => void; } | null>(null);
-    const [ stanze, setStanze ] = useState<IStanza[]>([]);
-    const [ loading, setLoading ] = useState(true);
-    const { addNotification } = useNotification();
-    const { selectedEdificio } = useEdifici();
+    const [stanze, setStanze] = useState<IStanza[]>([]);
+    const [loading, setLoading] = useState(true);
+    const {addNotification} = useNotification();
+    const {edificio} = useSelectedEdificio();
 
     useEffect(() => {
         providerRef.current = registerProvider("stanze");
-    }, [ registerProvider ]);
+    }, [registerProvider]);
 
     const loadStanze = useCallback(async () => {
         try {
@@ -33,7 +34,7 @@ const StanzeProvider = ({ children }: { children: React.ReactNode }) => {
         } finally {
             setLoading(false);
         }
-    }, [ addNotification ]);
+    }, [addNotification]);
 
     useEffect(() => {
         if (needReload) {
@@ -41,28 +42,34 @@ const StanzeProvider = ({ children }: { children: React.ReactNode }) => {
                 providerRef.current?.notifyReloadComplete();
             }).catch(console.error);
         }
-    }, [ loadStanze, needReload ]);
+    }, [loadStanze, needReload]);
 
     useEffect(() => {
         loadStanze().catch(console.error);
-    }, [ loadStanze ]);
+    }, [loadStanze]);
 
     const updateStanza = useCallback(async (newStanza: IStanza) => {
-        const updateStanzaProperties = (oldStanza: IStanza, newStanza: IStanza): IStanza => ({
-            ...oldStanza,
-            altezza       : newStanza.altezza ?? oldStanza.altezza,
-            spessore_muro : newStanza.spessore_muro ?? oldStanza.spessore_muro,
-            riscaldamento : newStanza.riscaldamento ?? oldStanza.riscaldamento,
-            raffrescamento: newStanza.raffrescamento ?? oldStanza.raffrescamento,
-            illuminazione : newStanza.illuminazione ?? oldStanza.illuminazione,
-            infissi       : [ ...(oldStanza.infissi ?? []), ...(newStanza.infissi ?? []) ],
-        });
+        const updateStanzaProperties = (oldStanza: IStanza, newStanza: IStanza): IStanza => (
+            {
+                ...oldStanza,
+                altezza       : newStanza.altezza ?? oldStanza.altezza,
+                spessore_muro : newStanza.spessore_muro ?? oldStanza.spessore_muro,
+                riscaldamento : newStanza.riscaldamento ?? oldStanza.riscaldamento,
+                raffrescamento: newStanza.raffrescamento ?? oldStanza.raffrescamento,
+                illuminazione : newStanza.illuminazione ?? oldStanza.illuminazione,
+                infissi       : [
+                    ...(
+                        oldStanza.infissi ?? []), ...(
+                        newStanza.infissi ?? [])
+                ]
+            });
 
 
         try {
-            await invoke("update_stanza", { stanza: newStanza });
-            setStanze((prevStanze) => prevStanze.map((stanza) => stanza.id === newStanza.id ? updateStanzaProperties(stanza, newStanza) : stanza));
-            addNotification(`Stanza ${ newStanza.stanza } aggiornata`, "success");
+            await invoke("update_stanza", {stanza: newStanza});
+            setStanze((prevStanze) => prevStanze.map((stanza) => stanza.id ===
+                                                                 newStanza.id ? updateStanzaProperties(stanza, newStanza) : stanza));
+            addNotification(`Stanza ${newStanza.cod_stanza} aggiornata`, "success");
         } catch (e) {
             if (e === "Nessun record aggiornato") {
                 toast.info(e as string);
@@ -71,19 +78,19 @@ const StanzeProvider = ({ children }: { children: React.ReactNode }) => {
             addNotification(e as string, "error");
         }
 
-    }, [ addNotification ]);
+    }, [addNotification]);
 
 
     const obj: IStanzaContext = useMemo(() => {
         return {
-            data        : stanze.filter(value => value.chiave === selectedEdificio) ?? [],
+            data        : stanze.filter(value => value.edificio_id === edificio?.chiave) ?? [],
             updateStanza: updateStanza,
             loading     : loading
         };
-    }, [ loading, selectedEdificio, stanze, updateStanza ]);
+    }, [edificio?.chiave, loading, stanze, updateStanza]);
 
-    return <StanzeContext.Provider value={ obj }>
-        { children }
+    return <StanzeContext.Provider value={obj}>
+        {children}
     </StanzeContext.Provider>;
 };
 

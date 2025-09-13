@@ -1,3 +1,6 @@
+use std::sync::Arc;
+use tokio::sync::RwLock;
+
 #[cfg(feature = "database")]
 pub mod database_interface {
     use app_error::database_error::DbError;
@@ -18,11 +21,16 @@ pub mod database_interface {
     }
 
     #[async_trait]
-    pub trait DatabaseManager {
+    pub trait DatabaseManagerTrait {
         async fn with_connector(connector: ConnectorDatabase) -> Self;
         async fn get_connection(&self) -> Result<PostgresPooled, DbError>;
     }
 }
+
+pub trait SelectedEdificioTrait {}
+
+pub type SelectedEdificioState<T: SelectedEdificioTrait + Send + Sync> = Arc<RwLock<T>>;
+
 
 #[cfg(feature = "dao")]
 pub mod dao_interface {
@@ -72,8 +80,9 @@ pub mod dto_interface {
 
 #[cfg(feature = "services")]
 pub mod service_interface {
-    use crate::database_interface::DatabaseManager;
+    use crate::database_interface::DatabaseManagerTrait;
     use crate::dto_interface::DTO;
+    use crate::{SelectedEdificioState, SelectedEdificioTrait};
     use app_error::AppResult;
     use async_trait::async_trait;
     use tauri::State;
@@ -83,8 +92,10 @@ pub mod service_interface {
     where
         T: DTO,
     {
-        async fn create(db: State<'_, impl DatabaseManager + Send + Sync>, item: T)
-            -> AppResult<T>;
+        async fn create(
+            db: State<'_, impl DatabaseManagerTrait + Send + Sync>,
+            item: T,
+        ) -> AppResult<T>;
     }
 
     #[allow(dead_code)]
@@ -94,8 +105,19 @@ pub mod service_interface {
         T: DTO,
     {
         async fn retrieve_one(
-            db: State<'_, impl DatabaseManager + Send + Sync>,
+            db: State<'_, impl DatabaseManagerTrait + Send + Sync>,
             id: K,
+        ) -> AppResult<T>;
+    }
+
+    #[async_trait]
+    pub trait RetrieveByEdificioSelected<T>
+    where
+        T: DTO,
+    {
+        async fn retrieve_by_edificio_selected(
+            db: State<'_, impl DatabaseManagerTrait + Send + Sync>,
+            edificio_selected: State<'_, SelectedEdificioState<dyn SelectedEdificioTrait + Send + Sync + 'static>>,
         ) -> AppResult<T>;
     }
 
@@ -105,7 +127,7 @@ pub mod service_interface {
         T: DTO,
     {
         async fn retrieve_many(
-            db: State<'_, impl DatabaseManager + Send + Sync>,
+            db: State<'_, impl DatabaseManagerTrait + Send + Sync>,
         ) -> AppResult<Vec<T>>;
     }
 
@@ -114,8 +136,10 @@ pub mod service_interface {
     where
         T: DTO,
     {
-        async fn update(db: State<'_, impl DatabaseManager + Send + Sync>, item: T)
-            -> AppResult<T>;
+        async fn update(
+            db: State<'_, impl DatabaseManagerTrait + Send + Sync>,
+            item: T,
+        ) -> AppResult<T>;
     }
 
     #[allow(dead_code)]
@@ -125,7 +149,7 @@ pub mod service_interface {
         T: DTO,
     {
         async fn delete(
-            db: State<'_, impl DatabaseManager + Send + Sync>,
+            db: State<'_, impl DatabaseManagerTrait + Send + Sync>,
             id: K,
         ) -> AppResult<bool>;
     }

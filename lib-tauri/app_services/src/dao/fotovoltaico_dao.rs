@@ -29,7 +29,7 @@ impl Insert<NewFotovoltaico> for FotovoltaicoDAO {
             .get_result(conn)
             .map_err(|e| match e {
                 Error::NotFound => DomainError::FotovoltaicoNotFound,
-                Error::DatabaseError(kind, ref db_info) => {
+                Error::DatabaseError(kind, ..) => {
                     if matches!(kind, diesel::result::DatabaseErrorKind::UniqueViolation) {
                         DomainError::FotovoltaicoAlreadyExists
                     } else {

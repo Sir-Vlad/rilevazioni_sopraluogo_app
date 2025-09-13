@@ -4,11 +4,11 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Clone)]
 pub struct UtenzaDTO {
-    pub(crate) id: u64,
-    pub(crate) edificio_id: String,
-    pub(crate) tipo: TipoUtenza,
-    pub(crate) cod_contatore: String,
-    pub(crate) indirizzo_contatore: Option<String>,
+    pub id: u64,
+    pub edificio_id: String,
+    pub tipo: TipoUtenza,
+    pub cod_contatore: String,
+    pub indirizzo_contatore: Option<String>,
 }
 
 impl DTO for UtenzaDTO {}

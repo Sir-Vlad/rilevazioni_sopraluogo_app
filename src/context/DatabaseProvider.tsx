@@ -1,61 +1,46 @@
+import {useNotification} from "@/context/NotificationProvider.tsx";
+import {EDIFICIO_CHANGED_EVENT} from "@/context/SelectedEdificioProvider.tsx";
+import {invoke} from "@tauri-apps/api/core";
 import * as React from "react";
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { invoke } from "@tauri-apps/api/core";
-import { listen } from "@tauri-apps/api/event";
-import { DatabaseContext, DatabaseContextType } from "./Context.tsx";
-import { getFileName } from "../helpers/helpers.ts";
-import { useNotification } from "@/context/NotificationProvider.tsx";
+import {useCallback, useEffect, useMemo, useState} from "react";
+import {DatabaseContext, DatabaseContextType} from "./Context.tsx";
 
-interface DatabaseEventPayload {
-    type_event: string;
-    path: string;
-}
+export const RELOAD_END = "reload-end";
 
-const DatabaseProvider = ({ children }: { children: React.ReactNode }) => {
-    const [ databaseName, setDatabaseName ] = useState<string | null>(null);
-    const [ databasePath, setDatabasePath ] = useState<string | null>(null);
-    const [ isLoading, setIsLoading ] = useState(false);
-    const [ error, setError ] = useState<string | null>(null);
-    const [ needReload, setNeedReload ] = useState(false);
-    const [ pendingProviders, setPendingProviders ] = useState(new Set());
-    const { addNotification } = useNotification();
+const DatabaseProvider = ({children}: { children: React.ReactNode }) => {
+    const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+    const [needReload, setNeedReload] = useState(false);
+    const [pendingProviders, setPendingProviders] = useState(new Set());
+    const {addNotification} = useNotification();
 
-    const switchDatabase = useCallback(async (dbName: string) => {
+    const changeDatabase = useCallback(async (chiave: number) => {
         try {
             setIsLoading(true);
             setError(null);
-            await invoke("switch_database", { dbName });
+            await invoke("switch_database", {chiave: chiave});
             addNotification("Cambio file avvenuto con successo", "success");
         } catch (e) {
             setError(e as string);
-            addNotification(e as string, "error")
+            addNotification(e as string, "error");
         } finally {
             setIsLoading(false);
         }
-    }, [ addNotification ]);
+    }, [addNotification]);
 
 
     useEffect(() => {
-        const databaseChangeListener = listen<DatabaseEventPayload>("db-changed", (e) => {
-            console.log("Evento ricevuto: ", e);
-            const { payload } = e as { payload: DatabaseEventPayload };
+        const handleReload = () => {
+            console.log("Reload event received");
+            setNeedReload(true);
+        };
 
-            if (payload.type_event === "database_switched") {
-                const databaseName = getFileName(payload.path);
-                setDatabasePath(payload.path);
-                setDatabaseName(databaseName ?? "");
-                setNeedReload(true);
-                setIsLoading(false);
-                setError(null);
-            }
-        });
+        window.addEventListener(EDIFICIO_CHANGED_EVENT, handleReload);
 
         return () => {
-            databaseChangeListener
-                .then(callback => callback())
-                .catch(console.error);
+            window.removeEventListener(EDIFICIO_CHANGED_EVENT, handleReload);
         };
-    });
+    }, []);
 
     const registerProvider = useCallback((providerId: string) => {
         setPendingProviders(prev => new Set(prev).add(providerId));
@@ -74,23 +59,22 @@ const DatabaseProvider = ({ children }: { children: React.ReactNode }) => {
     useEffect(() => {
         if (needReload && pendingProviders.size === 0) {
             setNeedReload(false);
+            window.dispatchEvent(new CustomEvent(RELOAD_END));
         }
-    }, [ needReload, pendingProviders ]);
+    }, [needReload, pendingProviders]);
 
     const obj = useMemo(() => {
         return {
-            databaseName    : databaseName,
-            databasePath    : databasePath,
             isLoading       : isLoading,
             error           : error,
             needReload      : needReload,
-            changeDatabase  : switchDatabase,
+            changeFascicolo : changeDatabase,
             registerProvider: registerProvider
         } as DatabaseContextType;
-    }, [ databaseName, databasePath, error, isLoading, needReload, registerProvider, switchDatabase ]);
+    }, [error, isLoading, needReload, registerProvider, changeDatabase]);
 
-    return <DatabaseContext.Provider value={ obj }>
-        { children }
+    return <DatabaseContext.Provider value={obj}>
+        {children}
     </DatabaseContext.Provider>;
 };
 export default DatabaseProvider;

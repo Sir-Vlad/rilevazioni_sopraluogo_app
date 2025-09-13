@@ -1,6 +1,6 @@
 use app_utils::app_error::database_error::DbError;
 pub use app_utils::app_interface::database_interface::{
-    ConnectorDatabase, DatabaseConnector, DatabaseManager as DatabaseManagerInterface,
+    ConnectorDatabase, DatabaseConnector, DatabaseManagerTrait as DatabaseManagerInterface,
     PostgresPool, PostgresPooled,
 };
 use async_trait::async_trait;
@@ -8,6 +8,7 @@ use diesel::{
     r2d2::{ConnectionManager, Pool},
     PgConnection,
 };
+use log::debug;
 use std::{
     any::Any,
     env,
@@ -15,7 +16,6 @@ use std::{
     path::Path,
     sync::Arc,
 };
-use log::debug;
 use tokio::sync::{Mutex, RwLock, RwLockReadGuard};
 
 pub struct RealDatabaseConnector;

@@ -4,10 +4,10 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Clone)]
 pub struct FotovoltaicoDTO {
-    pub(crate) id: Option<u64>,
-    pub(crate) id_edificio: String,
-    pub(crate) potenza: f32,
-    pub(crate) proprietario: String,
+    pub id: Option<u64>,
+    pub id_edificio: String,
+    pub potenza: f32,
+    pub proprietario: String,
 }
 
 impl DTO for FotovoltaicoDTO {}

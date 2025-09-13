@@ -5,7 +5,7 @@ use crate::test::impl_database_connector::IsolatedTestDatabaseConnector;
 use crate::test::utils::read_json_file;
 use app_interface::dao_interface::crud_operations::Insert;
 use app_interface::dao_interface::DAO as DAOTrait;
-use app_interface::database_interface::{DatabaseManager, PostgresPooled};
+use app_interface::database_interface::{DatabaseManagerTrait, PostgresPooled};
 use diesel::{
     r2d2::{ConnectionManager, Pool},
     PgConnection,
@@ -254,7 +254,7 @@ pub struct TestServiceEnvironment<D> {
 
 impl<D> TestServiceEnvironment<D>
 where
-    D: DatabaseManager + Send + Sync + 'static,
+    D: DatabaseManagerTrait + Send + Sync + 'static,
 {
     pub async fn new<T, F>(insert_data: T) -> ResultTest<Self>
     where

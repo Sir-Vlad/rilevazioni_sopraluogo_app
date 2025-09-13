@@ -1,25 +1,26 @@
+import {useSelectedEdificio} from "@/context/SelectedEdificioProvider.tsx";
+import {invoke} from "@tauri-apps/api/core";
 import * as React from "react";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { IInfisso } from "../models/models.tsx";
-import { useDatabase, useEdifici } from "./UseProvider.tsx";
-import { invoke } from "@tauri-apps/api/core";
-import { InfissiContext, InfissiContextType } from "./Context.tsx";
-import { useNotification } from "./NotificationProvider.tsx";
+import {useCallback, useEffect, useMemo, useRef, useState} from "react";
+import {IInfisso} from "../models/models.tsx";
+import {InfissiContext, InfissiContextType} from "./Context.tsx";
+import {useNotification} from "./NotificationProvider.tsx";
+import {useDatabase} from "./UseProvider.tsx";
 
-const InfissiProvider = ({ children }: { children: React.ReactNode }) => {
+const InfissiProvider = ({children}: { children: React.ReactNode }) => {
     const {
         needReload,
         registerProvider
     } = useDatabase();
-    const [ infissi, setInfissi ] = useState<IInfisso[]>([]);
+    const [infissi, setInfissi] = useState<IInfisso[]>([]);
     const providerRef = useRef<{ notifyReloadComplete: () => void; } | null>(null);
-    const [ loading, setLoading ] = useState(true);
-    const { addNotification } = useNotification();
-    const { selectedEdificio } = useEdifici();
+    const [loading, setLoading] = useState(true);
+    const {addNotification} = useNotification();
+    const {edificio} = useSelectedEdificio();
 
     useEffect(() => {
         providerRef.current = registerProvider("infissi");
-    }, [ registerProvider ]);
+    }, [registerProvider]);
 
     const loadInfissi = useCallback(async () => {
         try {
@@ -32,7 +33,7 @@ const InfissiProvider = ({ children }: { children: React.ReactNode }) => {
         } finally {
             setLoading(false);
         }
-    }, [ addNotification ]);
+    }, [addNotification]);
 
     // Ricarica i dati quando il database cambia
     useEffect(() => {
@@ -41,45 +42,46 @@ const InfissiProvider = ({ children }: { children: React.ReactNode }) => {
                 providerRef.current?.notifyReloadComplete();
             }).catch(console.error);
         }
-    }, [ loadInfissi, needReload ]);
+    }, [loadInfissi, needReload]);
 
     // Caricamento iniziale
     useEffect(() => {
         loadInfissi().catch(console.error);
-    }, [ loadInfissi ]);
+    }, [loadInfissi]);
 
     const insertInfisso = useCallback(async (newInfisso: IInfisso) => {
         try {
-            const insertedInfisso: IInfisso = await invoke("insert_infisso", { infisso: newInfisso });
-            setInfissi((prev) => [ ...prev, insertedInfisso ]);
-            addNotification(`Infisso ${ insertedInfisso.id } inserito correttamente`, "success");
+            const insertedInfisso: IInfisso = await invoke("insert_infisso", {infisso: newInfisso});
+            setInfissi((prev) => [...prev, insertedInfisso]);
+            addNotification(`Infisso ${insertedInfisso.id} inserito correttamente`, "success");
         } catch (e) {
             addNotification(e as string, "error");
         }
-    }, [ addNotification ]);
+    }, [addNotification]);
 
     const modifyInfisso = useCallback(async (infisso: IInfisso) => {
         try {
-            const updatedInfisso: IInfisso = await invoke("update_infisso", { infisso: infisso });
-            setInfissi((prev) => [ ...prev.filter(i => i.id !== infisso.id), updatedInfisso ]);
-            addNotification(`Infisso ${ updatedInfisso.id } modificato correttamente`, "success");
+            const updatedInfisso: IInfisso = await invoke("update_infisso", {infisso: infisso});
+            setInfissi((prev) => [...prev.filter(i => i.id !== infisso.id), updatedInfisso]);
+            addNotification(`Infisso ${updatedInfisso.id} modificato correttamente`, "success");
         } catch (e) {
             addNotification(e as string, "error");
         }
-    }, [ addNotification ]);
+    }, [addNotification]);
 
 
     const obj = useMemo(() => {
         return {
-            data         : selectedEdificio === undefined ? [] : infissi.filter(value => value.id_edificio === selectedEdificio),
+            data         : edificio === undefined ? [] : infissi.filter(value => value.id_edificio ===
+                                                                                 edificio.chiave),
             insertInfisso: insertInfisso,
             modifyInfisso: modifyInfisso,
             isLoading    : loading
         } as InfissiContextType;
-    }, [ infissi, insertInfisso, loading, modifyInfisso, selectedEdificio ]);
+    }, [edificio, infissi, insertInfisso, loading, modifyInfisso]);
 
-    return <InfissiContext.Provider value={ obj }>
-        { children }
+    return <InfissiContext.Provider value={obj}>
+        {children}
     </InfissiContext.Provider>;
 };
 

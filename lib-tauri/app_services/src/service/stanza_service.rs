@@ -6,7 +6,7 @@ pub use app_utils::{
     app_error::{AppResult, ApplicationError, DomainError},
     app_interface::{
         dao_interface::crud_operations::{Get, Insert, Update},
-        database_interface::DatabaseManager,
+        database_interface::DatabaseManagerTrait,
         service_interface::{CreateService, UpdateService},
     },
 };
@@ -19,7 +19,7 @@ pub struct StanzaService;
 
 impl StanzaService {
     pub async fn get_stanze_edificio(
-        db: State<'_, impl DatabaseManager + Send + Sync>,
+        db: State<'_, impl DatabaseManagerTrait + Send + Sync>,
         stato_edificio: State<'_, StateEdificioSelected>,
     ) -> AppResult<Vec<StanzaDTO>> {
         let mut conn = db.get_connection().await?;
@@ -71,7 +71,7 @@ impl StanzaService {
 #[async_trait]
 impl CreateService<StanzaDTO> for StanzaService {
     async fn create(
-        db: State<'_, impl DatabaseManager + Send + Sync>,
+        db: State<'_, impl DatabaseManagerTrait + Send + Sync>,
         item: StanzaDTO,
     ) -> AppResult<StanzaDTO> {
         let mut conn = db.get_connection().await?;
@@ -83,7 +83,7 @@ impl CreateService<StanzaDTO> for StanzaService {
 #[async_trait]
 impl UpdateService<StanzaDTO> for StanzaService {
     async fn update(
-        db: State<'_, impl DatabaseManager + Send + Sync>,
+        db: State<'_, impl DatabaseManagerTrait + Send + Sync>,
         item: StanzaDTO,
     ) -> AppResult<StanzaDTO> {
         let mut conn = db.get_connection().await?;
@@ -149,7 +149,7 @@ mod tests {
     use app_utils::{
         app_interface::{
             dao_interface::crud_operations::Insert,
-            database_interface::DatabaseManager as DatabaseManagerInterface,
+            database_interface::DatabaseManagerTrait as DatabaseManagerInterface,
         },
         path_data_fake,
         test::TestServiceEnvironment,

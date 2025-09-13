@@ -5,11 +5,11 @@ use app_utils::{
     app_error::AppResult,
     app_interface::{
         dao_interface::crud_operations::{Get, Insert, Update},
-        database_interface::DatabaseManager,
+        database_interface::DatabaseManagerTrait,
         service_interface::{
             CreateService, UpdateService,
-        }
-    }
+        },
+    },
 };
 use async_trait::async_trait;
 use tauri::State;
@@ -18,7 +18,7 @@ pub struct InfissoService;
 
 impl InfissoService {
     pub async fn retrieve_infissi_by_edificio(
-        db: State<'_, impl DatabaseManager + Send + Sync>,
+        db: State<'_, impl DatabaseManagerTrait + Send + Sync>,
         selected_edificio: State<'_, StateEdificioSelected>,
     ) -> AppResult<Vec<InfissoDTO>> {
         let mut conn = db.get_connection().await?;
@@ -34,7 +34,7 @@ impl InfissoService {
 #[async_trait]
 impl CreateService<InfissoDTO> for InfissoService {
     async fn create(
-        db: State<'_, impl DatabaseManager + Send + Sync>,
+        db: State<'_, impl DatabaseManagerTrait + Send + Sync>,
         item: InfissoDTO,
     ) -> AppResult<InfissoDTO> {
         let mut conn = db.get_connection().await?;
@@ -46,7 +46,7 @@ impl CreateService<InfissoDTO> for InfissoService {
 #[async_trait]
 impl UpdateService<InfissoDTO> for InfissoService {
     async fn update(
-        db: State<'_, impl DatabaseManager + Send + Sync>,
+        db: State<'_, impl DatabaseManagerTrait + Send + Sync>,
         item: InfissoDTO,
     ) -> AppResult<InfissoDTO> {
         let mut conn = db.get_connection().await?;
@@ -66,7 +66,7 @@ mod test {
     use crate::dto::EdificioDTO;
     use app_state::database::DatabaseManager;
     use app_state::selected_edificio::EdificioSelected;
-    use app_utils::app_interface::database_interface::DatabaseManager as DatabaseManagerInterface;
+    use app_utils::app_interface::database_interface::DatabaseManagerTrait as DatabaseManagerInterface;
     use app_utils::path_data_fake;
     use app_utils::test::utils::read_json_file;
     use app_utils::test::{ResultTest, TestServiceEnvironment};

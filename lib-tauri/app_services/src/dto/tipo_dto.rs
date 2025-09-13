@@ -2,7 +2,6 @@ use crate::service::TypeDTO;
 use app_models::models::{Climatizzazione, Illuminazione};
 use app_utils::app_interface::dto_interface::DTO;
 use serde::{Deserialize, Serialize};
-use crate::dao::IlluminazioneDAO;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct TipoDTO {

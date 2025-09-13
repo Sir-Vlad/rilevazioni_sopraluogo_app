@@ -422,7 +422,8 @@ struct UtenzaSqlite {
     pub tipo: String,
     #[diesel(sql_type = diesel::sql_types::Text, column_name = "COD_CONTATORE")]
     pub cod_contatore: String,
-    #[diesel(sql_type = diesel::sql_types::Nullable<diesel::sql_types::Text>, column_name = "INDIRIZZO_CONTATORE")]
+    #[diesel(sql_type = diesel::sql_types::Nullable<diesel::sql_types::Text>, column_name = "INDIRIZZO_CONTATORE"
+    )]
     pub indirizzo_contatore: Option<String>,
 }
 
@@ -527,7 +528,7 @@ mod test {
         let specific_table_check = diesel::sql_query(format!(
             "SELECT 1 FROM sqlite_master WHERE type='table' AND name='{name}'"
         ))
-        .execute(conn);
+            .execute(conn);
 
         assert!(
             specific_table_check.is_ok(),
@@ -595,11 +596,11 @@ mod test {
         is_exist_table("stanza", &mut conn_sq);
 
         let insert_stanza = NewStanza {
-            edificio_id: "7878788",
-            piano: "T",
-            id_spazio: "12587",
-            cod_stanza: "001",
-            destinazione_uso: "Ufficio",
+            edificio_id: "7878788".to_string(),
+            piano: "T".to_string(),
+            id_spazio: "12587".to_string(),
+            cod_stanza: "001".to_string(),
+            destinazione_uso: "Ufficio".to_string(),
         };
 
         diesel::insert_into(stanza::table)
@@ -630,13 +631,13 @@ mod test {
         is_exist_table("infisso", &mut conn_sq);
 
         let infisso = NewInfisso {
-            id: "A",
-            edificio_id: "785461",
-            tipo: "Porta",
+            id: "A".to_string(),
+            edificio_id: "785461".to_string(),
+            tipo: "Porta".to_string(),
             altezza: 120,
             larghezza: 150,
-            materiale: "Legno",
-            vetro: "Singolo",
+            materiale: "Legno".to_string(),
+            vetro: "Singolo".to_string(),
         };
 
         diesel::insert_into(infisso::table)
@@ -764,9 +765,9 @@ mod test {
         is_exist_table("fotovoltaico", &mut conn_sq);
 
         let insert_fotovoltaico = NewFotovoltaico {
-            edificio_id: "454545",
+            edificio_id: "454545".to_string(),
             potenza: 30.9,
-            proprietario: "Ugo Ugolini",
+            proprietario: "Ugo Ugolini".to_string(),
         };
 
         diesel::insert_into(fotovoltaico::table)

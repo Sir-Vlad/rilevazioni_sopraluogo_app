@@ -1,5 +1,5 @@
 use app_models::models::Illuminazione;
-use app_models::schema::{climatizzazione, illuminazione};
+use app_models::schema::illuminazione;
 use app_utils::app_error::DomainError;
 use app_utils::app_interface::dao_interface::crud_operations::{GetAll, Insert};
 use app_utils::app_interface::dao_interface::DAO;

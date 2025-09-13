@@ -1,7 +1,7 @@
 use app_models::models::{NewStanza, Stanza, UpdateStanza};
 use app_models::schema::stanza;
 use app_utils::app_error::DomainError;
-use app_utils::app_interface::dao_interface::crud_operations::{Get, GetAll, Insert, Update};
+use app_utils::app_interface::dao_interface::crud_operations::{Get, Insert, Update};
 use app_utils::app_interface::dao_interface::DAO;
 use app_utils::app_interface::database_interface::PostgresPooled;
 use diesel::result::Error;

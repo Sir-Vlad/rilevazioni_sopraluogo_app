@@ -4,7 +4,7 @@ use app_state::selected_edificio::StateEdificioSelected;
 use app_utils::app_error::{AppResult, ApplicationError};
 use app_utils::app_interface::{
     dao_interface::crud_operations::{Get, GetAll, Insert, Update},
-    database_interface::DatabaseManager,
+    database_interface::DatabaseManagerTrait,
     service_interface::{CreateService, RetrieveManyService, RetrieveOneService, UpdateService},
 };
 use async_trait::async_trait;
@@ -25,12 +25,17 @@ impl EdificioService {
             None => Err(ApplicationError::EdificioNotSelected),
         }
     }
+    
+    pub async fn clear_edificio(stato: State<'_, StateEdificioSelected>) {
+        let mut stato_lock = stato.write().await;
+        stato_lock.clear_edificio();
+    }
 }
 
 #[async_trait]
 impl RetrieveManyService<EdificioDTO> for EdificioService {
     async fn retrieve_many(
-        db: State<'_, impl DatabaseManager + Send + Sync>,
+        db: State<'_, impl DatabaseManagerTrait + Send + Sync>,
     ) -> Result<Vec<EdificioDTO>, ApplicationError> {
         let mut conn = db.get_connection().await?;
         let result = EdificioDAO::get_all(&mut conn)?;
@@ -41,7 +46,7 @@ impl RetrieveManyService<EdificioDTO> for EdificioService {
 #[async_trait]
 impl RetrieveOneService<EdificioDTO, String> for EdificioService {
     async fn retrieve_one(
-        db: State<'_, impl DatabaseManager + Send + Sync>,
+        db: State<'_, impl DatabaseManagerTrait + Send + Sync>,
         id: String,
     ) -> AppResult<EdificioDTO> {
         let mut conn = db.get_connection().await?;
@@ -53,7 +58,7 @@ impl RetrieveOneService<EdificioDTO, String> for EdificioService {
 #[async_trait]
 impl CreateService<EdificioDTO> for EdificioService {
     async fn create(
-        db: State<'_, impl DatabaseManager + Send + Sync>,
+        db: State<'_, impl DatabaseManagerTrait + Send + Sync>,
         item: EdificioDTO,
     ) -> AppResult<EdificioDTO> {
         let mut conn = db.get_connection().await?;
@@ -65,7 +70,7 @@ impl CreateService<EdificioDTO> for EdificioService {
 #[async_trait]
 impl UpdateService<EdificioDTO> for EdificioService {
     async fn update(
-        db: State<'_, impl DatabaseManager + Send + Sync>,
+        db: State<'_, impl DatabaseManagerTrait + Send + Sync>,
         edificio: EdificioDTO,
     ) -> Result<EdificioDTO, ApplicationError> {
         let mut conn = db.get_connection().await?;
@@ -83,7 +88,7 @@ mod tests {
     use crate::service::EdificioService;
     use app_state::database::DatabaseManager;
     use app_utils::app_interface::dao_interface::crud_operations::Insert;
-    use app_utils::app_interface::database_interface::DatabaseManager as DatabaseManagerInterface;
+    use app_utils::app_interface::database_interface::DatabaseManagerTrait as DatabaseManagerInterface;
     use app_utils::app_interface::service_interface::{
         CreateService, RetrieveManyService, RetrieveOneService, UpdateService,
     };
@@ -104,7 +109,7 @@ mod tests {
             }
             Ok(())
         })
-        .await
+            .await
     }
 
     #[tokio::test(flavor = "multi_thread", worker_threads = 1)]

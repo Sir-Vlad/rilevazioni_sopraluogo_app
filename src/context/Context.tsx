@@ -1,13 +1,11 @@
-import { createContext } from "react";
-import { IEdificio, IFotovoltaico, IInfisso, IStanza, IUtenza, NuovoTipo } from "../models/models.tsx";
+import {createContext} from "react";
+import {IEdificio, IFotovoltaico, IInfisso, IStanza, IUtenza, NuovoTipo} from "../models/models.tsx";
 
 export interface DatabaseContextType {
-    databasePath: string;
-    databaseName: string;
     isLoading: boolean;
     error: string | null;
     needReload: boolean;
-    changeDatabase: (dbName: string) => Promise<void>;
+    changeFascicolo: (fascicolo: number) => Promise<void>;
     registerProvider: (providerId: string) => { notifyReloadComplete: () => void };
 }
 
@@ -43,11 +41,9 @@ export const TypesContext = createContext<TypeContextType | null>(null);
 
 export interface EdificioContextType {
     data: IEdificio[];
-    selectedEdificio: string | undefined;
-    setSelectedEdificio: (chiave: string) => void;
+    modifyEdificio: (edificio: IEdificio) => Promise<void>;
     error: string | null;
     isLoading: boolean;
-    modifyEdificio: (edificio: IEdificio) => Promise<void>;
 }
 
 export const EdificioContext = createContext<EdificioContextType | null>(null);

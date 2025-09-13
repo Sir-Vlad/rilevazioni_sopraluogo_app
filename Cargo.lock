@@ -151,8 +151,11 @@ dependencies = [
  "app_services",
  "app_state",
  "app_utils",
+ "log",
+ "serde",
  "serde_json",
  "tauri",
+ "tokio",
 ]
 
 [[package]]
@@ -190,6 +193,7 @@ dependencies = [
  "async-trait",
  "diesel",
  "tauri",
+ "tokio",
 ]
 
 [[package]]

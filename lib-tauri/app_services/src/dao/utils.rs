@@ -1,20 +1,34 @@
-use app_utils::app_error::{ApplicationError, DomainError};
-use chrono::{DateTime, Local, NaiveDateTime, TimeZone, Utc};
+use app_utils::app_error::DomainError;
 use diesel::result::Error;
 
-pub(crate) fn convert_timestamp_to_local(timestamp: String) -> Result<String, ApplicationError> {
-    let naive_dt = NaiveDateTime::parse_from_str(&timestamp, "%Y-%m-%d %H:%M:%S")
-        .map_err(|e| ApplicationError::Unexpected(e.to_string()))?;
-    let local_time: DateTime<Local> = DateTime::from(Utc.from_utc_datetime(&naive_dt));
-    Ok(local_time.format("%Y-%m-%d %H:%M:%S").to_string())
+pub(crate) fn map_error_annotazione(e: Error) -> DomainError {
+    map_error_for_entity(e, EntityType::Annotazione)
 }
 
-pub(crate) fn map_error_annotazione(e: diesel::result::Error) -> DomainError {
+#[derive(Debug, Clone, Copy)]
+pub enum EntityType {
+    Annotazione,
+    Edificio,
+    Stanza,
+    Infisso,
+}
+
+pub(crate) fn map_error_for_entity(e: diesel::result::Error, entity: EntityType) -> DomainError {
     match e {
-        Error::NotFound => DomainError::AnnotazioneNotFound,
+        Error::NotFound => match entity {
+            EntityType::Annotazione => DomainError::AnnotazioneNotFound,
+            EntityType::Edificio => DomainError::EdificioNotFound,
+            EntityType::Stanza => DomainError::StanzaNotFound,
+            EntityType::Infisso => DomainError::InfissoNotFound,
+        },
         Error::DatabaseError(kind, ..) => {
             if matches!(kind, diesel::result::DatabaseErrorKind::UniqueViolation) {
-                DomainError::AnnotazioneAlreadyExists
+                match entity {
+                    EntityType::Annotazione => DomainError::AnnotazioneAlreadyExists,
+                    EntityType::Edificio => DomainError::EdificioAlreadyExists,
+                    EntityType::Stanza => DomainError::StanzaAlreadyExists,
+                    EntityType::Infisso => DomainError::InfissoAlreadyExists,
+                }
             } else {
                 DomainError::from(e)
             }

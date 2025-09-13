@@ -1,24 +1,24 @@
+import {UtenzeContext, UtenzeContextType} from "@/context/Context.tsx";
+import {useNotification} from "@/context/NotificationProvider.tsx";
+import {useDatabase} from "@/context/UseProvider.tsx";
+import {IUtenza} from "@/models/models.tsx";
+import {invoke} from "@tauri-apps/api/core";
 import * as React from "react";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { UtenzeContext, UtenzeContextType } from "@/context/Context.tsx";
-import { IUtenza } from "@/models/models.tsx";
-import { useDatabase } from "@/context/UseProvider.tsx";
-import { invoke } from "@tauri-apps/api/core";
-import { useNotification } from "@/context/NotificationProvider.tsx";
+import {useCallback, useEffect, useMemo, useRef, useState} from "react";
 
-const UtenzeProvider = ({ children }: { children: React.ReactNode }) => {
+const UtenzeProvider = ({children}: { children: React.ReactNode }) => {
     const {
         needReload,
         registerProvider
     } = useDatabase();
     const providerRef = useRef<{ notifyReloadComplete: () => void; } | null>(null);
-    const [ utenze, setUtenze ] = useState<IUtenza[]>([]);
-    const [ loading, setLoading ] = useState(true);
-    const { addNotification } = useNotification();
+    const [utenze, setUtenze] = useState<IUtenza[]>([]);
+    const [loading, setLoading] = useState(true);
+    const {addNotification} = useNotification();
 
     useEffect(() => {
         providerRef.current = registerProvider("utenze");
-    }, [ registerProvider ]);
+    }, [registerProvider]);
 
     const loadUtenze = useCallback(async () => {
         try {
@@ -32,22 +32,22 @@ const UtenzeProvider = ({ children }: { children: React.ReactNode }) => {
             setLoading(false);
         }
 
-    }, [ addNotification ]);
+    }, [addNotification]);
 
     const insertUtenza = useCallback(async (utenza: IUtenza) => {
         try {
             setLoading(true);
-            const newUtenza: IUtenza = await invoke("insert_utenza", { utenza });
+            const newUtenza: IUtenza = await invoke("insert_utenza", {utenza});
             setUtenze((prev) => {
-                return [ ...prev.filter(value => value.id !== newUtenza.id), newUtenza ];
-            })
+                return [...prev.filter(value => value.id !== newUtenza.id), newUtenza];
+            });
             addNotification("Utenza inserita correttamente", "success");
         } catch (e) {
             addNotification(e as string, "error");
         } finally {
             setLoading(false);
         }
-    }, [ addNotification ])
+    }, [addNotification]);
 
     useEffect(() => {
         if (needReload) {
@@ -55,20 +55,21 @@ const UtenzeProvider = ({ children }: { children: React.ReactNode }) => {
                 providerRef.current?.notifyReloadComplete();
             }).catch(console.error);
         }
-    }, [ loadUtenze, needReload ]);
+    }, [loadUtenze, needReload]);
 
     useEffect(() => {
         loadUtenze().catch(console.error);
-    }, [ loadUtenze ]);
+    }, [loadUtenze]);
 
-    const obj = useMemo(() => ({
-        data        : utenze,
-        isLoading   : loading,
-        insertUtenza: insertUtenza,
-    } as UtenzeContextType), [ insertUtenza, loading, utenze ]);
+    const obj = useMemo(() => (
+        {
+            data        : utenze,
+            isLoading   : loading,
+            insertUtenza: insertUtenza
+        } as UtenzeContextType), [insertUtenza, loading, utenze]);
 
-    return <UtenzeContext.Provider value={ obj }>
-        { children }
+    return <UtenzeContext.Provider value={obj}>
+        {children}
     </UtenzeContext.Provider>;
 };
 

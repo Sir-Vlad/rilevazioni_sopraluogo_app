@@ -8,7 +8,7 @@ use crate::dto::{
 use crate::service::DomainError;
 use app_utils::app_error::{AppResult, ApplicationError};
 use app_utils::app_interface::dao_interface::crud_operations::{GetAll, Insert};
-use app_utils::app_interface::database_interface::DatabaseManager;
+use app_utils::app_interface::database_interface::DatabaseManagerTrait;
 use app_utils::app_interface::dto_interface::DTO;
 use app_utils::app_interface::service_interface::RetrieveManyService;
 use async_trait::async_trait;
@@ -57,10 +57,10 @@ fn convert_to_json<T: DTO + Serialize>(items: Vec<T>) -> Vec<Value> {
 #[async_trait]
 pub trait TypeService {
     async fn retrieve_all(
-        db: State<'_, impl DatabaseManager + Send + Sync>,
+        db: State<'_, impl DatabaseManagerTrait + Send + Sync>,
     ) -> Result<HashMap<String, Vec<Value>>, ApplicationError>;
     async fn insert_type(
-        db: State<'_, impl DatabaseManager + Send + Sync>,
+        db: State<'_, impl DatabaseManagerTrait + Send + Sync>,
         dto: TipoDTO,
     ) -> Result<TipoDTO, ApplicationError>;
 }
@@ -70,7 +70,7 @@ pub struct TypeServiceImpl;
 #[async_trait]
 impl TypeService for TypeServiceImpl {
     async fn retrieve_all(
-        db: State<'_, impl DatabaseManager + Send + Sync>,
+        db: State<'_, impl DatabaseManagerTrait + Send + Sync>,
     ) -> AppResult<HashMap<String, Vec<Value>>> {
         let mut result_map: HashMap<String, Vec<Value>> = HashMap::new();
 
@@ -95,7 +95,7 @@ impl TypeService for TypeServiceImpl {
     }
 
     async fn insert_type(
-        db: State<'_, impl DatabaseManager + Send + Sync>,
+        db: State<'_, impl DatabaseManagerTrait + Send + Sync>,
         dto: TipoDTO,
     ) -> Result<TipoDTO, ApplicationError> {
         let mut conn = db.get_connection().await?;
@@ -117,7 +117,7 @@ struct MaterialeInfissoService;
 #[async_trait]
 impl RetrieveManyService<MaterialeInfissoDTO> for MaterialeInfissoService {
     async fn retrieve_many(
-        db: State<'_, impl DatabaseManager + Send + Sync>,
+        db: State<'_, impl DatabaseManagerTrait + Send + Sync>,
     ) -> Result<Vec<MaterialeInfissoDTO>, ApplicationError> {
         let mut conn = db.get_connection().await?;
         let result = MaterialeInfissoDAO::get_all(&mut conn)?;
@@ -137,7 +137,7 @@ struct VetroInfissoService;
 #[async_trait]
 impl RetrieveManyService<VetroInfissoDTO> for VetroInfissoService {
     async fn retrieve_many(
-        db: State<'_, impl DatabaseManager + Send + Sync>,
+        db: State<'_, impl DatabaseManagerTrait + Send + Sync>,
     ) -> Result<Vec<VetroInfissoDTO>, ApplicationError> {
         let mut conn = db.get_connection().await?;
         let result = VetroInfissoDAO::get_all(&mut conn)?;
@@ -157,7 +157,7 @@ struct ClimatizzazioneService;
 #[async_trait]
 impl RetrieveManyService<ClimatizzazioneDTO> for ClimatizzazioneService {
     async fn retrieve_many(
-        db: State<'_, impl DatabaseManager + Send + Sync>,
+        db: State<'_, impl DatabaseManagerTrait + Send + Sync>,
     ) -> Result<Vec<ClimatizzazioneDTO>, ApplicationError> {
         let mut conn = db.get_connection().await?;
         let result = ClimatizzazioneDAO::get_all(&mut conn)?;
@@ -177,7 +177,7 @@ struct IlluminazioneService;
 #[async_trait]
 impl RetrieveManyService<IlluminazioneDTO> for IlluminazioneService {
     async fn retrieve_many(
-        db: State<'_, impl DatabaseManager + Send + Sync>,
+        db: State<'_, impl DatabaseManagerTrait + Send + Sync>,
     ) -> Result<Vec<IlluminazioneDTO>, ApplicationError> {
         let mut conn = db.get_connection().await?;
         let result = IlluminazioneDAO::get_all(&mut conn)?;
@@ -197,7 +197,7 @@ struct TipoInfissoService;
 #[async_trait]
 impl RetrieveManyService<TipoInfissiDTO> for TipoInfissoService {
     async fn retrieve_many(
-        db: State<'_, impl DatabaseManager + Send + Sync>,
+        db: State<'_, impl DatabaseManagerTrait + Send + Sync>,
     ) -> Result<Vec<TipoInfissiDTO>, ApplicationError> {
         let mut conn = db.get_connection().await?;
         let result = TipoInfissoDAO::get_all(&mut conn)?;

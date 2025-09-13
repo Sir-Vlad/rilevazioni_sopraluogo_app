@@ -1,3 +1,4 @@
+use crate::service::Get;
 use app_models::models::{NewUtenza, UpdateUtenza, Utenza};
 use app_models::schema::utenze;
 use app_utils::app_error::DomainError;
@@ -6,6 +7,7 @@ use app_utils::app_interface::dao_interface::DAO;
 use app_utils::app_interface::database_interface::PostgresPooled;
 use diesel::result::Error;
 use diesel::RunQueryDsl;
+use diesel::{ExpressionMethods, QueryDsl};
 
 pub struct UtenzeDAO;
 
@@ -15,6 +17,21 @@ impl GetAll<Utenza> for UtenzeDAO {
     type Output = Utenza;
     fn get_all(conn: &mut PostgresPooled) -> Result<Vec<Self::Output>, DomainError> {
         utenze::table.load(conn).map_err(DomainError::from)
+    }
+}
+
+/// Retrieve per edificio
+impl Get<Utenza, String> for UtenzeDAO {
+    type Output = Vec<Utenza>;
+
+    fn get(conn: &mut PostgresPooled, id: String) -> Result<Self::Output, DomainError> {
+        utenze::table
+            .filter(utenze::edificio_id.eq(id))
+            .get_results(conn)
+            .map_err(|e| match e {
+                Error::NotFound => DomainError::UtenzaNotFound,
+                _ => DomainError::Unexpected(e),
+            })
     }
 }
 
@@ -75,7 +92,6 @@ impl Update<UpdateUtenza, i32> for UtenzeDAO {
 
 #[cfg(test)]
 mod tests {
-    use super::super::*;
     /*
     use crate::dao::crud_operations::{Insert, Update};
     use crate::dao::entity::{Edificio, TipoUtenza, Utenza};

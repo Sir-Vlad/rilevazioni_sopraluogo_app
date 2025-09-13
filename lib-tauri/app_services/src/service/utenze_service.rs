@@ -1,9 +1,13 @@
+use std::ops::Deref;
 use crate::dao::UtenzeDAO;
 use crate::dto::UtenzaDTO;
-use app_utils::app_error::ApplicationError;
-use app_utils::app_interface::dao_interface::crud_operations::{GetAll, Insert};
-use app_utils::app_interface::database_interface::DatabaseManager;
-use app_utils::app_interface::service_interface::{CreateService, RetrieveManyService};
+use app_utils::app_error::{AppResult, ApplicationError};
+use app_utils::app_interface::dao_interface::crud_operations::{Get, GetAll, Insert};
+use app_utils::app_interface::database_interface::DatabaseManagerTrait;
+use app_utils::app_interface::service_interface::{
+    CreateService, RetrieveByEdificioSelected, RetrieveManyService,
+};
+use app_utils::app_interface::SelectedEdificioTrait;
 use async_trait::async_trait;
 use tauri::State;
 
@@ -12,7 +16,7 @@ pub struct UtenzeService;
 #[async_trait]
 impl RetrieveManyService<UtenzaDTO> for UtenzeService {
     async fn retrieve_many(
-        db: State<'_, impl DatabaseManager + Send + Sync>,
+        db: State<'_, impl DatabaseManagerTrait + Send + Sync>,
     ) -> Result<Vec<UtenzaDTO>, ApplicationError> {
         let mut conn = db.get_connection().await?;
         let utenze = UtenzeDAO::get_all(&mut conn)?;
@@ -21,9 +25,23 @@ impl RetrieveManyService<UtenzaDTO> for UtenzeService {
 }
 
 #[async_trait]
+impl RetrieveByEdificioSelected<UtenzaDTO> for UtenzeService {
+    async fn retrieve_by_edificio_selected(
+        db: State<'_, impl DatabaseManagerTrait + Send + Sync>,
+        edificio_selected_state: State<'_, impl SelectedEdificioState + Send + Sync>,
+    ) -> AppResult<UtenzaDTO> {
+        let mut conn = db.get_connection().await?;
+        let edificio_selected = edificio_selected_state.
+
+        let utenze = UtenzeDAO::get(&mut conn,)?;
+        Ok(utenze.iter().map(UtenzaDTO::from).collect())
+    }
+}
+
+#[async_trait]
 impl CreateService<UtenzaDTO> for UtenzeService {
     async fn create(
-        db: State<'_, impl DatabaseManager + Send + Sync>,
+        db: State<'_, impl DatabaseManagerTrait + Send + Sync>,
         utenza: UtenzaDTO,
     ) -> Result<UtenzaDTO, ApplicationError> {
         let mut conn = db.get_connection().await?;
@@ -40,7 +58,7 @@ mod tests {
     use app_models::models::TipoUtenza;
     use app_state::database::DatabaseManager;
     use app_state::selected_edificio::{EdificioSelected, StateEdificioSelected};
-    use app_utils::app_interface::database_interface::DatabaseManager as DatabaseManagerTrait;
+    use app_utils::app_interface::database_interface::DatabaseManagerTrait;
     use app_utils::path_data_fake;
     use app_utils::test::utils::read_json_file;
     use app_utils::test::{ResultTest, TestServiceEnvironment};
@@ -48,28 +66,33 @@ mod tests {
     use tokio::sync::RwLock;
 
     async fn setup_utenze_env() -> ResultTest<TestServiceEnvironment<DatabaseManager>> {
-        let test_service_env = TestServiceEnvironment::new::<_, _>(|db_manager: DatabaseManager| async move {
-            let edifici_dto =
-                read_json_file::<EdificioDTO>(path_data_fake!("edificiFake").as_str())?;
-            let utenze_dto = read_json_file::<UtenzaDTO>(path_data_fake!("utenzeFake").as_str())?;
+        let test_service_env =
+            TestServiceEnvironment::new::<_, _>(|db_manager: DatabaseManager| async move {
+                let edifici_dto =
+                    read_json_file::<EdificioDTO>(path_data_fake!("edificiFake").as_str())?;
+                let utenze_dto =
+                    read_json_file::<UtenzaDTO>(path_data_fake!("utenzeFake").as_str())?;
 
-            {
-                let mut conn = db_manager.get_connection().await?;
+                {
+                    let mut conn = db_manager.get_connection().await?;
 
-                for edificio_dto in edifici_dto {
-                    let _ = EdificioDAO::insert(&mut conn, edificio_dto.into());
+                    for edificio_dto in edifici_dto {
+                        let _ = EdificioDAO::insert(&mut conn, edificio_dto.into());
+                    }
+                    for utenza_dto in utenze_dto {
+                        let _ = UtenzeDAO::insert(&mut conn, utenza_dto.into());
+                    }
                 }
-                for utenza_dto in utenze_dto {
-                    let _ = UtenzeDAO::insert(&mut conn, utenza_dto.into());
-                }
-            }
 
-            Ok(())
-        })
-            .await?;
+                Ok(())
+            })
+                .await?;
 
         let select_edificio = StateEdificioSelected::new(RwLock::new(EdificioSelected::new()));
-        select_edificio.write().await.set_chiave("8361-122".to_string());
+        select_edificio
+            .write()
+            .await
+            .set_chiave("8361-122".to_string());
         test_service_env.set_state_app(select_edificio);
 
         Ok(test_service_env)
@@ -84,7 +107,7 @@ mod tests {
             Ok(result) => {
                 assert_eq!(result.len(), 3);
             }
-            Err(e) => panic!("{:?}", e)
+            Err(e) => panic!("{:?}", e),
         }
 
         Ok(())
@@ -96,10 +119,15 @@ mod tests {
         let state_db = env.database();
         let selected_edificio = env.state_app::<StateEdificioSelected>();
 
-
         let insert_utenza = UtenzaDTO {
             id: 0,
-            edificio_id: selected_edificio.inner().deref().read().await.get_chiave().unwrap(),
+            edificio_id: selected_edificio
+                .inner()
+                .deref()
+                .read()
+                .await
+                .get_chiave()
+                .unwrap(),
             tipo: TipoUtenza::Acqua,
             cod_contatore: "TEST-COD-ACQUA".to_string(),
             indirizzo_contatore: None,
@@ -110,9 +138,8 @@ mod tests {
                 assert_eq!(result.id, 4);
                 assert_eq!(result.tipo, TipoUtenza::Acqua);
             }
-            Err(e) => panic!("{:?}", e)
+            Err(e) => panic!("{:?}", e),
         }
-
 
         Ok(())
     }

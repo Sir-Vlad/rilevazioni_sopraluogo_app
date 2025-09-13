@@ -1,4 +1,5 @@
 use crate::constants::NAME_DIR_DATABASE;
+use app_api::command::*;
 use app_state::database::DatabaseManager;
 use app_state::selected_edificio::EdificioSelected;
 use dirs_next::document_dir;
@@ -7,7 +8,6 @@ use tauri::async_runtime::RwLock;
 use tauri::path::BaseDirectory;
 use tauri::{App, AppHandle, Builder, Manager, Wry};
 use tauri_plugin_log::{RotationStrategy, Target, TargetKind};
-use app_api::command::command_tauri::*;
 
 mod constants;
 
@@ -41,10 +41,9 @@ pub fn initialize_tauri() -> Builder<Wry> {
             //export_data_to_excel,
             //init_to_excel,
             // database
-            //set_database,
-            //switch_database,
-            close_database,
-            get_all_name_database,
+            set_edificio,
+            clear_edificio,
+            get_fascicoli,
             // tipi
             get_all_tipi,
             insert_tipo,
@@ -74,7 +73,7 @@ pub fn initialize_tauri() -> Builder<Wry> {
 
 fn handle_window_events(windows: &tauri::Window, event: &tauri::WindowEvent) {
     if let tauri::WindowEvent::CloseRequested { .. } = event {
-        let db = windows.app_handle().state::<DatabaseManager>();
+        let _db = windows.app_handle().state::<DatabaseManager>();
         // fixme: eseguire qualcosa alla chiusura del database
         // match close_database(db) {
         //     Ok(..) => info!("Database chiuso correttamente"),

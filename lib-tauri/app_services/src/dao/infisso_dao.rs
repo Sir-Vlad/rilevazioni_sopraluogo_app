@@ -36,7 +36,7 @@ impl Insert<NewInfisso> for InfissoDAO {
             .get_result(conn)
             .map_err(|e| match e {
                 Error::NotFound => DomainError::InfissoNotFound,
-                Error::DatabaseError(kind, ref db_info) => {
+                Error::DatabaseError(kind, ..) => {
                     if matches!(kind, diesel::result::DatabaseErrorKind::UniqueViolation) {
                         DomainError::InfissoAlreadyExists
                     } else {

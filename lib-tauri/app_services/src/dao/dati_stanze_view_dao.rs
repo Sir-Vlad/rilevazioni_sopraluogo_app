@@ -1,6 +1,6 @@
 use app_models::models::DatiStanza;
 use app_utils::app_error::DomainError;
-use app_utils::app_interface::dao_interface::crud_operations::{Get, GetAll};
+use app_utils::app_interface::dao_interface::crud_operations::Get;
 use app_utils::app_interface::dao_interface::DAO;
 use app_utils::app_interface::database_interface::PostgresPooled;
 use diesel::RunQueryDsl;
@@ -36,7 +36,7 @@ mod tests {
                 println!("{dati_stanze:?}");
                 assert!(!dati_stanze.is_empty())
             }
-            Err(e) => panic!("{e:?}",),
+            Err(e) => panic!("{e:?}", ),
         }
     }
 }
