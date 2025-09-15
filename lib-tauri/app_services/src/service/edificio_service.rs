@@ -1,7 +1,8 @@
 use crate::dao::EdificioDAO;
 use crate::dto::EdificioDTO;
-use app_state::selected_edificio::StateEdificioSelected;
+use app_state::selected_edificio::EdificioSelected;
 use app_utils::app_error::{AppResult, ApplicationError};
+use app_utils::app_interface::service_interface::{SelectedEdificioState, SelectedEdificioTrait};
 use app_utils::app_interface::{
     dao_interface::crud_operations::{Get, GetAll, Insert, Update},
     database_interface::DatabaseManagerTrait,
@@ -13,22 +14,22 @@ use tauri::State;
 pub struct EdificioService;
 
 impl EdificioService {
-    pub async fn select_edificio(stato: State<'_, StateEdificioSelected>, chiave: String) {
+    pub async fn select_edificio(stato: State<'_, SelectedEdificioState<EdificioSelected>>, chiave: String) {
         let mut stato_lock = stato.write().await;
         stato_lock.set_chiave(chiave);
     }
 
-    pub async fn get_edificio(stato: State<'_, StateEdificioSelected>) -> AppResult<String> {
+    pub async fn get_edificio(stato: State<'_, SelectedEdificioState<EdificioSelected>>) -> AppResult<String> {
         let stato_lock = stato.read().await;
         match stato_lock.get_chiave() {
             Some(stato) => Ok(stato),
             None => Err(ApplicationError::EdificioNotSelected),
         }
     }
-    
-    pub async fn clear_edificio(stato: State<'_, StateEdificioSelected>) {
+
+    pub async fn clear_edificio(stato: State<'_, SelectedEdificioState<EdificioSelected>>) {
         let mut stato_lock = stato.write().await;
-        stato_lock.clear_edificio();
+        stato_lock.clear_chiave();
     }
 }
 

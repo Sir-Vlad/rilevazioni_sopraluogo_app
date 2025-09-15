@@ -1,7 +1,10 @@
 use crate::dao::{StanzaConInfissiDao, StanzaDAO};
 use crate::dto::StanzaDTO;
 use app_models::models::{StanzaConInfissi, UpdateStanzaConInfissi};
-use app_state::selected_edificio::StateEdificioSelected;
+use app_state::selected_edificio::SelectedEdificioState;
+use app_utils::app_interface::service_interface::{
+    RetrieveByEdificioSelected, SelectedEdificioTrait,
+};
 pub use app_utils::{
     app_error::{AppResult, ApplicationError, DomainError},
     app_interface::{
@@ -17,13 +20,17 @@ use tauri::State;
 
 pub struct StanzaService;
 
-impl StanzaService {
-    pub async fn get_stanze_edificio(
-        db: State<'_, impl DatabaseManagerTrait + Send + Sync>,
-        stato_edificio: State<'_, StateEdificioSelected>,
-    ) -> AppResult<Vec<StanzaDTO>> {
-        let mut conn = db.get_connection().await?;
-        let edificio_id = match stato_edificio.read().await.get_chiave() {
+#[async_trait]
+impl RetrieveByEdificioSelected<StanzaDTO> for StanzaService {
+    async fn retrieve_by_edificio_selected<S>(
+        db_state: State<'_, impl DatabaseManagerTrait + Send + Sync>,
+        edificio_selected_state: State<'_, SelectedEdificioState<S>>,
+    ) -> AppResult<Vec<StanzaDTO>>
+    where
+        S: SelectedEdificioTrait + Send + Sync,
+    {
+        let mut conn = db_state.get_connection().await?;
+        let edificio_id = match edificio_selected_state.read().await.get_chiave() {
             Some(edificio_id) => edificio_id,
             None => return Err(ApplicationError::EdificioNotSelected),
         };
@@ -142,7 +149,7 @@ mod tests {
     };
     use app_state::{
         database::DatabaseManager,
-        selected_edificio::{EdificioSelected, StateEdificioSelected},
+        selected_edificio::EdificioSelected,
     };
     use app_utils::test::utils::read_json_file;
     use app_utils::test::ResultTest;
@@ -183,7 +190,7 @@ mod tests {
             })
                 .await?;
 
-        let select_edificio = StateEdificioSelected::new(RwLock::new(EdificioSelected::new()));
+        let select_edificio = SelectedEdificioState::new(RwLock::new(EdificioSelected::new()));
         select_edificio
             .write()
             .await
@@ -198,9 +205,9 @@ mod tests {
     async fn test_retrieve_stanze() -> ResultTest {
         let env = setup_env_stanze().await?;
         let state_db = env.database();
-        let selected_edificio = env.state_app::<StateEdificioSelected>();
+        let selected_edificio = env.state_app::<SelectedEdificioState<EdificioSelected>>();
 
-        match StanzaService::get_stanze_edificio(state_db, selected_edificio).await {
+        match StanzaService::retrieve_by_edificio_selected(state_db, selected_edificio).await {
             Ok(result) => {
                 assert_eq!(result.len(), 5);
             }

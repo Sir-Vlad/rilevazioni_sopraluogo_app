@@ -1,3 +1,4 @@
+pub use app_utils::app_interface::service_interface::{SelectedEdificioState, SelectedEdificioTrait};
 use std::sync::Arc;
 use tokio::sync::RwLock;
 
@@ -12,22 +13,20 @@ impl Default for EdificioSelected {
     }
 }
 
-impl EdificioSelected {
-    pub fn new() -> Self {
+impl SelectedEdificioTrait for EdificioSelected {
+    fn new() -> Self {
         Self { chiave: None }
     }
-
-    pub fn set_chiave(&mut self, chiave: String) {
+    
+    fn set_chiave(&mut self, chiave: String) {
         self.chiave = Some(chiave);
     }
 
-    pub fn get_chiave(&self) -> Option<String> {
+    fn get_chiave(&self) -> Option<String> {
         self.chiave.clone()
     }
 
-    pub fn clear_edificio(&mut self) {
+    fn clear_chiave(&mut self) {
         self.chiave = None;
     }
 }
-
-pub type StateEdificioSelected = Arc<RwLock<EdificioSelected>>;

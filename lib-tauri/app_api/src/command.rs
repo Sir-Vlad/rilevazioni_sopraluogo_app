@@ -12,12 +12,12 @@ use app_services::{
     },
 };
 use app_state::database::DatabaseManager;
-use app_state::selected_edificio::StateEdificioSelected;
-use app_utils::app_interface::service_interface::RetrieveManyService;
+use app_utils::app_interface::service_interface::{RetrieveByEdificioSelected, RetrieveManyService, SelectedEdificioState};
 use log::info;
 use serde_json::Value;
 use std::collections::{HashMap, HashSet};
 use tauri::{AppHandle, Emitter, State};
+use app_state::selected_edificio::EdificioSelected;
 
 type ResultCommand<T> = Result<T, String>;
 
@@ -49,7 +49,7 @@ pub async fn get_fascicoli(db: State<'_, DatabaseManager>) -> ResultCommand<Vec<
 #[tauri::command]
 pub async fn set_edificio(
     app_handle: AppHandle,
-    edificio_selected: State<'_, StateEdificioSelected>,
+    edificio_selected: State<'_, SelectedEdificioState<EdificioSelected>>,
     chiave: String,
 ) -> ResultCommand<()> {
     info!("Switching edificio to {}", chiave);
@@ -70,7 +70,7 @@ pub async fn set_edificio(
 }
 
 #[tauri::command]
-pub async fn clear_edificio(edificio_selected: State<'_, StateEdificioSelected>) -> ResultCommand<()> {
+pub async fn clear_edificio(edificio_selected: State<'_, SelectedEdificioState<EdificioSelected>>) -> ResultCommand<()> {
     EdificioService::clear_edificio(edificio_selected).await;
     info!("Edificio cleared");
     Ok(())
@@ -121,9 +121,9 @@ pub fn init_to_excel(
 #[tauri::command]
 pub async fn get_infissi(
     db: State<'_, DatabaseManager>,
-    edificio_selected: State<'_, StateEdificioSelected>,
+    edificio_selected: State<'_, SelectedEdificioState<EdificioSelected>>,
 ) -> ResultCommand<Vec<InfissoDTO>> {
-    InfissoService::retrieve_infissi_by_edificio(db, edificio_selected)
+    InfissoService::retrieve_by_edificio_selected(db, edificio_selected)
         .await
         .map_err(|e| e.to_string())
 }
@@ -155,9 +155,9 @@ pub async fn update_infisso(
 #[tauri::command]
 pub async fn get_stanze(
     db: State<'_, DatabaseManager>,
-    edificio_selected: State<'_, StateEdificioSelected>,
+    edificio_selected: State<'_, SelectedEdificioState<EdificioSelected>>,
 ) -> ResultCommand<Vec<StanzaDTO>> {
-    StanzaService::get_stanze_edificio(db, edificio_selected)
+    StanzaService::retrieve_by_edificio_selected(db, edificio_selected)
         .await
         .map_err(|e| e.to_string())
 }
@@ -239,12 +239,12 @@ pub async fn update_edificio(
 /**************************************************************************************************/
 
 #[tauri::command]
-pub async fn get_utenze(db: State<'_, DatabaseManager>, selected_edificio: State<'_, StateEdificioSelected>) -> ResultCommand<Vec<UtenzaDTO>> {
+pub async fn get_utenze(db: State<'_, DatabaseManager>, selected_edificio: State<'_, SelectedEdificioState<EdificioSelected>>) -> ResultCommand<Vec<UtenzaDTO>> {
     if !is_selected_edificio(selected_edificio.clone()).await {
         return Ok(Vec::new());
     }
 
-    UtenzeService::retrieve_many(db)
+    UtenzeService::retrieve_by_edificio_selected(db, selected_edificio)
         .await
         .map_err(|e| e.to_string())
 }
@@ -252,7 +252,7 @@ pub async fn get_utenze(db: State<'_, DatabaseManager>, selected_edificio: State
 #[tauri::command]
 pub async fn insert_utenza(
     db: State<'_, DatabaseManager>,
-    selected_edificio: State<'_, StateEdificioSelected>,
+    selected_edificio: State<'_, SelectedEdificioState<EdificioSelected>>,
     utenza: UtenzaDTO,
 ) -> ResultCommand<UtenzaDTO> {
     if !is_selected_edificio(selected_edificio.clone()).await {
@@ -274,13 +274,13 @@ pub async fn insert_utenza(
 #[tauri::command]
 pub async fn get_fotovoltaico(
     db: State<'_, DatabaseManager>,
-    selected_edificio: State<'_, StateEdificioSelected>,
+    selected_edificio: State<'_, SelectedEdificioState<EdificioSelected>>,
 ) -> ResultCommand<Vec<FotovoltaicoDTO>> {
     if !is_selected_edificio(selected_edificio.clone()).await {
         return Ok(Vec::new());
     }
 
-    FotovoltaicoService::retrieve_many(db)
+    FotovoltaicoService::retrieve_by_edificio_selected(db, selected_edificio)
         .await
         .map_err(|e| e.to_string())
 }
@@ -288,7 +288,7 @@ pub async fn get_fotovoltaico(
 #[tauri::command]
 pub async fn insert_fotovoltaico(
     db: State<'_, DatabaseManager>,
-    selected_edificio: State<'_, StateEdificioSelected>,
+    selected_edificio: State<'_, SelectedEdificioState<EdificioSelected>>,
     fotovoltaico: FotovoltaicoDTO,
 ) -> ResultCommand<FotovoltaicoDTO> {
     if !is_selected_edificio(selected_edificio.clone()).await {
@@ -373,9 +373,5 @@ pub async fn insert_annotazione(
                 .map_err(|e| e.to_string())?
                 .into(),
         ),
-        _ => Err(format!(
-            "Tabella {table} non ha le annotazioni",
-            table = annotazione.ref_table
-        )),
     }
 }

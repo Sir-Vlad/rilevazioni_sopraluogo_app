@@ -1,14 +1,14 @@
-use std::ops::Deref;
 use crate::dao::UtenzeDAO;
 use crate::dto::UtenzaDTO;
+use app_state::selected_edificio::SelectedEdificioTrait;
 use app_utils::app_error::{AppResult, ApplicationError};
 use app_utils::app_interface::dao_interface::crud_operations::{Get, GetAll, Insert};
 use app_utils::app_interface::database_interface::DatabaseManagerTrait;
 use app_utils::app_interface::service_interface::{
-    CreateService, RetrieveByEdificioSelected, RetrieveManyService,
+    CreateService, RetrieveByEdificioSelected, RetrieveManyService, SelectedEdificioState,
 };
-use app_utils::app_interface::SelectedEdificioTrait;
 use async_trait::async_trait;
+use std::ops::Deref;
 use tauri::State;
 
 pub struct UtenzeService;
@@ -26,14 +26,20 @@ impl RetrieveManyService<UtenzaDTO> for UtenzeService {
 
 #[async_trait]
 impl RetrieveByEdificioSelected<UtenzaDTO> for UtenzeService {
-    async fn retrieve_by_edificio_selected(
-        db: State<'_, impl DatabaseManagerTrait + Send + Sync>,
-        edificio_selected_state: State<'_, impl SelectedEdificioState + Send + Sync>,
-    ) -> AppResult<UtenzaDTO> {
-        let mut conn = db.get_connection().await?;
-        let edificio_selected = edificio_selected_state.
+    async fn retrieve_by_edificio_selected<S>(
+        db_state: State<'_, impl DatabaseManagerTrait + Send + Sync>,
+        edificio_selected_state: State<'_, SelectedEdificioState<S>>,
+    ) -> AppResult<Vec<UtenzaDTO>>
+    where
+        S: SelectedEdificioTrait + Send + Sync,
+    {
+        let mut conn = db_state.get_connection().await?;
+        let edificio_selected = edificio_selected_state.read().await.deref().get_chiave();
+        if edificio_selected.is_none() {
+            return Err(ApplicationError::EdificioNotSelected);
+        }
 
-        let utenze = UtenzeDAO::get(&mut conn,)?;
+        let utenze = UtenzeDAO::get(&mut conn, edificio_selected.unwrap())?;
         Ok(utenze.iter().map(UtenzaDTO::from).collect())
     }
 }
@@ -57,12 +63,14 @@ mod tests {
     use crate::dto::EdificioDTO;
     use app_models::models::TipoUtenza;
     use app_state::database::DatabaseManager;
-    use app_state::selected_edificio::{EdificioSelected, StateEdificioSelected};
+    use app_state::selected_edificio::EdificioSelected;
     use app_utils::app_interface::database_interface::DatabaseManagerTrait;
+    use app_utils::app_interface::service_interface::SelectedEdificioTrait;
     use app_utils::path_data_fake;
     use app_utils::test::utils::read_json_file;
     use app_utils::test::{ResultTest, TestServiceEnvironment};
     use std::ops::Deref;
+    use tokio::io::AsyncReadExt;
     use tokio::sync::RwLock;
 
     async fn setup_utenze_env() -> ResultTest<TestServiceEnvironment<DatabaseManager>> {
@@ -88,7 +96,7 @@ mod tests {
             })
                 .await?;
 
-        let select_edificio = StateEdificioSelected::new(RwLock::new(EdificioSelected::new()));
+        let select_edificio = SelectedEdificioState::new(RwLock::new(EdificioSelected::new()));
         select_edificio
             .write()
             .await
@@ -117,7 +125,7 @@ mod tests {
     async fn test_create_utenze() -> ResultTest {
         let env = setup_utenze_env().await?;
         let state_db = env.database();
-        let selected_edificio = env.state_app::<StateEdificioSelected>();
+        let selected_edificio = env.state_app::<SelectedEdificioState<EdificioSelected>>();
 
         let insert_utenza = UtenzaDTO {
             id: 0,

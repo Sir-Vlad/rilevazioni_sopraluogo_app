@@ -1,14 +1,13 @@
 use crate::dao::InfissoDAO;
 use crate::dto::InfissoDTO;
-use app_state::selected_edificio::StateEdificioSelected;
+use app_state::selected_edificio::{SelectedEdificioState, SelectedEdificioTrait};
+use app_utils::app_interface::service_interface::RetrieveByEdificioSelected;
 use app_utils::{
     app_error::AppResult,
     app_interface::{
         dao_interface::crud_operations::{Get, Insert, Update},
         database_interface::DatabaseManagerTrait,
-        service_interface::{
-            CreateService, UpdateService,
-        },
+        service_interface::{CreateService, UpdateService},
     },
 };
 use async_trait::async_trait;
@@ -16,13 +15,17 @@ use tauri::State;
 
 pub struct InfissoService;
 
-impl InfissoService {
-    pub async fn retrieve_infissi_by_edificio(
-        db: State<'_, impl DatabaseManagerTrait + Send + Sync>,
-        selected_edificio: State<'_, StateEdificioSelected>,
-    ) -> AppResult<Vec<InfissoDTO>> {
-        let mut conn = db.get_connection().await?;
-        let edificio_id = match selected_edificio.read().await.get_chiave() {
+#[async_trait]
+impl RetrieveByEdificioSelected<InfissoDTO> for InfissoService {
+    async fn retrieve_by_edificio_selected<S>(
+        db_state: State<'_, impl DatabaseManagerTrait + Send + Sync>,
+        edificio_selected_state: State<'_, SelectedEdificioState<S>>,
+    ) -> AppResult<Vec<InfissoDTO>>
+    where
+        S: SelectedEdificioTrait + Send + Sync,
+    {
+        let mut conn = db_state.get_connection().await?;
+        let edificio_id = match edificio_selected_state.read().await.get_chiave() {
             Some(chiave) => chiave,
             None => return Ok(Vec::new()),
         };
@@ -65,8 +68,9 @@ mod test {
     use crate::dao::EdificioDAO;
     use crate::dto::EdificioDTO;
     use app_state::database::DatabaseManager;
-    use app_state::selected_edificio::EdificioSelected;
+    use app_state::selected_edificio::{EdificioSelected, SelectedEdificioTrait};
     use app_utils::app_interface::database_interface::DatabaseManagerTrait as DatabaseManagerInterface;
+    use app_utils::app_interface::service_interface::SelectedEdificioState;
     use app_utils::path_data_fake;
     use app_utils::test::utils::read_json_file;
     use app_utils::test::{ResultTest, TestServiceEnvironment};
@@ -95,7 +99,7 @@ mod test {
             })
                 .await?;
 
-        let select_edificio = StateEdificioSelected::new(RwLock::new(EdificioSelected::new()));
+        let select_edificio = SelectedEdificioState::new(RwLock::new(EdificioSelected::new()));
         select_edificio
             .write()
             .await
@@ -109,9 +113,9 @@ mod test {
     async fn test_retrieve_infissi() -> ResultTest {
         let env = setup_env_infissi().await?;
         let state_db = env.database();
-        let selected_edificio = env.state_app::<StateEdificioSelected>();
+        let selected_edificio = env.state_app::<SelectedEdificioState<EdificioSelected>>();
 
-        match InfissoService::retrieve_infissi_by_edificio(state_db, selected_edificio).await {
+        match InfissoService::retrieve_by_edificio_selected(state_db, selected_edificio).await {
             Ok(result) => {
                 assert_eq!(result.len(), 2)
             }
@@ -124,7 +128,7 @@ mod test {
     async fn test_create_infissi() -> ResultTest {
         let env = setup_env_infissi().await?;
         let state_db = env.database();
-        let selected_edificio = env.state_app::<StateEdificioSelected>();
+        let selected_edificio = env.state_app::<SelectedEdificioState<EdificioSelected>>();
 
         let insert_infisso = InfissoDTO {
             id: "C".to_string(),
@@ -155,7 +159,7 @@ mod test {
     async fn test_update_infissi() -> ResultTest {
         let env = setup_env_infissi().await?;
         let state_db = env.database();
-        let selected_edificio = env.state_app::<StateEdificioSelected>();
+        let selected_edificio = env.state_app::<SelectedEdificioState<EdificioSelected>>();
 
         let insert_infisso = InfissoDTO {
             id: "B".to_string(),

@@ -1,3 +1,4 @@
+use crate::service::Get;
 use app_models::models::{Fotovoltaico, NewFotovoltaico, UpdateFotovoltaico};
 use app_models::schema::fotovoltaico;
 use app_utils::app_error::DomainError;
@@ -5,6 +6,7 @@ use app_utils::app_interface::dao_interface::crud_operations::{GetAll, Insert, U
 use app_utils::app_interface::dao_interface::DAO;
 use app_utils::app_interface::database_interface::PostgresPooled;
 use diesel::result::Error;
+use diesel::ExpressionMethods;
 use diesel::{QueryDsl, RunQueryDsl};
 
 pub struct FotovoltaicoDAO;
@@ -15,6 +17,20 @@ impl GetAll<Fotovoltaico> for FotovoltaicoDAO {
     type Output = Fotovoltaico;
     fn get_all(conn: &mut PostgresPooled) -> Result<Vec<Self::Output>, DomainError> {
         fotovoltaico::table.load(conn).map_err(DomainError::from)
+    }
+}
+
+impl Get<Fotovoltaico, String> for FotovoltaicoDAO {
+    type Output = Vec<Fotovoltaico>;
+
+    fn get(conn: &mut PostgresPooled, id: String) -> Result<Self::Output, DomainError> {
+        fotovoltaico::table
+            .filter(fotovoltaico::edificio_id.eq(id))
+            .get_results(conn)
+            .map_err(|e| match e {
+                Error::NotFound => DomainError::UtenzaNotFound,
+                _ => DomainError::Unexpected(e),
+            })
     }
 }
 
