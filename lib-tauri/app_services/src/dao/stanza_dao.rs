@@ -6,6 +6,8 @@ use app_utils::app_interface::dao_interface::DAO;
 use app_utils::app_interface::database_interface::PostgresPooled;
 use diesel::result::Error;
 use diesel::{ExpressionMethods, QueryDsl, RunQueryDsl};
+use crate::dao::utils::EntityType::Stanza as StanzaType;
+use crate::dao::utils::map_error_for_entity;
 
 pub struct StanzaDAO;
 
@@ -30,17 +32,18 @@ impl Insert<NewStanza> for StanzaDAO {
         diesel::insert_into(stanza::table)
             .values(&item)
             .get_result(conn)
-            .map_err(|e| match e {
-                Error::NotFound => DomainError::StanzaNotFound,
-                Error::DatabaseError(kind, ..) => {
-                    if matches!(kind, diesel::result::DatabaseErrorKind::UniqueViolation) {
-                        DomainError::StanzaAlreadyExists
-                    } else {
-                        DomainError::from(e)
-                    }
-                }
-                _ => DomainError::Unexpected(e),
-            })
+            .map_err(|e| map_error_for_entity(e, StanzaType))
+    }
+}
+
+impl Insert<Vec<NewStanza>> for StanzaDAO {
+    type Output = Vec<Stanza>;
+
+    fn insert(conn: &mut PostgresPooled, item: Vec<NewStanza>) -> Result<Self::Output, DomainError> {
+        diesel::insert_into(stanza::table)
+            .values(&item)
+            .get_results(conn)
+            .map_err(|e| map_error_for_entity(e, StanzaType))
     }
 }
 

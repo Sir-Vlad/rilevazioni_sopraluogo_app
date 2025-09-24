@@ -102,7 +102,17 @@ pub mod service_interface {
         ) -> AppResult<T>;
     }
 
-    #[allow(dead_code)]
+    #[async_trait]
+    pub trait CreateBatchService<T>
+    where
+        T: DTO,
+    {
+        async fn create_batch(
+            db_state: State<'_, impl DatabaseManagerTrait + Send + Sync>,
+            item: Vec<T>,
+        ) -> AppResult<Vec<T>>;
+    }
+
     #[async_trait]
     pub trait RetrieveOneService<T, K>
     where
@@ -119,14 +129,12 @@ pub mod service_interface {
     where
         T: DTO,
     {
-        async fn retrieve_by_edificio_selected<S>
-        (
+        async fn retrieve_by_edificio_selected<S>(
             db_state: State<'_, impl DatabaseManagerTrait + Send + Sync>,
             edificio_selected_state: State<'_, SelectedEdificioState<S>>,
         ) -> AppResult<Vec<T>>
         where
-            S: SelectedEdificioTrait + Send + Sync,
-        ;
+            S: SelectedEdificioTrait + Send + Sync;
     }
 
     #[async_trait]

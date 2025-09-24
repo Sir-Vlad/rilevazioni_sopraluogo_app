@@ -86,9 +86,16 @@ impl CreateService<AnnotazioneInfissoDTO> for AnnotazioneService {
 
 #[cfg(test)]
 mod tests {
-    use crate::dao::{AnnotazioneEdificioDAO, AnnotazioneInfissoDAO, AnnotazioneStanzaDAO, EdificioDAO, InfissoDAO, StanzaDAO};
-    use crate::dto::{AnnotazioneEdificioDTO, AnnotazioneInfissoDTO, AnnotazioneStanzaDTO, EdificioDTO, InfissoDTO, StanzaDTO};
+    use crate::dao::{
+        AnnotazioneEdificioDAO, AnnotazioneInfissoDAO, AnnotazioneStanzaDAO, EdificioDAO,
+        InfissoDAO, StanzaDAO,
+    };
+    use crate::dto::{
+        AnnotazioneEdificioDTO, AnnotazioneInfissoDTO, AnnotazioneStanzaDTO, EdificioDTO,
+        InfissoDTO, StanzaDTO,
+    };
     use crate::service::AnnotazioneService;
+    use app_models::models::NewStanza;
     use app_state::database::DatabaseManager;
     use app_utils::app_interface::dao_interface::crud_operations::Insert;
     use app_utils::app_interface::database_interface::DatabaseManagerTrait;
@@ -99,13 +106,21 @@ mod tests {
 
     async fn setup_env_annotazione() -> ResultTest<TestServiceEnvironment<DatabaseManager>> {
         TestServiceEnvironment::new::<_, _>(|db_manager: DatabaseManager| async move {
-            let edifici_dto = read_json_file::<EdificioDTO>(path_data_fake!("edificiFake").as_str())?;
+            let edifici_dto =
+                read_json_file::<EdificioDTO>(path_data_fake!("edificiFake").as_str())?;
             let stanze_dto = read_json_file::<StanzaDTO>(path_data_fake!("stanzeFake").as_str())?;
-            let infissi_dto = read_json_file::<InfissoDTO>(path_data_fake!("infissiFake").as_str())?;
+            let infissi_dto =
+                read_json_file::<InfissoDTO>(path_data_fake!("infissiFake").as_str())?;
 
-            let ann_edifici_dto = read_json_file::<AnnotazioneEdificioDTO>(path_data_fake!("annotazioniEdificioFake").as_str())?;
-            let ann_stanze_dto = read_json_file::<AnnotazioneStanzaDTO>(path_data_fake!("annotazioniStanzeFake").as_str())?;
-            let ann_infissi_dto = read_json_file::<AnnotazioneInfissoDTO>(path_data_fake!("annotazioniInfissiFake").as_str())?;
+            let ann_edifici_dto = read_json_file::<AnnotazioneEdificioDTO>(
+                path_data_fake!("annotazioniEdificioFake").as_str(),
+            )?;
+            let ann_stanze_dto = read_json_file::<AnnotazioneStanzaDTO>(
+                path_data_fake!("annotazioniStanzeFake").as_str(),
+            )?;
+            let ann_infissi_dto = read_json_file::<AnnotazioneInfissoDTO>(
+                path_data_fake!("annotazioniInfissiFake").as_str(),
+            )?;
 
             {
                 let mut conn = db_manager.get_connection().await?;
@@ -114,7 +129,7 @@ mod tests {
                 }
 
                 for stanza_dto in stanze_dto {
-                    StanzaDAO::insert(&mut conn, stanza_dto.into())?;
+                    StanzaDAO::insert(&mut conn, NewStanza::from(stanza_dto))?;
                 }
 
                 for infisso_dto in infissi_dto {
@@ -135,7 +150,8 @@ mod tests {
             }
 
             Ok(())
-        }).await
+        })
+            .await
     }
 
     #[tokio::test(flavor = "multi_thread", worker_threads = 1)]
@@ -143,7 +159,11 @@ mod tests {
         let env = setup_env_annotazione().await?;
         let state_db = env.database();
 
-        match <AnnotazioneService as RetrieveManyService<AnnotazioneEdificioDTO>>::retrieve_many(state_db).await {
+        match <AnnotazioneService as RetrieveManyService<AnnotazioneEdificioDTO>>::retrieve_many(
+            state_db,
+        )
+            .await
+        {
             Ok(result) => {
                 assert_eq!(result.len(), 11);
                 println!("{:#?}", result)
@@ -165,7 +185,12 @@ mod tests {
             content: "TEST ANNOTAZIONE".to_string(),
         };
 
-        match <AnnotazioneService as CreateService<AnnotazioneEdificioDTO>>::create(state_db, insert_ann_edificio).await {
+        match <AnnotazioneService as CreateService<AnnotazioneEdificioDTO>>::create(
+            state_db,
+            insert_ann_edificio,
+        )
+            .await
+        {
             Ok(result) => {
                 assert_eq!(result.id, 12)
             }
@@ -180,7 +205,11 @@ mod tests {
         let env = setup_env_annotazione().await?;
         let state_db = env.database();
 
-        match <AnnotazioneService as RetrieveManyService<AnnotazioneStanzaDTO>>::retrieve_many(state_db).await {
+        match <AnnotazioneService as RetrieveManyService<AnnotazioneStanzaDTO>>::retrieve_many(
+            state_db,
+        )
+            .await
+        {
             Ok(result) => {
                 assert_eq!(result.len(), 11);
                 println!("{:#?}", result)
@@ -202,7 +231,12 @@ mod tests {
             content: "TEST ANNOTAZIONE".to_string(),
         };
 
-        match <AnnotazioneService as CreateService<AnnotazioneStanzaDTO>>::create(state_db, insert_ann_stanza).await {
+        match <AnnotazioneService as CreateService<AnnotazioneStanzaDTO>>::create(
+            state_db,
+            insert_ann_stanza,
+        )
+            .await
+        {
             Ok(result) => {
                 assert_eq!(result.id, 12)
             }
@@ -217,7 +251,11 @@ mod tests {
         let env = setup_env_annotazione().await?;
         let state_db = env.database();
 
-        match <AnnotazioneService as RetrieveManyService<AnnotazioneInfissoDTO>>::retrieve_many(state_db).await {
+        match <AnnotazioneService as RetrieveManyService<AnnotazioneInfissoDTO>>::retrieve_many(
+            state_db,
+        )
+            .await
+        {
             Ok(result) => {
                 assert_eq!(result.len(), 11);
                 println!("{:#?}", result)
@@ -240,7 +278,12 @@ mod tests {
             content: "TEST ANNOTAZIONE".to_string(),
         };
 
-        match <AnnotazioneService as CreateService<AnnotazioneInfissoDTO>>::create(state_db, insert_ann_stanza).await {
+        match <AnnotazioneService as CreateService<AnnotazioneInfissoDTO>>::create(
+            state_db,
+            insert_ann_stanza,
+        )
+            .await
+        {
             Ok(result) => {
                 assert_eq!(result.id, 12)
             }

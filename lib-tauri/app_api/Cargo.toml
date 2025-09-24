@@ -12,9 +12,11 @@ rust-version.workspace = true
 app_state = { path = "../app_state" }
 app_services = { path = "../app_services" }
 app_utils = { path = "../app_utils", features = ["interface"], default-features = false }
+app_data_processing = { path = "../app_data_processing" }
 
+serde = { workspace = true }
 serde_json = { workspace = true }
 tauri = { workspace = true }
 log = { workspace = true }
-serde = { version = "1.0.219", features = ["derive"] }
 tokio = { workspace = true }
+chrono = { workspace = true, features = ["serde"] }

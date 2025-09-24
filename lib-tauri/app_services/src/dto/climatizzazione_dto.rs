@@ -1,8 +1,9 @@
+use app_macro::Builder;
 use app_models::models::Climatizzazione;
 use app_utils::app_interface::dto_interface::DTO;
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize, Builder)]
 pub struct ClimatizzazioneDTO {
     pub climatizzazione: String,
     pub efficienza_energetica: u8,

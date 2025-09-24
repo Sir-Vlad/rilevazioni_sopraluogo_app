@@ -103,12 +103,14 @@ impl From<diesel::result::Error> for DomainError {
 #[non_exhaustive]
 pub enum ErrorKind {
     EmptyField,
+    FormatInvalid,
 }
 
 impl Display for ErrorKind {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
             ErrorKind::EmptyField => write!(f, "Empty field"),
+            ErrorKind::FormatInvalid => write!(f, "Format invalid"),
         }
     }
 }

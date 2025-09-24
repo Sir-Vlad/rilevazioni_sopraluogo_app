@@ -13,7 +13,7 @@ pub enum EntityType {
     Infisso,
 }
 
-pub(crate) fn map_error_for_entity(e: diesel::result::Error, entity: EntityType) -> DomainError {
+pub(crate) fn map_error_for_entity(e: Error, entity: EntityType) -> DomainError {
     match e {
         Error::NotFound => match entity {
             EntityType::Annotazione => DomainError::AnnotazioneNotFound,

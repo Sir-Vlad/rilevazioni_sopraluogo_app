@@ -1,6 +1,6 @@
 use app_utils::app_error::database_error::DbError;
 pub use app_utils::app_interface::database_interface::{
-    ConnectorDatabase, DatabaseConnector, DatabaseManagerTrait as DatabaseManagerInterface,
+    ConnectorDatabase, DatabaseConnector, DatabaseManagerTrait,
     PostgresPool, PostgresPooled,
 };
 use async_trait::async_trait;
@@ -23,8 +23,12 @@ pub struct RealDatabaseConnector;
 #[async_trait]
 impl DatabaseConnector for RealDatabaseConnector {
     async fn create_postgres_pool(&self) -> PostgresPool {
+        println!("{}", std::env::current_dir().unwrap().display());
+
         let possible_paths = vec![
+            "./lib-tauri/app_state/.env",
             "../lib-tauri/app_state/.env",
+            "../app_state/.env",
         ];
 
         for path in possible_paths {
@@ -67,7 +71,7 @@ pub struct DatabaseManager {
 }
 
 #[async_trait]
-impl DatabaseManagerInterface for DatabaseManager {
+impl DatabaseManagerTrait for DatabaseManager {
     async fn with_connector(connector: ConnectorDatabase) -> Self {
         let postgres_pool = connector.create_postgres_pool().await;
 

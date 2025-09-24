@@ -1,9 +1,9 @@
 use crate::dao::{StanzaConInfissiDao, StanzaDAO};
 use crate::dto::StanzaDTO;
-use app_models::models::{StanzaConInfissi, UpdateStanzaConInfissi};
+use app_models::models::{NewStanza, StanzaConInfissi, UpdateStanzaConInfissi};
 use app_state::selected_edificio::SelectedEdificioState;
 use app_utils::app_interface::service_interface::{
-    RetrieveByEdificioSelected, SelectedEdificioTrait,
+    CreateBatchService, RetrieveByEdificioSelected, SelectedEdificioTrait,
 };
 pub use app_utils::{
     app_error::{AppResult, ApplicationError, DomainError},
@@ -82,8 +82,24 @@ impl CreateService<StanzaDTO> for StanzaService {
         item: StanzaDTO,
     ) -> AppResult<StanzaDTO> {
         let mut conn = db.get_connection().await?;
-        let result = StanzaDAO::insert(&mut conn, item.into())?;
-        Ok(StanzaDTO::from(&result))
+        let result = StanzaDAO::insert(&mut conn, NewStanza::from(item))?;
+        Ok(StanzaDTO::from(result))
+    }
+}
+
+#[async_trait]
+impl CreateBatchService<StanzaDTO> for StanzaService {
+    async fn create_batch(
+        db_state: State<'_, impl DatabaseManagerTrait + Send + Sync>,
+        item: Vec<StanzaDTO>,
+    ) -> AppResult<Vec<StanzaDTO>> {
+        let mut conn = db_state.get_connection().await?;
+        let new_stanze: Vec<NewStanza> = item.iter().map(|v| NewStanza::from(v.clone())).collect();
+        let result = StanzaDAO::insert(&mut conn, new_stanze)?;
+        Ok(result
+            .iter()
+            .map(StanzaDTO::from)
+            .collect::<Vec<StanzaDTO>>())
     }
 }
 
@@ -147,10 +163,7 @@ mod tests {
         dao::{EdificioDAO, StanzaDAO},
         dto::{EdificioDTO, StanzaDTO},
     };
-    use app_state::{
-        database::DatabaseManager,
-        selected_edificio::EdificioSelected,
-    };
+    use app_state::{database::DatabaseManager, selected_edificio::EdificioSelected};
     use app_utils::test::utils::read_json_file;
     use app_utils::test::ResultTest;
     use app_utils::{
@@ -180,7 +193,8 @@ mod tests {
                         let _ = EdificioDAO::insert(&mut pool, edificio_dto.into());
                     }
                     for stanza_dto in stanze_dto {
-                        let _ = StanzaDAO::insert(&mut pool, stanza_dto.into());
+                        let new_stanza: NewStanza = stanza_dto.into();
+                        let _ = StanzaDAO::insert(&mut pool, new_stanza);
                     }
                     for infisso_dto in infissi_dto {
                         let _ = InfissoDAO::insert(&mut pool, infisso_dto.into());

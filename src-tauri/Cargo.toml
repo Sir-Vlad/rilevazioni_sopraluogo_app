@@ -21,14 +21,6 @@ tauri-build = { version = "2.0.5", features = [] }
 # Internal library
 app_core = { path = "../lib-tauri/app_core" }
 
-
-# Serialization
-serde_json = "1.0"
-serde = { workspace = true }
-
-# Logging
-log = "0.4"
-
 # Tauri and plugins
 tauri = { workspace = true }
 tauri-plugin-dialog = { workspace = true }
@@ -36,42 +28,7 @@ tauri-plugin-fs = { workspace = true }
 tauri-plugin-log = { workspace = true }
 
 # Database
-diesel = { workspace = true }
-diesel_migrations = { workspace = true }
 dotenvy = { workspace = true }
-diesel-derive-enum = { workspace = true }
-
-# Data processing
-polars = { version = "0.46.0", features = ["sql", "lazy"] }
-calamine = { git = "https://github.com/Sir-Vlad/calamine.git" }
-itertools = "0.14.0"
-rust_xlsxwriter = "0.89.1"
-
-# Filesystem and utils
-dirs-next = "2.0.0"
-#zip = "=2.5.0"
-thiserror = "2.0.12"
-
-
-tokio = { version = "1.46.1", features = ["time"] }
-async-trait = "0.1.88"
-libc = "0.2.172"
-
-# Tracing
-tracing = "0.1"
-tracing-subscriber = { version = "0.3", features = ["env-filter", "fmt"] }
-tracing-appender = "0.2"
 
 [target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
 tauri-plugin-single-instance = "2"
-
-[dev-dependencies]
-testcontainers = { workspace = true }
-testcontainers-modules = { workspace = true }
-
-# Tracing
-tracing-test = "0.2"  # Facilita i test con tracing
-
-
-[package.metadata.bundle.windows]
-manifest = "app.manifest"

@@ -1,10 +1,10 @@
+use crate::dao::utils::{map_error_for_entity, EntityType};
 use app_models::models::{Edificio, NewEdificio, UpdateEdificio};
 use app_models::schema::edificio;
 use app_state::database::database_manager::PostgresPooled;
 use app_utils::app_error::DomainError;
 use app_utils::app_interface::dao_interface::crud_operations::{Get, GetAll, Insert, Update};
 use app_utils::app_interface::dao_interface::DAO;
-use diesel::result::Error;
 use diesel::{QueryDsl, RunQueryDsl};
 
 pub struct EdificioDAO;
@@ -16,7 +16,7 @@ impl GetAll<Edificio> for EdificioDAO {
     fn get_all(conn: &mut PostgresPooled) -> Result<Vec<Self::Output>, DomainError> {
         edificio::table
             .load::<Edificio>(conn)
-            .map_err(DomainError::from)
+            .map_err(|e| map_error_for_entity(e, EntityType::Edificio))
     }
 }
 
@@ -26,10 +26,7 @@ impl Get<Edificio, String> for EdificioDAO {
         edificio::table
             .find(id)
             .first::<Edificio>(conn)
-            .map_err(|e| match e {
-                Error::NotFound => DomainError::EdificioNotFound,
-                _ => DomainError::Unexpected(e),
-            })
+            .map_err(|e| map_error_for_entity(e, EntityType::Edificio))
     }
 }
 
@@ -39,17 +36,7 @@ impl Insert<NewEdificio> for EdificioDAO {
         diesel::insert_into(edificio::table)
             .values(&item)
             .get_result(conn)
-            .map_err(|e| match e {
-                Error::NotFound => DomainError::EdificioNotFound,
-                Error::DatabaseError(kind, _) => {
-                    if matches!(kind, diesel::result::DatabaseErrorKind::UniqueViolation) {
-                        DomainError::EdificioAlreadyExists
-                    } else {
-                        DomainError::from(e)
-                    }
-                }
-                _ => DomainError::Unexpected(e),
-            })
+            .map_err(|e| map_error_for_entity(e, EntityType::Edificio))
     }
 }
 
@@ -63,10 +50,7 @@ impl Update<UpdateEdificio, String> for EdificioDAO {
         diesel::update(edificio::table.find(id))
             .set(&item)
             .get_result(conn)
-            .map_err(|e| match e {
-                Error::NotFound => DomainError::EdificioNotFound,
-                _ => DomainError::Unexpected(e),
-            })
+            .map_err(|e| map_error_for_entity(e, EntityType::Edificio))
     }
 }
 

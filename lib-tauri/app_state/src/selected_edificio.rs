@@ -1,6 +1,4 @@
 pub use app_utils::app_interface::service_interface::{SelectedEdificioState, SelectedEdificioTrait};
-use std::sync::Arc;
-use tokio::sync::RwLock;
 
 #[derive(Debug)]
 pub struct EdificioSelected {
@@ -17,7 +15,7 @@ impl SelectedEdificioTrait for EdificioSelected {
     fn new() -> Self {
         Self { chiave: None }
     }
-    
+
     fn set_chiave(&mut self, chiave: String) {
         self.chiave = Some(chiave);
     }

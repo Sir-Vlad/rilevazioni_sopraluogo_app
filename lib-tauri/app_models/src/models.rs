@@ -95,6 +95,12 @@ pub struct Stanza {
     pub illuminazione: Option<String>,
 }
 
+impl AsRef<Stanza> for Stanza {
+    fn as_ref(&self) -> &Self {
+        self
+    }
+}
+
 #[derive(Insertable, Debug, PartialEq)]
 #[diesel(table_name = stanza)]
 pub struct NewStanza {

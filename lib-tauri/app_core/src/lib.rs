@@ -39,7 +39,7 @@ pub fn initialize_tauri() -> Builder<Wry> {
         .invoke_handler(tauri::generate_handler![
             // miscellaneous
             //export_data_to_excel,
-            //init_to_excel,
+            add_new_fascicolo_from_xlsx,
             // database
             set_edificio,
             clear_edificio,

@@ -12,6 +12,8 @@ rust-version.workspace = true
 app_state = { path = "../app_state" }
 app_models = { path = "../app_models" }
 app_utils = { path = "../app_utils", features = ["dao", "service"] }
+app_macro = { path = "../app_macro" }
+
 
 serde = { workspace = true }
 serde_json = { workspace = true }

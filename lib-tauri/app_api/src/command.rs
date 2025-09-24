@@ -1,6 +1,7 @@
-use crate::events_payload::EdificioChangeEventPayload;
+use crate::events_payload::{EdificioChangePayload, EventWrapper, NewEdificioPayload, TypeEvent};
 use crate::{get_chiave_selected_edificio, is_selected_edificio};
-use app_services::dto::TableWithPrimaryKey;
+use app_data_processing::{IdGeneratorStanza, SimpleDataFrame, TransposedDataFrame};
+use app_services::dto::{StanzaDTOBuilder, TableWithPrimaryKey};
 use app_services::{
     dto::{
         AnnotazioneDTO, AnnotazioneEdificioDTO, AnnotazioneInfissoDTO, AnnotazioneStanzaDTO,
@@ -12,14 +13,18 @@ use app_services::{
     },
 };
 use app_state::database::DatabaseManager;
-use app_utils::app_interface::service_interface::{RetrieveByEdificioSelected, RetrieveManyService, SelectedEdificioState};
+use app_state::selected_edificio::EdificioSelected;
+use app_utils::app_interface::service_interface::{
+    CreateBatchService, RetrieveByEdificioSelected, RetrieveManyService, SelectedEdificioState,
+    SelectedEdificioTrait,
+};
 use log::info;
 use serde_json::Value;
 use std::collections::{HashMap, HashSet};
-use tauri::{AppHandle, Emitter, State};
-use app_state::selected_edificio::EdificioSelected;
+use std::error::Error;
+use tauri::{AppHandle, Emitter, Runtime, State};
 
-type ResultCommand<T> = Result<T, String>;
+pub(crate) type ResultCommand<T> = Result<T, String>;
 
 /**************************************************************************************************/
 /******************************* COMMAND PER MISCELLANEOUS **********************************/
@@ -30,10 +35,8 @@ pub async fn get_fascicoli(db: State<'_, DatabaseManager>) -> ResultCommand<Vec<
     let edifici = EdificioService::retrieve_many(db).await;
     match edifici {
         Ok(edifici) => {
-            let unique_fascicoli: HashSet<i32> = edifici
-                .iter()
-                .map(|edificio| edificio.fascicolo)
-                .collect();
+            let unique_fascicoli: HashSet<i32> =
+                edifici.iter().map(|edificio| edificio.fascicolo).collect();
             let mut res = unique_fascicoli.into_iter().collect::<Vec<i32>>();
             res.sort();
             Ok(res)
@@ -57,11 +60,15 @@ pub async fn set_edificio(
 
     app_handle
         .emit(
-            "edificio-changed",
-            EdificioChangeEventPayload {
-                type_event: "edificio_change",
-                chiave: get_chiave_selected_edificio(edificio_selected).await.unwrap(),
-            },
+            "edificio",
+            EventWrapper::new(
+                TypeEvent::ChangedEdificio,
+                EdificioChangePayload::new(
+                    get_chiave_selected_edificio(edificio_selected)
+                        .await
+                        .unwrap(),
+                ),
+            ),
         )
         .map_err(|e| e.to_string())?;
 
@@ -70,50 +77,109 @@ pub async fn set_edificio(
 }
 
 #[tauri::command]
-pub async fn clear_edificio(edificio_selected: State<'_, SelectedEdificioState<EdificioSelected>>) -> ResultCommand<()> {
+pub async fn clear_edificio(
+    edificio_selected: State<'_, SelectedEdificioState<EdificioSelected>>,
+) -> ResultCommand<()> {
     EdificioService::clear_edificio(edificio_selected).await;
     info!("Edificio cleared");
     Ok(())
 }
 
 /**************************************************************************************************/
-/***************************** COMMAND PER INIZIALIZZARE IL SISTEMA *******************************/
+/************************** COMMAND PER AGGIUNGERE UN NUOVO FASCICOLO *****************************/
 /**************************************************************************************************/
 
-/*
+fn get_field(row: &HashMap<&str, &str>, name: &str) -> Result<String, Box<dyn Error>> {
+    match row.get(name) {
+        Some(chiave) => Ok(chiave.to_string()),
+        None => Err(Box::from(format!("Campo {name} non trovato"))),
+    }
+}
+
+pub async fn save_to_database(
+    db: State<'_, DatabaseManager>,
+    df: TransposedDataFrame,
+) -> Result<Vec<EdificioDTO>, Box<dyn Error>> {
+    let df_clone = {
+        let mut df = df.clone().traspose();
+        df.select(&["chiave", "fascicolo", "nome_via"]).ok();
+        df.unique();
+        df.traspose()
+    };
+    let mut result = Vec::new();
+    for row in df_clone.iter_rows() {
+        let new_edificio = EdificioDTO {
+            chiave: get_field(&row, "chiave")?,
+            fascicolo: get_field(&row, "fascicolo")?.parse()?,
+            indirizzo: get_field(&row, "nome_via")?,
+            anno_costruzione: None,
+            anno_riqualificazione: None,
+            note_riqualificazione: None,
+            isolamento_tetto: false,
+            cappotto: false,
+        };
+        result.push(EdificioService::create(db.clone(), new_edificio).await?);
+    }
+
+    let mut generator_id_stanza = IdGeneratorStanza::new();
+    let mut new_stanze: Vec<StanzaDTO> = Vec::new();
+    for row in df.iter_rows() {
+        let new_stanza: StanzaDTO = generator_id_stanza
+            .generate_id(
+                StanzaDTOBuilder::default()
+                    .edificio_id(get_field(&row, "chiave")?)
+                    .piano(get_field(&row, "piano")?)
+                    .id_spazio(get_field(&row, "id_spazio")?)
+                    .cod_stanza(get_field(&row, "cod_stanza")?)
+                    .destinazione_uso(get_field(&row, "destinazione_uso")?)
+                    .build()
+                    .into(),
+            )?
+            .into();
+        new_stanze.push(new_stanza);
+    }
+    StanzaService::create_batch(db.clone(), new_stanze).await?;
+    Ok(result)
+}
+
 #[tauri::command]
-pub fn init_to_excel(
-    app_handle: AppHandle,
-    db: State<'_, Database>,
+pub async fn add_new_fascicolo_from_xlsx<R: Runtime>(
+    app_handle: AppHandle<R>,
+    db: State<'_, DatabaseManager>,
+    selected_edificio: State<'_, SelectedEdificioState<EdificioSelected>>,
     path: String,
-) -> ResultCommand<String> {
-    let df = ImportDatiStanzaToExcel::import(path)?;
+) -> ResultCommand<()> {
+    let df = SimpleDataFrame::from_xlsx(path.as_str()).map_err(|e| e.to_string())?;
+    let chiavi = df.column("chiave").map_err(|e| e.to_string())?;
+    let first_chiave = chiavi.first().ok_or(Box::from("Chiave non trovato"))?;
 
-    let name_db = df
-        .column("fascicolo")
-        .map_err(|e| e.to_string())?
-        .get(0)
-        .map_err(|e| e.to_string())?
-        .to_string()
-        .replace("\"", "");
-    let path_db = set_database(app_handle.clone(), db.clone(), name_db)?;
+    let new_edifici = save_to_database(db, df.traspose())
+        .await
+        .map_err(|e| e.to_string())?;
 
-    ImportDatiStanzaToExcel::save_to_database(db, df)?;
+    selected_edificio
+        .write()
+        .await
+        .set_chiave(first_chiave.clone());
 
     // emit event del cambio di database
     app_handle
         .emit(
-            "database-changed",
-            DatabaseEventPayload {
-                type_event: "database_switched",
-                path: path_db.clone(),
-            },
-        )
+            "edificio",
+            EventWrapper::new(
+                TypeEvent::NewEdificio,
+                NewEdificioPayload::new(
+                    new_edifici,
+                    get_chiave_selected_edificio(selected_edificio)
+                        .await
+                        .unwrap(),
+                ),
+            ))
         .map_err(|e| e.to_string())?;
 
-    Ok(path_db)
+    Ok(())
 }
-*/
+
 /**************************************************************************************************/
 /************************************** COMMAND PER INFISSI ***************************************/
 /**************************************************************************************************/
@@ -239,7 +305,10 @@ pub async fn update_edificio(
 /**************************************************************************************************/
 
 #[tauri::command]
-pub async fn get_utenze(db: State<'_, DatabaseManager>, selected_edificio: State<'_, SelectedEdificioState<EdificioSelected>>) -> ResultCommand<Vec<UtenzaDTO>> {
+pub async fn get_utenze(
+    db: State<'_, DatabaseManager>,
+    selected_edificio: State<'_, SelectedEdificioState<EdificioSelected>>,
+) -> ResultCommand<Vec<UtenzaDTO>> {
     if !is_selected_edificio(selected_edificio.clone()).await {
         return Ok(Vec::new());
     }
@@ -259,7 +328,11 @@ pub async fn insert_utenza(
         return Err("Non selezionato un edificio".to_string());
     }
 
-    if get_chiave_selected_edificio(selected_edificio).await.unwrap() != utenza.edificio_id {
+    if get_chiave_selected_edificio(selected_edificio)
+        .await
+        .unwrap()
+        != utenza.edificio_id
+    {
         return Err("Chiave non corrispondente".to_string());
     }
 
@@ -295,7 +368,11 @@ pub async fn insert_fotovoltaico(
         return Err("Non selezionato un edificio".to_string());
     }
 
-    if get_chiave_selected_edificio(selected_edificio).await.unwrap() != fotovoltaico.id_edificio {
+    if get_chiave_selected_edificio(selected_edificio)
+        .await
+        .unwrap()
+        != fotovoltaico.id_edificio
+    {
         return Err("Chiave non corrispondente".to_string());
     }
 
@@ -313,30 +390,30 @@ pub async fn get_annotazioni(
     table: TableWithPrimaryKey,
 ) -> ResultCommand<Vec<AnnotazioneDTO>> {
     match table {
-        TableWithPrimaryKey::Edificio(..) => Ok(
-            <AnnotazioneService as RetrieveManyService<AnnotazioneEdificioDTO>>::retrieve_many(db)
-                .await
-                .map_err(|e| e.to_string())?
-                .into_iter()
-                .map(AnnotazioneDTO::from)
-                .collect::<Vec<AnnotazioneDTO>>(),
-        ),
-        TableWithPrimaryKey::Stanza(..) => Ok(
-            <AnnotazioneService as RetrieveManyService<AnnotazioneStanzaDTO>>::retrieve_many(db)
-                .await
-                .map_err(|e| e.to_string())?
-                .into_iter()
-                .map(AnnotazioneDTO::from)
-                .collect::<Vec<AnnotazioneDTO>>(),
-        ),
-        TableWithPrimaryKey::Infisso(..) => Ok(
-            <AnnotazioneService as RetrieveManyService<AnnotazioneInfissoDTO>>::retrieve_many(db)
-                .await
-                .map_err(|e| e.to_string())?
-                .into_iter()
-                .map(AnnotazioneDTO::from)
-                .collect::<Vec<AnnotazioneDTO>>(),
-        )
+        TableWithPrimaryKey::Edificio(..) => Ok(<AnnotazioneService as RetrieveManyService<
+            AnnotazioneEdificioDTO,
+        >>::retrieve_many(db)
+            .await
+            .map_err(|e| e.to_string())?
+            .into_iter()
+            .map(AnnotazioneDTO::from)
+            .collect::<Vec<AnnotazioneDTO>>()),
+        TableWithPrimaryKey::Stanza(..) => Ok(<AnnotazioneService as RetrieveManyService<
+            AnnotazioneStanzaDTO,
+        >>::retrieve_many(db)
+            .await
+            .map_err(|e| e.to_string())?
+            .into_iter()
+            .map(AnnotazioneDTO::from)
+            .collect::<Vec<AnnotazioneDTO>>()),
+        TableWithPrimaryKey::Infisso(..) => Ok(<AnnotazioneService as RetrieveManyService<
+            AnnotazioneInfissoDTO,
+        >>::retrieve_many(db)
+            .await
+            .map_err(|e| e.to_string())?
+            .into_iter()
+            .map(AnnotazioneDTO::from)
+            .collect::<Vec<AnnotazioneDTO>>()),
     }
 }
 
@@ -346,32 +423,88 @@ pub async fn insert_annotazione(
     annotazione: AnnotazioneDTO,
 ) -> ResultCommand<AnnotazioneDTO> {
     match annotazione.ref_table {
-        TableWithPrimaryKey::Edificio(..) => Ok(
-            <AnnotazioneService as CreateService<AnnotazioneEdificioDTO>>::create(
-                db,
-                annotazione.into(),
-            )
+        TableWithPrimaryKey::Edificio(..) => Ok(<AnnotazioneService as CreateService<
+            AnnotazioneEdificioDTO,
+        >>::create(db, annotazione.into())
+            .await
+            .map_err(|e| e.to_string())?
+            .into()),
+        TableWithPrimaryKey::Stanza(..) => Ok(<AnnotazioneService as CreateService<
+            AnnotazioneStanzaDTO,
+        >>::create(db, annotazione.into())
+            .await
+            .map_err(|e| e.to_string())?
+            .into()),
+        TableWithPrimaryKey::Infisso(..) => Ok(<AnnotazioneService as CreateService<
+            AnnotazioneInfissoDTO,
+        >>::create(db, annotazione.into())
+            .await
+            .map_err(|e| e.to_string())?
+            .into()),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use app_utils::app_interface::database_interface::DatabaseManagerTrait;
+    use app_utils::app_interface::service_interface::SelectedEdificioTrait;
+    use app_utils::test::impl_database_connector::IsolatedTestDatabaseConnector;
+    use tauri::{Listener, Manager};
+    use tokio::sync::RwLock;
+
+    #[tokio::test]
+    async fn test_add_new_fascicolo_from_xlsx() {
+        let app = tauri::test::mock_app();
+        let app_handle = app.handle();
+
+        let db =
+            DatabaseManager::with_connector(Box::new(IsolatedTestDatabaseConnector::new().await))
+                .await;
+        app.manage(db);
+        let db_state = app.state::<DatabaseManager>();
+
+        let edificio_selected = SelectedEdificioState::new(RwLock::new(EdificioSelected::new()));
+        app.manage(edificio_selected);
+        let selected_edificio = app.state::<SelectedEdificioState<EdificioSelected>>();
+
+        let path = "/home/maty/Downloads/Telegram Desktop/scuole massalongo e coccinelle.xlsx";
+
+        app.listen("edificio-changed", |event| {
+            println!("Received event: {:?}", event);
+            assert!(event.payload().contains("edificio_change"))
+        });
+
+        match add_new_fascicolo_from_xlsx(
+            app_handle.clone(),
+            db_state.clone(),
+            selected_edificio.clone(),
+            path.to_string(),
+        )
+            .await
+        {
+            Ok(_) => {}
+            Err(e) => panic!("{e}"),
+        }
+
+        tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
+
+        let edificio = EdificioService::retrieve_many(db_state.clone())
+            .await
+            .unwrap();
+        println!("{:?}", edificio);
+        assert_eq!(edificio.len(), 1);
+        assert_eq!(
+            edificio[0].chiave,
+            selected_edificio.read().await.get_chiave().unwrap()
+        );
+
+        let stanze =
+            StanzaService::retrieve_by_edificio_selected(db_state, selected_edificio.clone())
                 .await
-                .map_err(|e| e.to_string())?
-                .into(),
-        ),
-        TableWithPrimaryKey::Stanza(..) => Ok(
-            <AnnotazioneService as CreateService<AnnotazioneStanzaDTO>>::create(
-                db,
-                annotazione.into(),
-            )
-                .await
-                .map_err(|e| e.to_string())?
-                .into(),
-        ),
-        TableWithPrimaryKey::Infisso(..) => Ok(
-            <AnnotazioneService as CreateService<AnnotazioneInfissoDTO>>::create(
-                db,
-                annotazione.into(),
-            )
-                .await
-                .map_err(|e| e.to_string())?
-                .into(),
-        ),
+                .ok()
+                .unwrap();
+        println!("{:?}", stanze);
+        assert_eq!(stanze.len(), 68);
     }
 }
