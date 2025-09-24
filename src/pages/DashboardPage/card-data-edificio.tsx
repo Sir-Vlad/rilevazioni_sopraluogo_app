@@ -138,7 +138,7 @@ const InsertEdificio = () => {
 
     return <Sheet>
         <SheetTrigger asChild>
-            <Button variant="ghost" size={"sm"} disabled={edificio?.chiave === null}><PlusIcon/></Button>
+            <Button variant="ghost" size={"sm"} disabled={edificio === undefined}><PlusIcon/></Button>
         </SheetTrigger>
         <SheetContent className="w-[400px]">
             <SheetHeader>

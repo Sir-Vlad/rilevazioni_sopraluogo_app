@@ -1,4 +1,4 @@
-import {createContext} from "react";
+import {createContext, Dispatch, SetStateAction} from "react";
 import {IEdificio, IFotovoltaico, IInfisso, IStanza, IUtenza, NuovoTipo} from "../models/models.tsx";
 
 export interface DatabaseContextType {
@@ -41,6 +41,7 @@ export const TypesContext = createContext<TypeContextType | null>(null);
 
 export interface EdificioContextType {
     data: IEdificio[];
+    setEdifici: Dispatch<SetStateAction<IEdificio[]>>;
     modifyEdificio: (edificio: IEdificio) => Promise<void>;
     error: string | null;
     isLoading: boolean;

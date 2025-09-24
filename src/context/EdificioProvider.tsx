@@ -76,12 +76,14 @@ const EdificioProvider = ({children}: { children: React.ReactNode }) => {
     }, [loadEdifici]);
 
 
-    const obj = useMemo(() => {
+    const obj: EdificioContextType = useMemo(() => {
         return {
             data          : edifici,
             isLoading     : isLoading,
-            modifyEdificio: modifyEdificio
-        } as EdificioContextType;
+            modifyEdificio: modifyEdificio,
+            setEdifici    : setEdifici,
+            error         : null
+        };
     }, [edifici, isLoading, modifyEdificio]);
 
     return <EdificioContext.Provider value={obj}>

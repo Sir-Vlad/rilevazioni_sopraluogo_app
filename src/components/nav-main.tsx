@@ -10,15 +10,20 @@ import {
     SidebarMenuItem,
     SidebarMenuSub
 } from "@/components/ui/sidebar";
+import {useNotification} from "@/context/NotificationProvider.tsx";
 import {useSelectedEdificio} from "@/context/SelectedEdificioProvider.tsx";
 import {useEdifici} from "@/context/UseProvider.tsx";
 import {IEdificio} from "@/models/models.tsx";
+import {invoke} from "@tauri-apps/api/core";
+import {open} from "@tauri-apps/plugin-dialog";
 import {Building, Check, ChevronRight, FileText, Plus} from "lucide-react";
 import {useEffect, useMemo, useState} from "react";
 
 export function NavMain({valueSearch}: Readonly<{ valueSearch: string | null }>) {
     const selectedEdificio = useSelectedEdificio();
     const edificiContext = useEdifici();
+    const {addNotification} = useNotification();
+
     const [fascicoli, setFascicoli] = useState(new Map<number, IEdificio[]>());
     const [filteredFascicolo, setFilteredFascicolo] = useState(new Map<number, IEdificio[]>);
     const fascicoliRender = useMemo(() => {
@@ -27,7 +32,7 @@ export function NavMain({valueSearch}: Readonly<{ valueSearch: string | null }>)
         }
         return Array.from(fascicoli);
     }, [valueSearch, fascicoli, filteredFascicolo]);
-
+    const [selectedFascicolo, setSelectedFascicolo] = useState<number>();
 
     useEffect(() => {
         const newFascicoli = new Map<number, IEdificio[]>();
@@ -60,33 +65,33 @@ export function NavMain({valueSearch}: Readonly<{ valueSearch: string | null }>)
         }
     }, [fascicoli, valueSearch]);
 
-    const addNewFascicolo = () => {
-        throw new Error("Not implemented");
+    const addNewFascicolo = async () => {
+        const path_file = await open({
+            title    : "Seleziona il file da caricare",
+            multiple : false,
+            directory: false,
+            filters  : [
+                {
+                    name      : "Excel file",
+                    extensions: ["xlsx", "xls"]
+                }
+            ]
+        });
+        if (!path_file) {
+            return;
+        }
+        console.log(path_file);
 
-        // const file = await open({
-        //     title    : "Seleziona il file da caricare",
-        //     multiple : false,
-        //     directory: false,
-        //     filters  : [{
-        //         name      : "Excel file",
-        //         extensions: ["xlsx", "xls"]
-        //     }]
-        // });
-        // if (!file) {
-        //     return;
-        // }
-        //
-        // /* Passare il path a rust che ne elabora il contenuto (con polars) e imposta il database */
-        // try {
-        //     const path_db: string = await invoke("init_to_excel", {
-        //         path: file
-        //     });
-        //     const name_db: string = getFileNameWithExtension(path_db);
-        //     setFascicoli((prev) => [...prev, name_db]);
-        //     addNotification("Inserimento avvenuto con successo", "success");
-        // } catch (e) {
-        //     addNotification(e as string, "error");
-        // }
+
+        /* Passare il path a rust che ne elabora il contenuto (con polars) e imposta il database */
+        try {
+            await invoke("add_new_fascicolo_from_xlsx", {
+                path: path_file
+            });
+            addNotification("Inserimento avvenuto con successo", "success");
+        } catch (e) {
+            addNotification(e as string, "error");
+        }
     };
 
     const renderCheckedEdificio = (edificio: IEdificio) => {
@@ -102,8 +107,7 @@ export function NavMain({valueSearch}: Readonly<{ valueSearch: string | null }>)
         return (
             <div className="flex justify-end">
                 <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white"></div>
-            </div>
-        );
+            </div>);
     };
 
     return (
@@ -119,7 +123,10 @@ export function NavMain({valueSearch}: Readonly<{ valueSearch: string | null }>)
                             <CollapsibleTrigger asChild>
                                 <SidebarMenuButton tooltip={fascicolo.toString()}>
                                     <FileText/>
-                                    <span>{fascicolo}</span>
+                                    <div className="flex flex-row justify-between content-center w-full">
+                                        <p>{fascicolo}</p>
+                                        {selectedFascicolo === fascicolo && <Check/>}
+                                    </div>
                                     <ChevronRight
                                         className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90"/>
                                 </SidebarMenuButton>
@@ -130,6 +137,7 @@ export function NavMain({valueSearch}: Readonly<{ valueSearch: string | null }>)
                                         return <SidebarMenuItem key={edificio.chiave}>
                                                     <SidebarMenuButton asChild tooltip={fascicolo.toString()}
                                                                        onClick={async () => {
+                                                                           setSelectedFascicolo(fascicolo);
                                                                            await selectedEdificio.changeEdificio(edificio);
                                                                        }}>
                                                         <div className="flex items-center justify-between">

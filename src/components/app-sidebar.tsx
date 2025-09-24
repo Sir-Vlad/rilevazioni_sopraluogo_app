@@ -1,10 +1,5 @@
-import * as React from "react";
-import { useState } from "react";
-import { Command, LifeBuoy, Send } from "lucide-react";
-
-import { NavMain } from "@/components/nav-main";
-import { NavSecondary } from "@/components/nav-secondary";
-import { NavUser } from "@/components/nav-user";
+import {NavMain} from "@/components/nav-main";
+import {SearchForm} from "@/components/search-form.tsx";
 import {
     Sidebar,
     SidebarContent,
@@ -14,32 +9,37 @@ import {
     SidebarMenuButton,
     SidebarMenuItem
 } from "@/components/ui/sidebar";
-import { SearchForm } from "@/components/search-form.tsx";
+import {Command} from "lucide-react";
+import * as React from "react";
+import {useState} from "react";
 
-const data = {
-    user        : {
-        name  : "shadcn",
-        email : "m@example.com",
-        avatar: "/avatars/shadcn.jpg"
-    },
-    navSecondary: [ {
-        title: "Support",
-        url  : "#",
-        icon : LifeBuoy
-    }, {
-        title: "Feedback",
-        url  : "#",
-        icon : Send
-    } ]
-};
+// const data = {
+//     user        : {
+//         name  : "shadcn",
+//         email : "m@example.com",
+//         avatar: "/avatars/shadcn.jpg"
+//     },
+//     navSecondary: [
+//         {
+//             title: "Support",
+//             url  : "#",
+//             icon : LifeBuoy
+//         }, {
+//             title: "Feedback",
+//             url  : "#",
+//             icon : Send
+//         }
+//     ]
+// };
 
-export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-    const [ searchEntry, setSearchEntry ] = useState<string | null>(null);
+export function AppSidebar({...props}: React.ComponentProps<typeof Sidebar>) {
+    const [searchEntry, setSearchEntry] = useState<string | null>(null);
 
-    return (<Sidebar
-        className="top-(--header-height) h-[calc(100svh-var(--header-height))]!"
-        { ...props }
-    >
+    return (
+        <Sidebar
+            className="top-(--header-height) h-[calc(100svh-var(--header-height))]!"
+            {...props}
+        >
         <SidebarHeader>
             <SidebarMenu>
                 <SidebarMenuItem>
@@ -59,12 +59,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             </SidebarMenu>
         </SidebarHeader>
         <SidebarContent>
-            <SearchForm onSearch={ setSearchEntry }/>
-            <NavMain valueSearch={ searchEntry }/>
-            <NavSecondary items={ data.navSecondary } className="mt-auto"/>
+            <SearchForm onSearch={setSearchEntry}/>
+            <NavMain valueSearch={searchEntry}/>
+            {/*<NavSecondary items={ data.navSecondary } className="mt-auto"/>*/}
         </SidebarContent>
-        <SidebarFooter>
-            <NavUser user={ data.user }/>
-        </SidebarFooter>
+            <SidebarFooter>
+            {/*    <NavUser user={ data.user }/>*/}
+            </SidebarFooter>
     </Sidebar>);
 }

@@ -14,9 +14,17 @@ export interface SelectedEdificioContextType {
     error: string | null;
 }
 
-interface EdificioChange {
+interface EventBackend {
     type_event: string;
+}
+
+interface EdificioChange extends EventBackend {
     chiave: string;
+}
+
+interface NewEdificio extends EventBackend {
+    edifici: IEdificio[];
+    edificio_selected: string;
 }
 
 export const SelectedEdificioContext = createContext<SelectedEdificioContextType | null>(null);
@@ -42,23 +50,44 @@ export const SelectedEdificioProvider = ({children}: { children: React.ReactNode
         }
     }, [addNotification]);
 
-    useEffect(() => {
-        const edificioChangeListener = listen<EdificioChange>("edificio-changed", (e) => {
-            console.log("Event change edificio:", e);
-            const {payload} = e as { payload: EdificioChange };
+    function setEdificioSelected(edificio: IEdificio) {
+        setEdificio(edificio);
+        window.dispatchEvent(new CustomEvent(EDIFICIO_CHANGED_EVENT));
+    }
 
-            if (payload.type_event === "edificio_change") {
+
+    useEffect(() => {
+        const edificioChangeListener = listen<EdificioChange>("edificio", (e) => {
+            console.log("Event change edificio arrived:", e);
+            const {payload} = e as { payload: EventBackend };
+
+            if (payload.type_event === "ChangedEdificio") {
+                console.log("Event change edificio:", payload);
+                const event = payload as EdificioChange;
+
                 // launch event for reloading the data
                 const edificio = edificiContext.data.find(edificio => {
-                    return edificio.chiave === payload.chiave;
+                    return edificio.chiave === event.chiave;
                 });
                 if (edificio) {
-                    setEdificio(edificio);
-                    window.dispatchEvent(new CustomEvent(EDIFICIO_CHANGED_EVENT));
+                    setEdificioSelected(edificio);
                 } else {
                     setError("Edificio non esiste");
                     addNotification("Edificio non esiste", "error");
                 }
+            } else if (payload.type_event === "NewEdificio") {
+                console.log("Event new edificio:", payload);
+                const event = payload as NewEdificio;
+
+                edificiContext.setEdifici((prevState) => {
+                    return [...prevState, ...event.edifici];
+                });
+                const edificio = event.edifici.find(edificio => edificio.chiave === event.edificio_selected)!;
+                setEdificioSelected(edificio);
+            } else {
+                setIsLoading(false);
+                setError("Edificio non esiste");
+                addNotification("Edificio non esiste", "error");
             }
         });
 
@@ -67,7 +96,7 @@ export const SelectedEdificioProvider = ({children}: { children: React.ReactNode
                 .then(callback => callback())
                 .catch(console.error);
         };
-    }, [addNotification, edificiContext.data]);
+    }, [addNotification, edificiContext, edificiContext.data]);
 
     useEffect(() => {
         const handleEndReload = () => {
