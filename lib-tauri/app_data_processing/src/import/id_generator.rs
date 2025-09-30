@@ -46,13 +46,13 @@ impl IdGeneratorStanza {
         let piano = if let Some(piano) = self.format_piano(stanza.piano.as_str()) {
             piano
         } else {
-            return Err(DomainError::InvalidInput(ErrorKind::FormatInvalid, "Piano non valido o vuoto".to_string()).into());
+            return Err(DomainError::InvalidInput(ErrorKind::InvalidFormat, "Piano non valido o vuoto".to_string()).into());
         };
 
         let des_uso = if let Some(des_uso) = self.format_uso(stanza.destinazione_uso.as_str()) {
             des_uso
         } else {
-            return Err(DomainError::InvalidInput(ErrorKind::FormatInvalid, "Destinazione d'uso non valido o vuoto".to_string()).into());
+            return Err(DomainError::InvalidInput(ErrorKind::InvalidFormat, "Destinazione d'uso non valido o vuoto".to_string()).into());
         };
 
         let key_hash = (stanza.edificio_id.clone(), piano.clone());
@@ -240,7 +240,7 @@ mod tests {
         match id {
             Ok(_) => {}
             Err(ApplicationError::Domain(DomainError::InvalidInput(error_kind, msg))) => {
-                assert_eq!(error_kind, ErrorKind::FormatInvalid);
+                assert_eq!(error_kind, ErrorKind::InvalidFormat);
             }
             _ => {}
         }
@@ -255,7 +255,7 @@ mod tests {
         match id {
             Ok(_) => {}
             Err(ApplicationError::Domain(DomainError::InvalidInput(error_kind, msg))) => {
-                assert_eq!(error_kind, ErrorKind::FormatInvalid);
+                assert_eq!(error_kind, ErrorKind::InvalidFormat);
             }
             _ => {}
         }

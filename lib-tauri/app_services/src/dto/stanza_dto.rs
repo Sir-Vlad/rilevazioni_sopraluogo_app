@@ -3,7 +3,7 @@ use app_models::models::{NewStanza, Stanza, UpdateStanza};
 use app_utils::app_interface::dto_interface::DTO;
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Serialize, Deserialize, Clone, Builder)]
+#[derive(Debug, Serialize, Deserialize, Clone, Builder, PartialEq)]
 pub struct StanzaDTO {
     pub id: u64,
     pub edificio_id: String,
@@ -63,7 +63,7 @@ impl From<StanzaDTO> for Stanza {
     }
 }
 
-impl From<StanzaDTO> for NewStanza 
+impl From<StanzaDTO> for NewStanza
 {
     fn from(value: StanzaDTO) -> Self {
         Self {

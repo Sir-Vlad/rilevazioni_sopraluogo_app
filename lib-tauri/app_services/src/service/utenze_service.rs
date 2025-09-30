@@ -1,11 +1,13 @@
 use crate::dao::UtenzeDAO;
 use crate::dto::UtenzaDTO;
+use crate::service::DomainError;
 use app_state::selected_edificio::SelectedEdificioTrait;
-use app_utils::app_error::{AppResult, ApplicationError};
+use app_utils::app_error::{AppResult, ApplicationError, ErrorKind};
 use app_utils::app_interface::dao_interface::crud_operations::{Get, GetAll, Insert};
 use app_utils::app_interface::database_interface::DatabaseManagerTrait;
 use app_utils::app_interface::service_interface::{
-    CreateService, RetrieveByEdificioSelected, RetrieveManyService, SelectedEdificioState,
+    CreateService, RetrieveBy, RetrieveByEdificioSelected, RetrieveManyService,
+    SelectedEdificioState,
 };
 use async_trait::async_trait;
 use std::ops::Deref;
@@ -25,6 +27,32 @@ impl RetrieveManyService<UtenzaDTO> for UtenzeService {
 }
 
 #[async_trait]
+impl RetrieveBy<UtenzaDTO> for UtenzeService {
+    type Output = Vec<UtenzaDTO>;
+
+    async fn retrieve_by(
+        db_state: State<'_, impl DatabaseManagerTrait + Send + Sync>,
+        where_field: &str,
+        where_value: &str,
+    ) -> AppResult<Self::Output> {
+        let mut conn = db_state.get_connection().await?;
+
+        let result = match where_field {
+            "edificio" => UtenzeDAO::get(&mut conn, where_value.to_string())?,
+            _ => {
+                return Err(DomainError::InvalidInput(
+                    ErrorKind::InvalidField,
+                    where_field.to_string(),
+                )
+                    .into())
+            }
+        };
+
+        Ok(result.iter().map(UtenzaDTO::from).collect())
+    }
+}
+
+#[async_trait]
 impl RetrieveByEdificioSelected<UtenzaDTO> for UtenzeService {
     async fn retrieve_by_edificio_selected<S>(
         db_state: State<'_, impl DatabaseManagerTrait + Send + Sync>,
@@ -33,14 +61,12 @@ impl RetrieveByEdificioSelected<UtenzaDTO> for UtenzeService {
     where
         S: SelectedEdificioTrait + Send + Sync,
     {
-        let mut conn = db_state.get_connection().await?;
         let edificio_selected = edificio_selected_state.read().await.deref().get_chiave();
         if edificio_selected.is_none() {
             return Err(ApplicationError::EdificioNotSelected);
         }
 
-        let utenze = UtenzeDAO::get(&mut conn, edificio_selected.unwrap())?;
-        Ok(utenze.iter().map(UtenzaDTO::from).collect())
+        Self::retrieve_by(db_state, "edificio", edificio_selected.unwrap().deref()).await
     }
 }
 
@@ -70,7 +96,6 @@ mod tests {
     use app_utils::test::utils::read_json_file;
     use app_utils::test::{ResultTest, TestServiceEnvironment};
     use std::ops::Deref;
-    use tokio::io::AsyncReadExt;
     use tokio::sync::RwLock;
 
     async fn setup_utenze_env() -> ResultTest<TestServiceEnvironment<DatabaseManager>> {

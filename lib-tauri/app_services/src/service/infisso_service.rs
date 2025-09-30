@@ -1,7 +1,9 @@
 use crate::dao::InfissoDAO;
 use crate::dto::InfissoDTO;
+use crate::service::DomainError;
 use app_state::selected_edificio::{SelectedEdificioState, SelectedEdificioTrait};
-use app_utils::app_interface::service_interface::RetrieveByEdificioSelected;
+use app_utils::app_error::ErrorKind;
+use app_utils::app_interface::service_interface::{RetrieveBy, RetrieveByEdificioSelected};
 use app_utils::{
     app_error::AppResult,
     app_interface::{
@@ -16,6 +18,32 @@ use tauri::State;
 pub struct InfissoService;
 
 #[async_trait]
+impl RetrieveBy<InfissoDTO> for InfissoService {
+    type Output = Vec<InfissoDTO>;
+
+    async fn retrieve_by(
+        db_state: State<'_, impl DatabaseManagerTrait + Send + Sync>,
+        where_field: &str,
+        where_value: &str,
+    ) -> AppResult<Self::Output> {
+        let mut conn = db_state.get_connection().await?;
+
+        let result = match where_field {
+            "edificio" => InfissoDAO::get(&mut conn, where_value.to_string())?,
+            _ => {
+                return Err(DomainError::InvalidInput(
+                    ErrorKind::InvalidField,
+                    where_field.to_string(),
+                )
+                    .into())
+            }
+        };
+
+        Ok(result.iter().map(InfissoDTO::from).collect())
+    }
+}
+
+#[async_trait]
 impl RetrieveByEdificioSelected<InfissoDTO> for InfissoService {
     async fn retrieve_by_edificio_selected<S>(
         db_state: State<'_, impl DatabaseManagerTrait + Send + Sync>,
@@ -24,13 +52,12 @@ impl RetrieveByEdificioSelected<InfissoDTO> for InfissoService {
     where
         S: SelectedEdificioTrait + Send + Sync,
     {
-        let mut conn = db_state.get_connection().await?;
         let edificio_id = match edificio_selected_state.read().await.get_chiave() {
             Some(chiave) => chiave,
             None => return Ok(Vec::new()),
         };
-        let result = InfissoDAO::get(&mut conn, edificio_id)?;
-        Ok(result.iter().map(InfissoDTO::from).collect())
+
+        Self::retrieve_by(db_state, "edificio", &edificio_id).await
     }
 }
 

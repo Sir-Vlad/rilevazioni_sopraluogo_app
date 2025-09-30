@@ -21,12 +21,12 @@ use std::{
     time::Duration,
 };
 use tauri::test::{mock_app, MockRuntime};
-use tauri::{App, Manager, State};
+use tauri::{AppHandle, Manager, State};
 use testcontainers::ContainerAsync;
 use testcontainers_modules::postgres::Postgres;
 use tokio::sync::OnceCell;
 
-pub type ResultTest<T = ()> = std::result::Result<T, Box<dyn Error + Send + Sync>>;
+pub type ResultTest<T = ()> = Result<T, Box<dyn Error + Send + Sync>>;
 
 static CLEANUP_REGISTERED: Once = Once::new();
 
@@ -247,7 +247,7 @@ pub async fn create_postgres_pool() -> &'static Pool<ConnectionManager<PgConnect
 /// ```
 pub struct TestServiceEnvironment<D> {
     connector: Box<IsolatedTestDatabaseConnector>,
-    app: App<MockRuntime>,
+    app: Arc<AppHandle<MockRuntime>>,
     cleanup_done: Arc<AtomicBool>,
     phantom_data: PhantomData<D>,
 }
@@ -291,11 +291,15 @@ where
         }));
 
         Ok(TestServiceEnvironment {
-            app,
+            app: Arc::new(app.handle().clone()),
             connector,
             cleanup_done,
             phantom_data: Default::default(),
         })
+    }
+
+    pub fn app(&self) -> Arc<AppHandle<MockRuntime>> {
+        self.app.clone()
     }
 
     pub fn database(&self) -> State<'_, D> {

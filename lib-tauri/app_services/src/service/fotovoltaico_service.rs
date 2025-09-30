@@ -1,11 +1,12 @@
 use crate::dao::FotovoltaicoDAO;
 use crate::dto::FotovoltaicoDTO;
 use app_state::selected_edificio::SelectedEdificioTrait;
-use app_utils::app_error::{AppResult, ApplicationError};
+use app_utils::app_error::{AppResult, ApplicationError, DomainError, ErrorKind};
 use app_utils::app_interface::dao_interface::crud_operations::{Get, GetAll, Insert};
 use app_utils::app_interface::database_interface::DatabaseManagerTrait;
 use app_utils::app_interface::service_interface::{
-    CreateService, RetrieveByEdificioSelected, RetrieveManyService, SelectedEdificioState,
+    CreateService, RetrieveBy, RetrieveByEdificioSelected, RetrieveManyService,
+    SelectedEdificioState,
 };
 use async_trait::async_trait;
 use std::ops::Deref;
@@ -25,6 +26,32 @@ impl RetrieveManyService<FotovoltaicoDTO> for FotovoltaicoService {
 }
 
 #[async_trait]
+impl RetrieveBy<FotovoltaicoDTO> for FotovoltaicoService {
+    type Output = Vec<FotovoltaicoDTO>;
+
+    async fn retrieve_by(
+        db_state: State<'_, impl DatabaseManagerTrait + Send + Sync>,
+        where_field: &str,
+        where_value: &str,
+    ) -> AppResult<Self::Output> {
+        let mut conn = db_state.get_connection().await?;
+
+        let result = match where_field {
+            "edificio" => FotovoltaicoDAO::get(&mut conn, where_value.to_string())?,
+            _ => {
+                return Err(DomainError::InvalidInput(
+                    ErrorKind::InvalidField,
+                    where_field.to_string(),
+                )
+                    .into())
+            }
+        };
+
+        Ok(result.iter().map(FotovoltaicoDTO::from).collect())
+    }
+}
+
+#[async_trait]
 impl RetrieveByEdificioSelected<FotovoltaicoDTO> for FotovoltaicoService {
     async fn retrieve_by_edificio_selected<S>(
         db_state: State<'_, impl DatabaseManagerTrait + Send + Sync>,
@@ -33,14 +60,12 @@ impl RetrieveByEdificioSelected<FotovoltaicoDTO> for FotovoltaicoService {
     where
         S: SelectedEdificioTrait + Send + Sync,
     {
-        let mut conn = db_state.get_connection().await?;
         let edificio_selected = edificio_selected_state.read().await.deref().get_chiave();
         if edificio_selected.is_none() {
             return Err(ApplicationError::EdificioNotSelected);
         }
 
-        let utenze = FotovoltaicoDAO::get(&mut conn, edificio_selected.unwrap())?;
-        Ok(utenze.iter().map(FotovoltaicoDTO::from).collect())
+        Self::retrieve_by(db_state, "edificio", edificio_selected.unwrap().deref()).await
     }
 }
 

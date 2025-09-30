@@ -18,6 +18,8 @@
           "path": "$APPDATA"
         }
       ]
-    }
+    },
+    "notification:default",
+    "store:default"
   ]
 }

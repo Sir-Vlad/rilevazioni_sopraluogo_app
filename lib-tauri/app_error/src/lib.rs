@@ -1,3 +1,4 @@
+use std::error::Error;
 use crate::database_error::DbError;
 use std::fmt::{Display, Formatter};
 use thiserror::Error;
@@ -50,6 +51,10 @@ pub enum ApplicationError {
     Unexpected(String),
     #[error("Edificio not selected")]
     EdificioNotSelected,
+    #[error("Task error: {0}")]
+    BackgroundTask(#[from] ErrorTask),
+    #[error("Tauri error: {0}")]
+    Tauri(TauriError)
 }
 
 impl From<DbError> for ApplicationError {
@@ -103,14 +108,16 @@ impl From<diesel::result::Error> for DomainError {
 #[non_exhaustive]
 pub enum ErrorKind {
     EmptyField,
-    FormatInvalid,
+    InvalidFormat,
+    InvalidField,
 }
 
 impl Display for ErrorKind {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
             ErrorKind::EmptyField => write!(f, "Empty field"),
-            ErrorKind::FormatInvalid => write!(f, "Format invalid"),
+            ErrorKind::InvalidFormat => write!(f, "Format invalid"),
+            ErrorKind::InvalidField => write!(f, "Invalid field"),
         }
     }
 }
@@ -123,4 +130,16 @@ pub enum InfrastructureError {
     ConnectionPool(String),
     #[error("Connection timeout")]
     ConnectionTimeout,
+}
+
+#[derive(Error, Debug)]
+pub enum ErrorTask {
+    #[error("Error: {0}")]
+    Generic(String)
+}
+
+#[derive(Error, Debug)]
+pub enum TauriError {
+    #[error(transparent)]
+    Plugin(Box<dyn Error + Send + Sync>),
 }

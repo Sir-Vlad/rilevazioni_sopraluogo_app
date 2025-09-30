@@ -4,6 +4,7 @@ use crate::schema::{
     tipo_infisso, utenze, vetro_infisso,
 };
 use chrono::NaiveDateTime;
+use diesel::sql_types::{Integer, Nullable, SmallInt, Text};
 use diesel::{
     AsChangeset, Associations, Identifiable, Insertable, Queryable, QueryableByName, Selectable,
 };
@@ -78,20 +79,31 @@ pub struct UpdateEdificio {
     pub cappotto: Option<bool>,
 }
 
-#[derive(Queryable, Selectable, Identifiable, Associations, Debug, PartialEq)]
+#[derive(Queryable, QueryableByName, Selectable, Identifiable, Associations, Debug, PartialEq)]
 #[diesel(belongs_to(Edificio))]
 #[diesel(table_name = stanza)]
 pub struct Stanza {
+    #[diesel(sql_type = Integer)]
     pub id: i32,
+    #[diesel(sql_type = Text)]
     pub edificio_id: String,
+    #[diesel(sql_type = Text)]
     pub piano: String,
+    #[diesel(sql_type = Text)]
     pub id_spazio: String,
+    #[diesel(sql_type = Text)]
     pub cod_stanza: String,
+    #[diesel(sql_type = Text)]
     pub destinazione_uso: String,
+    #[diesel(sql_type = Nullable<SmallInt>)]
     pub altezza: Option<i16>,
+    #[diesel(sql_type = Nullable<SmallInt>)]
     pub spessore_muro: Option<i16>,
+    #[diesel(sql_type = Nullable<Text>)]
     pub riscaldamento: Option<String>,
+    #[diesel(sql_type = Nullable<Text>)]
     pub raffrescamento: Option<String>,
+    #[diesel(sql_type = Nullable<Text>)]
     pub illuminazione: Option<String>,
 }
 

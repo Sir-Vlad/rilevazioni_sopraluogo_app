@@ -1,3 +1,5 @@
+use crate::dao::utils::map_error_for_entity;
+use crate::dao::utils::EntityType::Stanza as StanzaType;
 use app_models::models::{NewStanza, Stanza, UpdateStanza};
 use app_models::schema::stanza;
 use app_utils::app_error::DomainError;
@@ -6,8 +8,6 @@ use app_utils::app_interface::dao_interface::DAO;
 use app_utils::app_interface::database_interface::PostgresPooled;
 use diesel::result::Error;
 use diesel::{ExpressionMethods, QueryDsl, RunQueryDsl};
-use crate::dao::utils::EntityType::Stanza as StanzaType;
-use crate::dao::utils::map_error_for_entity;
 
 pub struct StanzaDAO;
 

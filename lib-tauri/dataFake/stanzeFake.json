@@ -2,7 +2,7 @@
   {
     "id": 1,
     "edificio_id": "8361-122",
-    "piano": "0",
+    "piano": "T",
     "id_spazio": "SP001",
     "cod_stanza": "ST001",
     "destinazione_uso": "Soggiorno",
@@ -16,7 +16,7 @@
   {
     "id": 2,
     "edificio_id": "8361-122",
-    "piano": "0",
+    "piano": "T",
     "id_spazio": "SP002",
     "cod_stanza": "ST002",
     "destinazione_uso": "Cucina",
@@ -72,7 +72,7 @@
   {
     "id": 6,
     "edificio_id": "5257-184",
-    "piano": "0",
+    "piano": "T",
     "id_spazio": "SP006",
     "cod_stanza": "ST006",
     "destinazione_uso": "Soggiorno",
@@ -86,7 +86,7 @@
   {
     "id": 7,
     "edificio_id": "5257-184",
-    "piano": "0",
+    "piano": "T",
     "id_spazio": "SP007",
     "cod_stanza": "ST007",
     "destinazione_uso": "Cucina",
@@ -142,7 +142,7 @@
   {
     "id": 11,
     "edificio_id": "8518-34",
-    "piano": "0",
+    "piano": "T",
     "id_spazio": "SP011",
     "cod_stanza": "ST011",
     "destinazione_uso": "Ingresso",
@@ -156,7 +156,7 @@
   {
     "id": 12,
     "edificio_id": "8518-34",
-    "piano": "0",
+    "piano": "T",
     "id_spazio": "SP012",
     "cod_stanza": "ST012",
     "destinazione_uso": "Soggiorno",
@@ -170,7 +170,7 @@
   {
     "id": 13,
     "edificio_id": "8518-34",
-    "piano": "0",
+    "piano": "T",
     "id_spazio": "SP013",
     "cod_stanza": "ST013",
     "destinazione_uso": "Cucina",
@@ -212,7 +212,7 @@
   {
     "id": 16,
     "edificio_id": "5435-160",
-    "piano": "0",
+    "piano": "T",
     "id_spazio": "SP016",
     "cod_stanza": "ST016",
     "destinazione_uso": "Open space",
@@ -226,7 +226,7 @@
   {
     "id": 17,
     "edificio_id": "5435-160",
-    "piano": "0",
+    "piano": "T",
     "id_spazio": "SP017",
     "cod_stanza": "ST017",
     "destinazione_uso": "Cucina a vista",
@@ -296,7 +296,7 @@
   {
     "id": 22,
     "edificio_id": "5340-179",
-    "piano": "0",
+    "piano": "T",
     "id_spazio": "SP022",
     "cod_stanza": "ST022",
     "destinazione_uso": "Salotto",
@@ -310,7 +310,7 @@
   {
     "id": 23,
     "edificio_id": "5340-179",
-    "piano": "0",
+    "piano": "T",
     "id_spazio": "SP023",
     "cod_stanza": "ST023",
     "destinazione_uso": "Cucina abitabile",
@@ -352,7 +352,7 @@
   {
     "id": 26,
     "edificio_id": "4693-182",
-    "piano": "0",
+    "piano": "T",
     "id_spazio": "SP026",
     "cod_stanza": "ST026",
     "destinazione_uso": "Ingresso",
@@ -366,7 +366,7 @@
   {
     "id": 27,
     "edificio_id": "4693-182",
-    "piano": "0",
+    "piano": "T",
     "id_spazio": "SP027",
     "cod_stanza": "ST027",
     "destinazione_uso": "Soggiorno",
@@ -380,7 +380,7 @@
   {
     "id": 28,
     "edificio_id": "4693-182",
-    "piano": "0",
+    "piano": "T",
     "id_spazio": "SP028",
     "cod_stanza": "ST028",
     "destinazione_uso": "Cucina",
@@ -422,7 +422,7 @@
   {
     "id": 31,
     "edificio_id": "8799-138",
-    "piano": "0",
+    "piano": "T",
     "id_spazio": "SP031",
     "cod_stanza": "ST031",
     "destinazione_uso": "Atrio",
@@ -436,7 +436,7 @@
   {
     "id": 32,
     "edificio_id": "8799-138",
-    "piano": "0",
+    "piano": "T",
     "id_spazio": "SP032",
     "cod_stanza": "ST032",
     "destinazione_uso": "Open space",
@@ -492,7 +492,7 @@
   {
     "id": 36,
     "edificio_id": "7835-174",
-    "piano": "0",
+    "piano": "T",
     "id_spazio": "SP036",
     "cod_stanza": "ST036",
     "destinazione_uso": "Soggiorno",
@@ -506,7 +506,7 @@
   {
     "id": 37,
     "edificio_id": "7835-174",
-    "piano": "0",
+    "piano": "T",
     "id_spazio": "SP037",
     "cod_stanza": "ST037",
     "destinazione_uso": "Pranzo",
@@ -520,7 +520,7 @@
   {
     "id": 38,
     "edificio_id": "7835-174",
-    "piano": "0",
+    "piano": "T",
     "id_spazio": "SP038",
     "cod_stanza": "ST038",
     "destinazione_uso": "Cucina",
@@ -562,7 +562,7 @@
   {
     "id": 41,
     "edificio_id": "8351-198",
-    "piano": "0",
+    "piano": "T",
     "id_spazio": "SP041",
     "cod_stanza": "ST041",
     "destinazione_uso": "Soggiorno",
@@ -576,7 +576,7 @@
   {
     "id": 42,
     "edificio_id": "8351-198",
-    "piano": "0",
+    "piano": "T",
     "id_spazio": "SP042",
     "cod_stanza": "ST042",
     "destinazione_uso": "Cucina moderna",
@@ -632,7 +632,7 @@
   {
     "id": 46,
     "edificio_id": "6192-81",
-    "piano": "0",
+    "piano": "T",
     "id_spazio": "SP046",
     "cod_stanza": "ST046",
     "destinazione_uso": "Soggiorno vintage",
@@ -646,7 +646,7 @@
   {
     "id": 47,
     "edificio_id": "6192-81",
-    "piano": "0",
+    "piano": "T",
     "id_spazio": "SP047",
     "cod_stanza": "ST047",
     "destinazione_uso": "Biblioteca",
@@ -660,7 +660,7 @@
   {
     "id": 48,
     "edificio_id": "6192-81",
-    "piano": "0",
+    "piano": "T",
     "id_spazio": "SP048",
     "cod_stanza": "ST048",
     "destinazione_uso": "Cucina country",

@@ -125,7 +125,21 @@ pub mod service_interface {
     }
 
     #[async_trait]
-    pub trait RetrieveByEdificioSelected<T>
+    pub trait RetrieveBy<T>
+    where
+        T: DTO,
+    {
+        type Output;
+        
+        async fn retrieve_by(
+            db_state: State<'_, impl DatabaseManagerTrait + Send + Sync>,
+            where_field: &str,
+            where_value: &str,
+        ) -> AppResult<Self::Output>;
+    }
+
+    #[async_trait]
+    pub trait RetrieveByEdificioSelected<T> : RetrieveBy<T>
     where
         T: DTO,
     {

@@ -2,8 +2,9 @@ use crate::dao::{StanzaConInfissiDao, StanzaDAO};
 use crate::dto::StanzaDTO;
 use app_models::models::{NewStanza, StanzaConInfissi, UpdateStanzaConInfissi};
 use app_state::selected_edificio::SelectedEdificioState;
+use app_utils::app_error::ErrorKind;
 use app_utils::app_interface::service_interface::{
-    CreateBatchService, RetrieveByEdificioSelected, SelectedEdificioTrait,
+    CreateBatchService, RetrieveBy, RetrieveByEdificioSelected, SelectedEdificioTrait,
 };
 pub use app_utils::{
     app_error::{AppResult, ApplicationError, DomainError},
@@ -21,6 +22,66 @@ use tauri::State;
 pub struct StanzaService;
 
 #[async_trait]
+impl RetrieveBy<StanzaDTO> for StanzaService {
+    type Output = Vec<StanzaDTO>;
+
+    async fn retrieve_by(
+        db_state: State<'_, impl DatabaseManagerTrait + Send + Sync>,
+        where_field: &str,
+        where_value: &str,
+    ) -> AppResult<Self::Output> {
+        let mut conn = db_state.get_connection().await?;
+        match where_field {
+            "edificio" => {
+                let edificio_id = where_value.to_string();
+
+                conn.transaction::<_, DomainError, _>(|conn| {
+                    let stanze = StanzaDAO::get(conn, &edificio_id)?;
+                    let mut stanze_dto: Vec<StanzaDTO> =
+                        stanze.iter().map(StanzaDTO::from).collect();
+
+                    let infissi = StanzaConInfissiDao::get(conn, edificio_id.as_str())?;
+
+                    for stanza_dto in &mut stanze_dto {
+                        // Retrieve only the infissi of the current stanza
+                        let infissi: Vec<&StanzaConInfissi> = infissi
+                            .iter()
+                            .filter(|x| {
+                                x.stanza_id == (stanza_dto.id as i32)
+                                    && x.edificio_id == edificio_id.as_str()
+                            })
+                            .collect();
+
+                        if infissi.is_empty() {
+                            continue;
+                        }
+
+                        // Retrieve the infissi id of the current stanza and add them to the stanza dto
+                        let infissi_id = infissi
+                            .iter()
+                            .flat_map(|infisso| {
+                                std::iter::repeat_n(
+                                    infisso.infisso_id.clone(),
+                                    infisso.num_infisso as usize,
+                                )
+                            })
+                            .collect();
+
+                        stanza_dto.infissi = Some(infissi_id);
+                    }
+
+                    Ok(stanze_dto)
+                })
+                    .map_err(|e| e.into())
+            }
+            _ => Err(
+                DomainError::InvalidInput(ErrorKind::InvalidField, where_field.to_string()).into(),
+            ),
+        }
+    }
+}
+
+#[async_trait]
 impl RetrieveByEdificioSelected<StanzaDTO> for StanzaService {
     async fn retrieve_by_edificio_selected<S>(
         db_state: State<'_, impl DatabaseManagerTrait + Send + Sync>,
@@ -29,49 +90,12 @@ impl RetrieveByEdificioSelected<StanzaDTO> for StanzaService {
     where
         S: SelectedEdificioTrait + Send + Sync,
     {
-        let mut conn = db_state.get_connection().await?;
         let edificio_id = match edificio_selected_state.read().await.get_chiave() {
             Some(edificio_id) => edificio_id,
             None => return Err(ApplicationError::EdificioNotSelected),
         };
 
-        conn.transaction::<_, DomainError, _>(|conn| {
-            let stanze = StanzaDAO::get(conn, &edificio_id)?;
-            let mut stanze_dto: Vec<StanzaDTO> = stanze.iter().map(StanzaDTO::from).collect();
-
-            let infissi = StanzaConInfissiDao::get(conn, edificio_id.as_str())?;
-
-            for stanza_dto in &mut stanze_dto {
-                // Retrieve only the infissi of the current stanza
-                let infissi: Vec<&StanzaConInfissi> = infissi
-                    .iter()
-                    .filter(|x| {
-                        x.stanza_id == (stanza_dto.id as i32)
-                            && x.edificio_id == edificio_id.as_str()
-                    })
-                    .collect();
-
-                if infissi.is_empty() {
-                    continue;
-                }
-
-                // Retrieve the infissi id of the current stanza and add them to the stanza dto
-                let infissi_id = infissi
-                    .iter()
-                    .flat_map(|infisso| {
-                        std::iter::repeat_n(
-                            infisso.infisso_id.clone(),
-                            infisso.num_infisso as usize,
-                        )
-                    })
-                    .collect();
-
-                stanza_dto.infissi = Some(infissi_id);
-            }
-
-            Ok(stanze_dto)
-        })
-            .map_err(|e| e.into())
+        Self::retrieve_by(db_state, "edificio", &edificio_id).await
     }
 }
 
@@ -322,14 +346,17 @@ mod tests {
         match StanzaService::update(state_db, stanza_dto).await {
             Ok(result) => {
                 assert_eq!(result.id, 50);
+                assert!(result.infissi.is_some());
+                let mut infissi = result.infissi.clone().unwrap();
+                infissi.sort();
                 assert_eq!(
-                    result.infissi,
-                    Some(vec![
+                    infissi,
+                    vec![
                         "A".to_string(),
                         "A".to_string(),
                         "B".to_string(),
                         "B".to_string()
-                    ])
+                    ]
                 );
                 println!("{:#?}", result);
             }
