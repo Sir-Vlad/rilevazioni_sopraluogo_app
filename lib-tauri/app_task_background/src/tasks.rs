@@ -1,42 +1,52 @@
-use crate::{BackgroundTask, ResultTask};
+use std::{collections::HashSet, sync::Arc};
+
 use app_data_processing::IdGeneratorStanza;
 use app_models::models::Stanza;
 use app_services::service::{DomainError, EdificioService, StanzaService};
 use app_state::database::DatabaseManager;
-use app_utils::app_error::{ApplicationError, ErrorTask, TauriError};
-use app_utils::app_interface::{
-    database_interface::DatabaseManagerTrait,
-    service_interface::{RetrieveBy, RetrieveManyService},
+use app_utils::{
+    app_error::{ApplicationError, ErrorTask, TauriError},
+    app_interface::{
+        database_interface::DatabaseManagerTrait,
+        service_interface::{RetrieveBy, RetrieveManyService},
+    },
 };
 use async_trait::async_trait;
 use diesel::{
-    sql_types::{Integer, Text},
     RunQueryDsl,
+    sql_types::{Integer, Text},
 };
 use log::{debug, info};
-use std::{collections::HashSet, sync::Arc};
 use tauri::{AppHandle, Manager, Runtime};
 use tauri_plugin_store::StoreExt;
 
+use crate::{BackgroundTask, ResultTask, StatusTask, TaskInfo};
+
 pub struct IdStanzeProcessor<R: Runtime> {
     app_handle: Arc<AppHandle<R>>,
+    task_info: TaskInfo,
 }
 
 impl<R: Runtime> IdStanzeProcessor<R> {
     const FILE_SAVE_EDIFICI: &'static str = "migration_id_stanze.json";
+    const INTERVAL_SEC: u64 = 10;
     const KEY_EDIFICI: &'static str = "edifici_processed";
+    const TASK_NAME: &'static str = "id_stanze_processor";
 
     pub fn new(app_handle: Arc<AppHandle<R>>) -> Self {
-        Self { app_handle }
+        Self {
+            app_handle,
+            task_info: TaskInfo::new(
+                Self::TASK_NAME.to_string(),
+                Some(std::time::Duration::from_secs(Self::INTERVAL_SEC)),
+            ),
+        }
     }
 }
 
 #[async_trait]
 impl<R: Runtime> BackgroundTask for IdStanzeProcessor<R> {
-    const INTERVAL_SEC: u64 = 60; // 1 min
-    const TASK_NAME: &'static str = "IdStanzeProcessor";
-
-    async fn run(&mut self) -> ResultTask {
+    async fn run(&mut self) -> ResultTask<StatusTask> {
         /*
         Ogni volta che viene eseguita si sceglie un nuovo id edificio da aggiornare
          */
@@ -52,6 +62,7 @@ impl<R: Runtime> BackgroundTask for IdStanzeProcessor<R> {
             .map_err(|e| ApplicationError::Tauri(TauriError::Plugin(e.into())))?;
 
         let edifici_stored = store.get(Self::KEY_EDIFICI);
+        #[allow(unused_assignments)]
         let mut edificio_processing: Option<String> = None;
 
         match edifici_stored {
@@ -91,7 +102,7 @@ impl<R: Runtime> BackgroundTask for IdStanzeProcessor<R> {
 
                     if difference.is_empty() {
                         info!("All edifici are already processed, nothing to do");
-                        return Ok(());
+                        return Ok(StatusTask::Done);
                     }
 
                     edificio_processing = Some(difference[0].clone());
@@ -109,7 +120,10 @@ impl<R: Runtime> BackgroundTask for IdStanzeProcessor<R> {
             },
             None => {
                 edificio_processing = Some(edifici[0].chiave.clone());
-                store.set(Self::KEY_EDIFICI, vec![edificio_processing.clone().unwrap()]);
+                store.set(
+                    Self::KEY_EDIFICI,
+                    vec![edificio_processing.clone().unwrap()],
+                );
             }
         }
 
@@ -121,7 +135,7 @@ impl<R: Runtime> BackgroundTask for IdStanzeProcessor<R> {
                 "edificio",
                 edificio.to_string().as_str(),
             )
-                .await?;
+            .await?;
 
             let mut id_generator_stanza = IdGeneratorStanza::new();
             let mut conn = db_state.get_connection().await?;
@@ -133,10 +147,10 @@ impl<R: Runtime> BackgroundTask for IdStanzeProcessor<R> {
                 let stanza_updated: Stanza = diesel::sql_query(
                     "UPDATE stanza SET cod_stanza = $1 WHERE id = $2 RETURNING *;",
                 )
-                    .bind::<Text, _>(new_stanza.cod_stanza)
-                    .bind::<Integer, _>(new_stanza.id)
-                    .get_result(&mut conn)
-                    .map_err(|e| ApplicationError::Domain(DomainError::from(e)))?;
+                .bind::<Text, _>(new_stanza.cod_stanza)
+                .bind::<Integer, _>(new_stanza.id)
+                .get_result(&mut conn)
+                .map_err(|e| ApplicationError::Domain(DomainError::from(e)))?;
 
                 debug!("After: {:?}", stanza_updated.cod_stanza);
 
@@ -151,23 +165,32 @@ impl<R: Runtime> BackgroundTask for IdStanzeProcessor<R> {
 
         info!("Finish processing");
 
-        Ok(())
+        Ok(StatusTask::Completed)
     }
+
+    fn info(&self) -> &TaskInfo { &self.task_info }
+
+    fn info_mut(&mut self) -> &mut TaskInfo { &mut self.task_info }
 }
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-    use app_models::models::NewStanza;
-    use app_services::dao::{EdificioDAO, InfissoDAO, StanzaDAO};
-    use app_services::dto::{EdificioDTO, InfissoDTO, StanzaDTO};
-    use app_services::service::DatabaseManagerTrait;
-    use app_utils::app_interface::dao_interface::crud_operations::Insert;
-    use app_utils::path_data_fake;
-    use app_utils::test::utils::read_json_file;
-    use app_utils::test::{ResultTest, TestServiceEnvironment};
     use std::sync::Once;
+
+    use app_models::models::NewStanza;
+    use app_services::{
+        dao::{EdificioDAO, InfissoDAO, StanzaDAO},
+        dto::{EdificioDTO, InfissoDTO, StanzaDTO},
+        service::DatabaseManagerTrait,
+    };
+    use app_utils::{
+        app_interface::dao_interface::crud_operations::Insert,
+        path_data_fake,
+        test::{ResultTest, TestServiceEnvironment, utils::read_json_file},
+    };
     use tauri::test::MockRuntime;
+
+    use super::*;
 
     static LOGGER: Once = Once::new();
 
@@ -183,7 +206,7 @@ mod tests {
         pub async fn new<T, F>(insert_data: T) -> Self
         where
             T: Fn(D) -> F + Send + 'static,
-            F: std::future::Future<Output=ResultTest<()>> + Send + 'static,
+            F: std::future::Future<Output = ResultTest<()>> + Send + 'static,
             D: Clone,
         {
             let env = TestServiceEnvironment::new(insert_data)
@@ -226,14 +249,12 @@ mod tests {
 
             Ok(())
         })
-            .await
+        .await
     }
 
     fn init_logger() {
         LOGGER.call_once(|| {
-            env_logger::builder()
-                .is_test(true)
-                .try_init().ok();
+            env_logger::builder().is_test(true).try_init().ok();
         });
     }
 
@@ -247,7 +268,6 @@ mod tests {
             .app()
             .store(IdStanzeProcessor::<MockRuntime>::FILE_SAVE_EDIFICI)?;
         store.delete(IdStanzeProcessor::<MockRuntime>::KEY_EDIFICI);
-
 
         test_env.id_stanze_processor.run().await?;
 
