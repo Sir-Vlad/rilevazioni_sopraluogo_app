@@ -1,4 +1,4 @@
-use std::fmt::Debug;
+use std::{borrow::Cow, fmt::Debug};
 
 use chrono::NaiveDateTime;
 use diesel::{
@@ -65,18 +65,18 @@ pub struct Edificio {
 #[derive(Insertable, Debug, PartialEq)]
 #[diesel(table_name = edificio)]
 #[cfg_attr(feature = "default", derive(Clone))]
-pub struct NewEdificio {
-    pub chiave: String,
+pub struct NewEdificio<'a> {
+    pub chiave: Cow<'a, str>,
     pub fascicolo: i32,
-    pub indirizzo: String,
+    pub indirizzo: Cow<'a, str>,
 }
 
 #[derive(AsChangeset, Debug, PartialEq)]
 #[diesel(table_name = edificio)]
-pub struct UpdateEdificio {
+pub struct UpdateEdificio<'a> {
     pub anno_costruzione: Option<i32>,
     pub anno_riqualificazione: Option<i32>,
-    pub note_riqualificazione: Option<String>,
+    pub note_riqualificazione: Option<Cow<'a, str>>,
     pub isolamento_tetto: Option<bool>,
     pub cappotto: Option<bool>,
 }
@@ -115,22 +115,22 @@ impl AsRef<Stanza> for Stanza {
 
 #[derive(Insertable, Debug, PartialEq)]
 #[diesel(table_name = stanza)]
-pub struct NewStanza {
-    pub edificio_id: String,
-    pub piano: String,
-    pub id_spazio: String,
-    pub cod_stanza: String,
-    pub destinazione_uso: String,
+pub struct NewStanza<'a> {
+    pub edificio_id: Cow<'a, str>,
+    pub piano: Cow<'a, str>,
+    pub id_spazio: Cow<'a, str>,
+    pub cod_stanza: Cow<'a, str>,
+    pub destinazione_uso: Cow<'a, str>,
 }
 
 #[derive(AsChangeset, Debug, PartialEq)]
 #[diesel(table_name = stanza)]
-pub struct UpdateStanza {
+pub struct UpdateStanza<'a> {
     pub altezza: Option<i16>,
     pub spessore_muro: Option<i16>,
-    pub riscaldamento: Option<String>,
-    pub raffrescamento: Option<String>,
-    pub illuminazione: Option<String>,
+    pub riscaldamento: Option<Cow<'a, str>>,
+    pub raffrescamento: Option<Cow<'a, str>>,
+    pub illuminazione: Option<Cow<'a, str>>,
 }
 
 #[derive(Queryable, Selectable, Identifiable, Debug, PartialEq)]
@@ -149,23 +149,23 @@ pub struct Infisso {
 
 #[derive(Insertable, Debug, PartialEq)]
 #[diesel(table_name = infisso)]
-pub struct NewInfisso {
-    pub id: String,
-    pub edificio_id: String,
-    pub tipo: String,
+pub struct NewInfisso<'a> {
+    pub id: Cow<'a, str>,
+    pub edificio_id: Cow<'a, str>,
+    pub tipo: Cow<'a, str>,
     pub altezza: i16,
     pub larghezza: i16,
-    pub materiale: String,
-    pub vetro: String,
+    pub materiale: Cow<'a, str>,
+    pub vetro: Cow<'a, str>,
 }
 
 #[derive(AsChangeset, Debug, PartialEq)]
 #[diesel(table_name = infisso)]
-pub struct UpdateInfisso {
+pub struct UpdateInfisso<'a> {
     pub altezza: Option<i16>,
     pub larghezza: Option<i16>,
-    pub materiale: Option<String>,
-    pub vetro: Option<String>,
+    pub materiale: Option<Cow<'a, str>>,
+    pub vetro: Option<Cow<'a, str>>,
 }
 
 #[derive(
@@ -200,18 +200,18 @@ pub struct Fotovoltaico {
 #[cfg_attr(feature = "test-models", derive(Clone))]
 #[derive(Insertable, Debug, PartialEq)]
 #[diesel(table_name = fotovoltaico)]
-pub struct NewFotovoltaico {
-    pub edificio_id: String,
+pub struct NewFotovoltaico<'a> {
+    pub edificio_id: Cow<'a, str>,
     pub potenza: f32,
-    pub proprietario: String,
+    pub proprietario: Cow<'a, str>,
 }
 
 #[cfg_attr(feature = "test-models", derive(Clone))]
 #[derive(AsChangeset, Debug, PartialEq)]
 #[diesel(table_name = fotovoltaico)]
-pub struct UpdateFotovoltaico {
+pub struct UpdateFotovoltaico<'a> {
     pub potenza: Option<f32>,
-    pub proprietario: Option<String>,
+    pub proprietario: Option<Cow<'a, str>>,
 }
 
 #[derive(Queryable, Selectable, Identifiable, Debug, PartialEq)]
@@ -226,19 +226,19 @@ pub struct Utenza {
 
 #[derive(Insertable, Debug, PartialEq)]
 #[diesel(table_name = utenze)]
-pub struct NewUtenza {
-    pub edificio_id: String,
+pub struct NewUtenza<'a> {
+    pub edificio_id: Cow<'a, str>,
     pub tipo: TipoUtenza,
-    pub cod_contatore: String,
-    pub indirizzo_contatore: Option<String>,
+    pub cod_contatore: Cow<'a, str>,
+    pub indirizzo_contatore: Option<Cow<'a, str>>,
 }
 
 #[derive(AsChangeset, Debug, PartialEq)]
 #[diesel(table_name = utenze)]
-pub struct UpdateUtenza {
+pub struct UpdateUtenza<'a> {
     pub tipo: Option<TipoUtenza>,
-    pub cod_contatore: Option<String>,
-    pub indirizzo_contatore: Option<String>,
+    pub cod_contatore: Option<Cow<'a, str>>,
+    pub indirizzo_contatore: Option<Cow<'a, str>>,
 }
 
 #[derive(Serialize, Deserialize, diesel_derive_enum::DbEnum, Debug, PartialEq, Clone)]
@@ -272,9 +272,9 @@ pub struct AnnotazioneEdificio {
 
 #[derive(Insertable, Debug, PartialEq)]
 #[diesel(table_name = annotazione_edificio)]
-pub struct NewAnnotazioneEdificio {
-    pub edificio_id: String,
-    pub content: String,
+pub struct NewAnnotazioneEdificio<'a> {
+    pub edificio_id: Cow<'a, str>,
+    pub content: Cow<'a, str>,
 }
 
 #[derive(Queryable, Selectable, Identifiable, Debug, PartialEq)]
@@ -289,9 +289,9 @@ pub struct AnnotazioneStanza {
 #[cfg_attr(feature = "test-models", derive(Clone))]
 #[derive(Insertable, Debug, PartialEq)]
 #[diesel(table_name = annotazione_stanza)]
-pub struct NewAnnotazioneStanza {
+pub struct NewAnnotazioneStanza<'a> {
     pub stanza_id: i32,
-    pub content: String,
+    pub content: Cow<'a, str>,
 }
 
 #[derive(Queryable, Selectable, Identifiable, Debug, PartialEq)]
@@ -306,10 +306,10 @@ pub struct AnnotazioneInfisso {
 
 #[derive(Insertable, Debug, PartialEq)]
 #[diesel(table_name = annotazione_infisso)]
-pub struct NewAnnotazioneInfisso {
-    pub infisso_id: String,
-    pub edificio_id: String,
-    pub content: String,
+pub struct NewAnnotazioneInfisso<'a> {
+    pub infisso_id: Cow<'a, str>,
+    pub edificio_id: Cow<'a, str>,
+    pub content: Cow<'a, str>,
 }
 
 #[derive(Queryable, QueryableByName, Debug)]
@@ -467,9 +467,9 @@ mod test {
 
     fn insert_edificio_standard(conn: &mut PgConnection) -> Result<Edificio, Box<dyn Error>> {
         let new_values = NewEdificio {
-            chiave: "1234567".to_string(),
+            chiave: "1234567".into(),
             fascicolo: 1,
-            indirizzo: "Via Roma 1".to_string(),
+            indirizzo: "Via Roma 1".into(),
         };
         Ok(diesel::insert_into(edificio::table)
             .values(&new_values)
@@ -530,11 +530,11 @@ mod test {
         edificio_id: &str,
     ) -> Result<Stanza, Box<dyn Error>> {
         let new_values = NewStanza {
-            edificio_id: edificio_id.to_string(),
-            piano: "T".to_string(),
-            id_spazio: "145236".to_string(),
-            cod_stanza: "001".to_string(),
-            destinazione_uso: "Ufficio".to_string(),
+            edificio_id: edificio_id.into(),
+            piano: "T".into(),
+            id_spazio: "145236".into(),
+            cod_stanza: "001".into(),
+            destinazione_uso: "Ufficio".into(),
         };
 
         Ok(diesel::insert_into(stanza::table)
@@ -562,7 +562,7 @@ mod test {
         let update_stanza = UpdateStanza {
             altezza: Some(120),
             spessore_muro: None,
-            riscaldamento: Some("Radiatori".to_string()),
+            riscaldamento: Some("Radiatori".into()),
             raffrescamento: None,
             illuminazione: None,
         };
@@ -571,7 +571,7 @@ mod test {
             .set(&update_stanza)
             .get_result(&mut conn)?;
         assert_eq!(updated.altezza, Some(120));
-        assert_eq!(updated.riscaldamento, Some("Radiatori".to_string()));
+        assert_eq!(updated.riscaldamento, Some("Radiatori".into()));
 
         Ok(())
     }
@@ -581,13 +581,13 @@ mod test {
         edificio_id: &str,
     ) -> Result<Infisso, Box<dyn Error>> {
         let insert_infisso = NewInfisso {
-            id: "A".to_string(),
-            edificio_id: edificio_id.to_string(),
-            tipo: "Porta".to_string(),
+            id: "A".into(),
+            edificio_id: edificio_id.into(),
+            tipo: "Porta".into(),
             altezza: 120,
             larghezza: 150,
-            materiale: "Legno".to_string(),
-            vetro: "Singolo".to_string(),
+            materiale: "Legno".into(),
+            vetro: "Singolo".into(),
         };
 
         Ok(diesel::insert_into(infisso::table)
@@ -617,7 +617,7 @@ mod test {
         let update_infisso = UpdateInfisso {
             altezza: Some(135),
             larghezza: None,
-            materiale: Some("PVC".to_string()),
+            materiale: Some("PVC".into()),
             vetro: None,
         };
 
@@ -641,13 +641,13 @@ mod test {
         let infisso_a = insert_infisso_standard(conn, edificio.chiave.as_str())?;
 
         let infisso_b = NewInfisso {
-            id: "B".to_string(),
-            edificio_id: edificio.chiave,
-            tipo: "Porta".to_string(),
+            id: "B".into(),
+            edificio_id: edificio.chiave.into(),
+            tipo: "Porta".into(),
             altezza: 120,
             larghezza: 150,
-            materiale: "Legno".to_string(),
-            vetro: "Singolo".to_string(),
+            materiale: "Legno".into(),
+            vetro: "Singolo".into(),
         };
 
         let infisso_b: Infisso = diesel::insert_into(infisso::table)
@@ -690,7 +690,7 @@ mod test {
         let results = insert_stanza_con_infissi(&mut conn)?;
 
         let update = StanzaConInfissi {
-            infisso_id: "B".to_string(),
+            infisso_id: "B".into(),
             edificio_id: results[0].edificio_id.clone(),
             stanza_id: results[0].stanza_id,
             num_infisso: 10,
@@ -718,8 +718,8 @@ mod test {
         let edificio = insert_edificio_standard(&mut conn)?;
 
         let insert_annotazione = NewAnnotazioneEdificio {
-            edificio_id: edificio.chiave,
-            content: "Sono una nuova annotazione".to_string(),
+            edificio_id: edificio.chiave.into(),
+            content: "Sono una nuova annotazione".into(),
         };
 
         let inserted: AnnotazioneEdificio = diesel::insert_into(annotazione_edificio::table)
@@ -740,7 +740,7 @@ mod test {
 
         let insert_annotazione = NewAnnotazioneStanza {
             stanza_id: stanza.id,
-            content: "Sono una nuova annotazione".to_string(),
+            content: "Sono una nuova annotazione".into(),
         };
 
         let inserted: AnnotazioneStanza = diesel::insert_into(annotazione_stanza::table)
@@ -760,9 +760,9 @@ mod test {
         let infisso = insert_infisso_standard(&mut conn, edificio.chiave.as_str())?;
 
         let insert_annotazione = NewAnnotazioneInfisso {
-            infisso_id: infisso.id,
-            edificio_id: infisso.edificio_id,
-            content: "Sono una nuova annotazione".to_string(),
+            infisso_id: infisso.id.into(),
+            edificio_id: infisso.edificio_id.into(),
+            content: "Sono una nuova annotazione".into(),
         };
 
         let inserted: AnnotazioneInfisso = diesel::insert_into(annotazione_infisso::table)
@@ -780,9 +780,9 @@ mod test {
         let edificio = insert_edificio_standard(conn)?;
 
         let insert_entity = NewFotovoltaico {
-            edificio_id: edificio.chiave,
+            edificio_id: edificio.chiave.into(),
             potenza: 85.0,
-            proprietario: "Ugo Ugolini".to_string(),
+            proprietario: "Ugo Ugolini".into(),
         };
 
         Ok(diesel::insert_into(fotovoltaico::table)
@@ -825,10 +825,10 @@ mod test {
         let edificio = insert_edificio_standard(conn)?;
 
         let insert_entity = NewUtenza {
-            edificio_id: edificio.chiave,
+            edificio_id: edificio.chiave.into(),
             tipo: TipoUtenza::Acqua,
-            cod_contatore: "785452215588".to_string(),
-            indirizzo_contatore: Some("Via Roma 1".to_string()),
+            cod_contatore: "785452215588".into(),
+            indirizzo_contatore: Some("Via Roma 1".into()),
         };
 
         Ok(diesel::insert_into(utenze::table)
@@ -856,7 +856,7 @@ mod test {
 
         let update_entity = UpdateUtenza {
             tipo: Some(TipoUtenza::Elettricità),
-            cod_contatore: Some("456789".to_string()),
+            cod_contatore: Some("456789".into()),
             indirizzo_contatore: None,
         };
 

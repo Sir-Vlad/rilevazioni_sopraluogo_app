@@ -30,7 +30,7 @@ impl GetAll<AnnotazioneInfisso> for AnnotazioneInfissoDAO {
     }
 }
 
-impl Insert<NewAnnotazioneInfisso> for AnnotazioneInfissoDAO {
+impl Insert<NewAnnotazioneInfisso<'_>> for AnnotazioneInfissoDAO {
     type Output = AnnotazioneInfisso;
 
     fn insert(

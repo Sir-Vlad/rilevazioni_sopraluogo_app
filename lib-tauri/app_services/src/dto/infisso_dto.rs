@@ -30,27 +30,27 @@ impl From<&Infisso> for InfissoDTO {
     }
 }
 
-impl From<InfissoDTO> for NewInfisso {
+impl From<InfissoDTO> for NewInfisso<'_> {
     fn from(value: InfissoDTO) -> Self {
         Self {
-            id: value.id,
-            edificio_id: value.id_edificio,
-            tipo: value.tipo,
+            id: value.id.into(),
+            edificio_id: value.id_edificio.into(),
+            tipo: value.tipo.into(),
             altezza: value.altezza as i16,
             larghezza: value.larghezza as i16,
-            materiale: value.materiale,
-            vetro: value.vetro,
+            materiale: value.materiale.into(),
+            vetro: value.vetro.into(),
         }
     }
 }
 
-impl From<InfissoDTO> for UpdateInfisso {
+impl From<InfissoDTO> for UpdateInfisso<'_> {
     fn from(value: InfissoDTO) -> Self {
         Self {
             altezza: Some(value.altezza as i16),
             larghezza: Some(value.larghezza as i16),
-            materiale: Some(value.materiale),
-            vetro: Some(value.vetro),
+            materiale: Some(value.materiale.into()),
+            vetro: Some(value.vetro.into()),
         }
     }
 }

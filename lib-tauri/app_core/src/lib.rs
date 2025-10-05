@@ -191,13 +191,10 @@ fn setup_logger(app: &mut App) -> Result<(), Box<dyn error::Error>> {
     let mut log_directory = document_dir().unwrap();
     log_directory.push(format!("{NAME_DIR_DATABASE}/log"));
 
-    let level_filter = if cfg!(debug_assertions) {
-        log::LevelFilter::Debug
-    } else {
-        log::LevelFilter::Info
-    };
-
-    println!("{:?}", level_filter);
+    let level_filter: log::LevelFilter = std::env::var("RUST_LOG")
+        .ok()
+        .map(|s| s.parse().ok().unwrap())
+        .unwrap_or(log::LevelFilter::Info);
 
     app.handle().plugin(
         tauri_plugin_log::Builder::new()

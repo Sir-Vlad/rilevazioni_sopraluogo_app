@@ -41,7 +41,7 @@ impl Get<Infisso, String> for InfissoDAO {
     }
 }
 
-impl Insert<NewInfisso> for InfissoDAO {
+impl Insert<NewInfisso<'_>> for InfissoDAO {
     type Output = Infisso;
 
     fn insert(conn: &mut PostgresPooled, item: NewInfisso) -> Result<Self::Output, DomainError> {
@@ -52,7 +52,7 @@ impl Insert<NewInfisso> for InfissoDAO {
     }
 }
 
-impl Update<UpdateInfisso, (String, String)> for InfissoDAO {
+impl Update<UpdateInfisso<'_>, (String, String)> for InfissoDAO {
     type Output = Infisso;
 
     /// id -> (infisso, edificio)

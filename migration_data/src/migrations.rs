@@ -1,15 +1,15 @@
-use crate::errors::{DataMigrationError, MigrationError};
-use app_models::models::{Fotovoltaico, StanzaConInfissi};
+use std::collections::HashMap;
+
 use app_models::{
-    models::{Edificio, Infisso, Stanza, TipoUtenza},
+    models::{Edificio, Fotovoltaico, Infisso, Stanza, StanzaConInfissi, TipoUtenza},
     schema::{edificio, fotovoltaico, infisso, stanza, stanza_con_infissi, utenze},
 };
-use diesel::r2d2::Pool;
 use diesel::{
-    r2d2::{ConnectionManager, PooledConnection}, Insertable, PgConnection, RunQueryDsl,
-    SqliteConnection,
+    Insertable, PgConnection, RunQueryDsl, SqliteConnection,
+    r2d2::{ConnectionManager, Pool, PooledConnection},
 };
-use std::collections::HashMap;
+
+use crate::errors::{DataMigrationError, MigrationError};
 
 pub type PostgresPool = Pool<ConnectionManager<PgConnection>>;
 pub type SqlitePool = Pool<ConnectionManager<SqliteConnection>>;
@@ -42,43 +42,49 @@ pub struct DatabaseMigrator<'a> {
 }
 
 impl<'a> DatabaseMigrator<'a> {
-    pub fn new(from: &'a ConnectionPool, to: &'a ConnectionPool) -> Self {
-        Self { from, to }
-    }
+    pub fn new(from: &'a ConnectionPool, to: &'a ConnectionPool) -> Self { Self { from, to } }
 
-    /// Migrates data between two database connections defined in the `ConnectionPool`.
+    /// Migrates data between two database connections defined in the
+    /// `ConnectionPool`.
     ///
     /// # Description
-    /// This function handles the migration of data from one database type to another. Currently,
-    /// only migrations from SQLite (`ConnectionPool::Sqlite`) to PostgreSQL (`ConnectionPool::Postgres`)
-    /// are supported. The migration process is divided into multiple steps, each responsible for migrating
-    /// a specific part of the database schema, such as buildings (`edificio`), windows (`infissi`),
+    /// This function handles the migration of data from one database type to
+    /// another. Currently, only migrations from SQLite
+    /// (`ConnectionPool::Sqlite`) to PostgreSQL (`ConnectionPool::Postgres`)
+    /// are supported. The migration process is divided into multiple steps,
+    /// each responsible for migrating a specific part of the database
+    /// schema, such as buildings (`edificio`), windows (`infissi`),
     /// rooms (`stanza`), and other entities.
     ///
     /// The steps involved in the migration are:
     /// 1. `migrate_edificio`: Migrates building (`edificio`) data.
     /// 2. `migrate_infisso`: Migrates window (`infisso`) data.
-    /// 3. `migrate_stanza`: Migrates room (`stanza`) data and returns a mapping of IDs for further steps.
-    /// 4. `migrate_stanza_con_infissi`: Migrates rooms associated with windows, using the mapping obtained in step 3.
+    /// 3. `migrate_stanza`: Migrates room (`stanza`) data and returns a mapping
+    ///    of IDs for further steps.
+    /// 4. `migrate_stanza_con_infissi`: Migrates rooms associated with windows,
+    ///    using the mapping obtained in step 3.
     /// 5. `migrate_fotovoltaico`: Migrates photovoltaic (`fotovoltaico`) data.
     /// 6. `migrate_utenze`: Migrates utility (`utenze`) data.
     ///
-    /// Messages are logged at each step to indicate the progress of the migration process.
+    /// Messages are logged at each step to indicate the progress of the
+    /// migration process.
     ///
     /// # Errors
     /// Returns a `Result` where:
     /// - `Ok(())` indicates a successful migration.
     /// - `Err(MigrationError)` is returned in the following scenarios:
-    ///   - If the source and destination connection types do not match the supported migration (e.g., PostgreSQL to SQLite).
-    ///   - If there is an error when acquiring connections from the database pools.
+    ///   - If the source and destination connection types do not match the
+    ///     supported migration (e.g., PostgreSQL to SQLite).
+    ///   - If there is an error when acquiring connections from the database
+    ///     pools.
     ///   - If there is a failure in one of the specific migration steps.
     ///
     /// # Notes
-    /// - This function assumes that both the source (`from`) and destination (`to`) connection pools are valid and
-    ///   operational.
-    /// - Attempting to migrate in unsupported directions (e.g., PostgreSQL to SQLite) will result in a
-    ///   `DataMigrationError::UnsupportedMigration` error being returned.
-    ///
+    /// - This function assumes that both the source (`from`) and destination
+    ///   (`to`) connection pools are valid and operational.
+    /// - Attempting to migrate in unsupported directions (e.g., PostgreSQL to
+    ///   SQLite) will result in a `DataMigrationError::UnsupportedMigration`
+    ///   error being returned.
     pub fn migrate(&self) -> Result<(), MigrationError> {
         match (&self.from, &self.to) {
             (ConnectionPool::Sqlite(from), ConnectionPool::Postgres(to)) => {
@@ -460,17 +466,19 @@ fn capitalize(s: String) -> String {
 
 #[cfg(test)]
 mod test {
-    use super::*;
-    use app_models::models::{NewEdificio, NewFotovoltaico, NewInfisso, NewStanza, Utenza};
-    use app_models::MIGRATIONS_POSTGRES;
-    use diesel::sql_types::Text;
-    use diesel::ExpressionMethods;
-    use diesel_migrations::{embed_migrations, EmbeddedMigrations, MigrationHarness};
     use std::error::Error;
+
+    use app_models::{
+        MIGRATIONS_POSTGRES,
+        models::{NewEdificio, NewFotovoltaico, NewInfisso, NewStanza, Utenza},
+    };
+    use diesel::{ExpressionMethods, sql_types::Text};
+    use diesel_migrations::{EmbeddedMigrations, MigrationHarness, embed_migrations};
     use tempfile::NamedTempFile;
-    use testcontainers::runners::SyncRunner;
-    use testcontainers::Container;
+    use testcontainers::{Container, runners::SyncRunner};
     use testcontainers_modules::postgres::Postgres;
+
+    use super::*;
 
     const MIGRATIONS_SQLITE: EmbeddedMigrations = embed_migrations!("./migrations/sqlite");
 
@@ -528,7 +536,7 @@ mod test {
         let specific_table_check = diesel::sql_query(format!(
             "SELECT 1 FROM sqlite_master WHERE type='table' AND name='{name}'"
         ))
-            .execute(conn);
+        .execute(conn);
 
         assert!(
             specific_table_check.is_ok(),
@@ -558,9 +566,9 @@ mod test {
         is_exist_table("edificio", &mut conn_sq);
 
         let edificio = NewEdificio {
-            chiave: "785461".to_string(),
+            chiave: "785461".into(),
             fascicolo: 78591,
-            indirizzo: "Via Roma 123".to_string(),
+            indirizzo: "Via Roma 123".into(),
         };
 
         diesel::insert_into(edificio::table)
@@ -596,11 +604,11 @@ mod test {
         is_exist_table("stanza", &mut conn_sq);
 
         let insert_stanza = NewStanza {
-            edificio_id: "7878788".to_string(),
-            piano: "T".to_string(),
-            id_spazio: "12587".to_string(),
-            cod_stanza: "001".to_string(),
-            destinazione_uso: "Ufficio".to_string(),
+            edificio_id: "7878788".into(),
+            piano: "T".into(),
+            id_spazio: "12587".into(),
+            cod_stanza: "001".into(),
+            destinazione_uso: "Ufficio".into(),
         };
 
         diesel::insert_into(stanza::table)
@@ -626,18 +634,19 @@ mod test {
         let mut conn_pg = to.get_postgres_pool().get()?;
 
         diesel::sql_query("PRAGMA foreign_keys = off").execute(&mut conn_sq)?;
-        //diesel::sql_query("SET session_replication_role = replica").execute(&mut conn_pg)?;
+        //diesel::sql_query("SET session_replication_role = replica").execute(&mut
+        // conn_pg)?;
 
         is_exist_table("infisso", &mut conn_sq);
 
         let infisso = NewInfisso {
-            id: "A".to_string(),
-            edificio_id: "785461".to_string(),
-            tipo: "Porta".to_string(),
+            id: "A".into(),
+            edificio_id: "785461".into(),
+            tipo: "Porta".into(),
             altezza: 120,
             larghezza: 150,
-            materiale: "Legno".to_string(),
-            vetro: "Singolo".to_string(),
+            materiale: "Legno".into(),
+            vetro: "Singolo".into(),
         };
 
         diesel::insert_into(infisso::table)
@@ -646,9 +655,9 @@ mod test {
 
         diesel::insert_into(edificio::table)
             .values(&NewEdificio {
-                chiave: infisso.edificio_id.to_string(),
+                chiave: infisso.edificio_id,
                 fascicolo: 78591,
-                indirizzo: "Via Roma 123".to_string(),
+                indirizzo: "Via Roma 123".into(),
             })
             .execute(&mut conn_pg)?;
 
@@ -684,14 +693,14 @@ mod test {
 
         let value_insert = [
             StanzaConInfissi {
-                infisso_id: "A".to_string(),
-                edificio_id: "7878788".to_string(),
+                infisso_id: "A".into(),
+                edificio_id: "7878788".into(),
                 stanza_id: 7,
                 num_infisso: 25,
             },
             StanzaConInfissi {
-                infisso_id: "B".to_string(),
-                edificio_id: "7878788".to_string(),
+                infisso_id: "B".into(),
+                edificio_id: "7878788".into(),
                 stanza_id: 8,
                 num_infisso: 12,
             },
@@ -765,9 +774,9 @@ mod test {
         is_exist_table("fotovoltaico", &mut conn_sq);
 
         let insert_fotovoltaico = NewFotovoltaico {
-            edificio_id: "454545".to_string(),
+            edificio_id: "454545".into(),
             potenza: 30.9,
-            proprietario: "Ugo Ugolini".to_string(),
+            proprietario: "Ugo Ugolini".into(),
         };
 
         diesel::insert_into(fotovoltaico::table)

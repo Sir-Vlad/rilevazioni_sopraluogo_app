@@ -31,24 +31,24 @@ impl From<&Edificio> for EdificioDTO {
     }
 }
 
-impl From<EdificioDTO> for UpdateEdificio {
+impl From<EdificioDTO> for UpdateEdificio<'_> {
     fn from(value: EdificioDTO) -> Self {
         UpdateEdificio {
             anno_costruzione: value.anno_costruzione,
             anno_riqualificazione: value.anno_riqualificazione,
-            note_riqualificazione: value.note_riqualificazione,
+            note_riqualificazione: value.note_riqualificazione.map(|x| x.into()),
             isolamento_tetto: Some(value.isolamento_tetto),
             cappotto: Some(value.isolamento_tetto),
         }
     }
 }
 
-impl From<EdificioDTO> for NewEdificio {
+impl From<EdificioDTO> for NewEdificio<'_> {
     fn from(value: EdificioDTO) -> Self {
         NewEdificio {
-            chiave: value.chiave,
+            chiave: value.chiave.into(),
             fascicolo: value.fascicolo,
-            indirizzo: value.indirizzo,
+            indirizzo: value.indirizzo.into(),
         }
     }
 }

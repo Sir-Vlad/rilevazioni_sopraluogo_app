@@ -63,26 +63,26 @@ impl From<StanzaDTO> for Stanza {
     }
 }
 
-impl From<StanzaDTO> for NewStanza {
+impl From<StanzaDTO> for NewStanza<'_> {
     fn from(value: StanzaDTO) -> Self {
         Self {
-            edificio_id: value.edificio_id,
-            piano: value.piano,
-            id_spazio: value.id_spazio,
-            cod_stanza: value.cod_stanza,
-            destinazione_uso: value.destinazione_uso,
+            edificio_id: value.edificio_id.into(),
+            piano: value.piano.into(),
+            id_spazio: value.id_spazio.into(),
+            cod_stanza: value.cod_stanza.into(),
+            destinazione_uso: value.destinazione_uso.into(),
         }
     }
 }
 
-impl From<StanzaDTO> for UpdateStanza {
+impl From<StanzaDTO> for UpdateStanza<'_> {
     fn from(value: StanzaDTO) -> Self {
         Self {
             altezza: value.altezza.map(|v| v as i16),
             spessore_muro: value.spessore_muro.map(|v| v as i16),
-            riscaldamento: value.riscaldamento,
-            raffrescamento: value.raffrescamento,
-            illuminazione: value.illuminazione,
+            riscaldamento: value.riscaldamento.map(|x| x.into()),
+            raffrescamento: value.raffrescamento.map(|x| x.into()),
+            illuminazione: value.illuminazione.map(|x| x.into()),
         }
     }
 }

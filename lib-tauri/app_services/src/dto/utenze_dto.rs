@@ -25,13 +25,13 @@ impl From<&Utenza> for UtenzaDTO {
     }
 }
 
-impl From<UtenzaDTO> for NewUtenza {
+impl From<UtenzaDTO> for NewUtenza<'_> {
     fn from(value: UtenzaDTO) -> Self {
         Self {
-            edificio_id: value.edificio_id,
+            edificio_id: value.edificio_id.into(),
             tipo: value.tipo,
-            cod_contatore: value.cod_contatore,
-            indirizzo_contatore: value.indirizzo_contatore,
+            cod_contatore: value.cod_contatore.into(),
+            indirizzo_contatore: value.indirizzo_contatore.map(|x| x.into()),
         }
     }
 }

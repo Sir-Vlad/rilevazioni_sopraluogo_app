@@ -30,7 +30,7 @@ impl GetAll<AnnotazioneStanza> for AnnotazioneStanzaDAO {
     }
 }
 
-impl Insert<NewAnnotazioneStanza> for AnnotazioneStanzaDAO {
+impl Insert<NewAnnotazioneStanza<'_>> for AnnotazioneStanzaDAO {
     type Output = AnnotazioneStanza;
 
     fn insert(
@@ -61,7 +61,7 @@ mod test {
         let mut conn = pool.get().unwrap();
         let item = NewAnnotazioneStanza {
             stanza_id: 1,
-            content: "test".to_string(),
+            content: "test".into(),
         };
         match AnnotazioneStanzaDAO::insert(&mut conn, item.clone()) {
             Ok(res) => assert_eq!(res.stanza_id, item.stanza_id),
@@ -75,7 +75,7 @@ mod test {
         let mut conn = pool.get().unwrap();
         let item = NewAnnotazioneStanza {
             stanza_id: 1,
-            content: "".to_string(),
+            content: "".into(),
         };
         match AnnotazioneStanzaDAO::insert(&mut conn, item.clone()) {
             Ok(_) => panic!("Should not be able to insert"),

@@ -42,7 +42,7 @@ impl Get<Fotovoltaico, String> for FotovoltaicoDAO {
     }
 }
 
-impl Insert<NewFotovoltaico> for FotovoltaicoDAO {
+impl Insert<NewFotovoltaico<'_>> for FotovoltaicoDAO {
     type Output = Fotovoltaico;
 
     fn insert(
@@ -66,7 +66,7 @@ impl Insert<NewFotovoltaico> for FotovoltaicoDAO {
     }
 }
 
-impl Update<UpdateFotovoltaico, i32> for FotovoltaicoDAO {
+impl Update<UpdateFotovoltaico<'_>, i32> for FotovoltaicoDAO {
     type Output = Fotovoltaico;
 
     fn update(
@@ -101,9 +101,9 @@ mod test {
         let mut conn = pool.get().unwrap();
 
         let insert_data = NewFotovoltaico {
-            edificio_id: "9338-14".to_string(),
+            edificio_id: "9338-14".into(),
             potenza: 55f32,
-            proprietario: "Ugo Ugolini".to_string(),
+            proprietario: "Ugo Ugolini".into(),
         };
 
         let result = match FotovoltaicoDAO::insert(&mut conn, insert_data.clone()) {
@@ -119,7 +119,7 @@ mod test {
 
         let update_data = UpdateFotovoltaico {
             potenza: Some(85f32),
-            proprietario: Some("Ugo Ugolini".to_string()),
+            proprietario: Some("Ugo Ugolini".into()),
         };
         match FotovoltaicoDAO::update(&mut conn, result.id, update_data.clone()) {
             Ok(res) => {

@@ -23,12 +23,12 @@ impl From<&Fotovoltaico> for FotovoltaicoDTO {
     }
 }
 
-impl From<FotovoltaicoDTO> for NewFotovoltaico {
+impl From<FotovoltaicoDTO> for NewFotovoltaico<'_> {
     fn from(value: FotovoltaicoDTO) -> Self {
         Self {
-            edificio_id: value.id_edificio,
+            edificio_id: value.id_edificio.into(),
             potenza: value.potenza,
-            proprietario: value.proprietario,
+            proprietario: value.proprietario.into(),
         }
     }
 }

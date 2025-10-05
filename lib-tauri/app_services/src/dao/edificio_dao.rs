@@ -39,7 +39,7 @@ impl Get<Edificio, String> for EdificioDAO {
     }
 }
 
-impl Insert<NewEdificio> for EdificioDAO {
+impl Insert<NewEdificio<'_>> for EdificioDAO {
     type Output = Edificio;
 
     fn insert(conn: &mut PostgresPooled, item: NewEdificio) -> Result<Self::Output, DomainError> {
@@ -50,7 +50,7 @@ impl Insert<NewEdificio> for EdificioDAO {
     }
 }
 
-impl Update<UpdateEdificio, String> for EdificioDAO {
+impl Update<UpdateEdificio<'_>, String> for EdificioDAO {
     type Output = Edificio;
 
     fn update(
@@ -93,9 +93,9 @@ mod test {
         let mut conn = pool.get().unwrap();
 
         let insert_edificio = NewEdificio {
-            chiave: "9999-999".to_string(),
+            chiave: "9999-999".into(),
             fascicolo: 125898,
-            indirizzo: "Via test, 12345".to_string(),
+            indirizzo: "Via test, 12345".into(),
         };
 
         let inserted_edificio = match EdificioDAO::insert(&mut conn, insert_edificio) {
@@ -165,9 +165,9 @@ mod test {
         let mut conn = pool.get().unwrap();
 
         let insert_edificio = NewEdificio {
-            chiave: "9999-999".to_string(),
+            chiave: "9999-999".into(),
             fascicolo: 125898,
-            indirizzo: "Via test, 12345".to_string(),
+            indirizzo: "Via test, 12345".into(),
         };
 
         let _ = EdificioDAO::insert(&mut conn, insert_edificio.clone());

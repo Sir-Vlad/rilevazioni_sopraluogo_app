@@ -31,7 +31,7 @@ impl GetAll<AnnotazioneEdificio> for AnnotazioneEdificioDAO {
     }
 }
 
-impl Insert<NewAnnotazioneEdificio> for AnnotazioneEdificioDAO {
+impl Insert<NewAnnotazioneEdificio<'_>> for AnnotazioneEdificioDAO {
     type Output = AnnotazioneEdificio;
 
     fn insert(

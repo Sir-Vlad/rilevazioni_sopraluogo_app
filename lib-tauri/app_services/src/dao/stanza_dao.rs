@@ -34,7 +34,7 @@ impl Get<Stanza, &str> for StanzaDAO {
     }
 }
 
-impl Insert<NewStanza> for StanzaDAO {
+impl Insert<NewStanza<'_>> for StanzaDAO {
     type Output = Stanza;
 
     fn insert(conn: &mut PostgresPooled, item: NewStanza) -> Result<Self::Output, DomainError> {
@@ -45,7 +45,7 @@ impl Insert<NewStanza> for StanzaDAO {
     }
 }
 
-impl Insert<Vec<NewStanza>> for StanzaDAO {
+impl Insert<Vec<NewStanza<'_>>> for StanzaDAO {
     type Output = Vec<Stanza>;
 
     fn insert(
@@ -59,7 +59,7 @@ impl Insert<Vec<NewStanza>> for StanzaDAO {
     }
 }
 
-impl Update<UpdateStanza, i32> for StanzaDAO {
+impl Update<UpdateStanza<'_>, i32> for StanzaDAO {
     type Output = Stanza;
 
     fn update(

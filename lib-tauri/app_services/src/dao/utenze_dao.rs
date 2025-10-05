@@ -43,7 +43,7 @@ impl Get<Utenza, String> for UtenzeDAO {
     }
 }
 
-impl Insert<NewUtenza> for UtenzeDAO {
+impl Insert<NewUtenza<'_>> for UtenzeDAO {
     type Output = Utenza;
 
     fn insert(conn: &mut PostgresPooled, item: NewUtenza) -> Result<Self::Output, DomainError> {
@@ -64,7 +64,7 @@ impl Insert<NewUtenza> for UtenzeDAO {
     }
 }
 
-impl Update<UpdateUtenza, i32> for UtenzeDAO {
+impl Update<UpdateUtenza<'_>, i32> for UtenzeDAO {
     type Output = Utenza;
 
     fn update(
@@ -80,23 +80,6 @@ impl Update<UpdateUtenza, i32> for UtenzeDAO {
                 _ => DomainError::Unexpected(e),
             })
     }
-
-    /*
-    fn update<C: DatabaseConnection>(conn: &C, item: Utenza) -> Result<Utenza, AppError> {
-        let builder = QueryBuilder::update()
-            .table("UTENZE")
-            .set("COD_CONTATORE", item.cod_contatore.clone())
-            .set_if("INDIRIZZO_CONTATORE", item.indirizzo_contatore.clone())
-            .where_eq("ID", item.id);
-        let (query, params) = builder.build()?;
-        conn.execute(
-            query.as_str(),
-            rusqlite::params_from_iter(convert_param(params)),
-        )?;
-        Ok(item)
-    }
-
-     */
 }
 
 #[cfg(test)]

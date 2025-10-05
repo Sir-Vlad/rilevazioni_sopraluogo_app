@@ -85,11 +85,11 @@ impl From<AnnotazioneEdificio> for AnnotazioneEdificioDTO {
     }
 }
 
-impl From<AnnotazioneEdificioDTO> for NewAnnotazioneEdificio {
+impl From<AnnotazioneEdificioDTO> for NewAnnotazioneEdificio<'_> {
     fn from(dto: AnnotazioneEdificioDTO) -> Self {
         Self {
-            edificio_id: dto.edificio_id,
-            content: dto.content,
+            edificio_id: dto.edificio_id.into(),
+            content: dto.content.into(),
         }
     }
 }
@@ -133,11 +133,11 @@ impl From<AnnotazioneStanza> for AnnotazioneStanzaDTO {
     }
 }
 
-impl From<AnnotazioneStanzaDTO> for NewAnnotazioneStanza {
+impl From<AnnotazioneStanzaDTO> for NewAnnotazioneStanza<'_> {
     fn from(value: AnnotazioneStanzaDTO) -> Self {
         Self {
             stanza_id: value.stanza_id as i32,
-            content: value.content,
+            content: value.content.into(),
         }
     }
 }
@@ -183,12 +183,12 @@ impl From<AnnotazioneInfisso> for AnnotazioneInfissoDTO {
     }
 }
 
-impl From<AnnotazioneInfissoDTO> for NewAnnotazioneInfisso {
+impl From<AnnotazioneInfissoDTO> for NewAnnotazioneInfisso<'_> {
     fn from(value: AnnotazioneInfissoDTO) -> Self {
         Self {
-            infisso_id: value.infisso_id,
-            edificio_id: value.edificio_id,
-            content: value.content,
+            infisso_id: value.infisso_id.into(),
+            edificio_id: value.edificio_id.into(),
+            content: value.content.into(),
         }
     }
 }
