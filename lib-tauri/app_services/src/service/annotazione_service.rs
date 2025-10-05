@@ -1,11 +1,18 @@
-use crate::dao::{AnnotazioneEdificioDAO, AnnotazioneInfissoDAO, AnnotazioneStanzaDAO};
-use crate::dto::{AnnotazioneEdificioDTO, AnnotazioneInfissoDTO, AnnotazioneStanzaDTO};
-use app_utils::app_error::AppResult;
-use app_utils::app_interface::dao_interface::crud_operations::{GetAll, Insert};
-use app_utils::app_interface::database_interface::DatabaseManagerTrait;
-use app_utils::app_interface::service_interface::{CreateService, RetrieveManyService};
+use app_utils::{
+    app_error::AppResult,
+    app_interface::{
+        dao_interface::crud_operations::{GetAll, Insert},
+        database_interface::DatabaseManagerTrait,
+        service_interface::{CreateService, RetrieveManyService},
+    },
+};
 use async_trait::async_trait;
 use tauri::State;
+
+use crate::{
+    dao::{AnnotazioneEdificioDAO, AnnotazioneInfissoDAO, AnnotazioneStanzaDAO},
+    dto::{AnnotazioneEdificioDTO, AnnotazioneInfissoDTO, AnnotazioneStanzaDTO},
+};
 
 pub struct AnnotazioneService;
 
@@ -86,23 +93,29 @@ impl CreateService<AnnotazioneInfissoDTO> for AnnotazioneService {
 
 #[cfg(test)]
 mod tests {
-    use crate::dao::{
-        AnnotazioneEdificioDAO, AnnotazioneInfissoDAO, AnnotazioneStanzaDAO, EdificioDAO,
-        InfissoDAO, StanzaDAO,
-    };
-    use crate::dto::{
-        AnnotazioneEdificioDTO, AnnotazioneInfissoDTO, AnnotazioneStanzaDTO, EdificioDTO,
-        InfissoDTO, StanzaDTO,
-    };
-    use crate::service::AnnotazioneService;
     use app_models::models::NewStanza;
     use app_state::database::DatabaseManager;
-    use app_utils::app_interface::dao_interface::crud_operations::Insert;
-    use app_utils::app_interface::database_interface::DatabaseManagerTrait;
-    use app_utils::app_interface::service_interface::{CreateService, RetrieveManyService};
-    use app_utils::path_data_fake;
-    use app_utils::test::utils::read_json_file;
-    use app_utils::test::{ResultTest, TestServiceEnvironment};
+    use app_utils::{
+        app_interface::{
+            dao_interface::crud_operations::Insert,
+            database_interface::DatabaseManagerTrait,
+            service_interface::{CreateService, RetrieveManyService},
+        },
+        path_data_fake,
+        test::{ResultTest, TestServiceEnvironment, utils::read_json_file},
+    };
+
+    use crate::{
+        dao::{
+            AnnotazioneEdificioDAO, AnnotazioneInfissoDAO, AnnotazioneStanzaDAO, EdificioDAO,
+            InfissoDAO, StanzaDAO,
+        },
+        dto::{
+            AnnotazioneEdificioDTO, AnnotazioneInfissoDTO, AnnotazioneStanzaDTO, EdificioDTO,
+            InfissoDTO, StanzaDTO,
+        },
+        service::AnnotazioneService,
+    };
 
     async fn setup_env_annotazione() -> ResultTest<TestServiceEnvironment<DatabaseManager>> {
         TestServiceEnvironment::new::<_, _>(|db_manager: DatabaseManager| async move {
@@ -151,7 +164,7 @@ mod tests {
 
             Ok(())
         })
-            .await
+        .await
     }
 
     #[tokio::test(flavor = "multi_thread", worker_threads = 1)]
@@ -162,7 +175,7 @@ mod tests {
         match <AnnotazioneService as RetrieveManyService<AnnotazioneEdificioDTO>>::retrieve_many(
             state_db,
         )
-            .await
+        .await
         {
             Ok(result) => {
                 assert_eq!(result.len(), 11);
@@ -189,7 +202,7 @@ mod tests {
             state_db,
             insert_ann_edificio,
         )
-            .await
+        .await
         {
             Ok(result) => {
                 assert_eq!(result.id, 12)
@@ -208,7 +221,7 @@ mod tests {
         match <AnnotazioneService as RetrieveManyService<AnnotazioneStanzaDTO>>::retrieve_many(
             state_db,
         )
-            .await
+        .await
         {
             Ok(result) => {
                 assert_eq!(result.len(), 11);
@@ -235,7 +248,7 @@ mod tests {
             state_db,
             insert_ann_stanza,
         )
-            .await
+        .await
         {
             Ok(result) => {
                 assert_eq!(result.id, 12)
@@ -254,7 +267,7 @@ mod tests {
         match <AnnotazioneService as RetrieveManyService<AnnotazioneInfissoDTO>>::retrieve_many(
             state_db,
         )
-            .await
+        .await
         {
             Ok(result) => {
                 assert_eq!(result.len(), 11);
@@ -282,7 +295,7 @@ mod tests {
             state_db,
             insert_ann_stanza,
         )
-            .await
+        .await
         {
             Ok(result) => {
                 assert_eq!(result.id, 12)

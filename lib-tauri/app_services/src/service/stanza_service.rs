@@ -1,10 +1,12 @@
-use crate::dao::{StanzaConInfissiDao, StanzaDAO};
-use crate::dto::StanzaDTO;
+use std::collections::HashMap;
+
 use app_models::models::{NewStanza, StanzaConInfissi, UpdateStanzaConInfissi};
 use app_state::selected_edificio::SelectedEdificioState;
-use app_utils::app_error::ErrorKind;
-use app_utils::app_interface::service_interface::{
-    CreateBatchService, RetrieveBy, RetrieveByEdificioSelected, SelectedEdificioTrait,
+use app_utils::{
+    app_error::ErrorKind,
+    app_interface::service_interface::{
+        CreateBatchService, RetrieveBy, RetrieveByEdificioSelected, SelectedEdificioTrait,
+    },
 };
 pub use app_utils::{
     app_error::{AppResult, ApplicationError, DomainError},
@@ -16,8 +18,12 @@ pub use app_utils::{
 };
 use async_trait::async_trait;
 use diesel::Connection;
-use std::collections::HashMap;
 use tauri::State;
+
+use crate::{
+    dao::{StanzaConInfissiDao, StanzaDAO},
+    dto::StanzaDTO,
+};
 
 pub struct StanzaService;
 
@@ -56,7 +62,8 @@ impl RetrieveBy<StanzaDTO> for StanzaService {
                             continue;
                         }
 
-                        // Retrieve the infissi id of the current stanza and add them to the stanza dto
+                        // Retrieve the infissi id of the current stanza and add them to the stanza
+                        // dto
                         let infissi_id = infissi
                             .iter()
                             .flat_map(|infisso| {
@@ -72,7 +79,7 @@ impl RetrieveBy<StanzaDTO> for StanzaService {
 
                     Ok(stanze_dto)
                 })
-                    .map_err(|e| e.into())
+                .map_err(|e| e.into())
             }
             _ => Err(
                 DomainError::InvalidInput(ErrorKind::InvalidField, where_field.to_string()).into(),
@@ -174,31 +181,28 @@ impl UpdateService<StanzaDTO> for StanzaService {
 
             Ok(stanza_dto)
         })
-            .map_err(|e| e.into())
+        .map_err(|e| e.into())
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-    use crate::dao::InfissoDAO;
-    use crate::dto::InfissoDTO;
-    use crate::{
-        dao::{EdificioDAO, StanzaDAO},
-        dto::{EdificioDTO, StanzaDTO},
-    };
     use app_state::{database::DatabaseManager, selected_edificio::EdificioSelected};
-    use app_utils::test::utils::read_json_file;
-    use app_utils::test::ResultTest;
     use app_utils::{
         app_interface::{
             dao_interface::crud_operations::Insert,
             database_interface::DatabaseManagerTrait as DatabaseManagerInterface,
         },
         path_data_fake,
-        test::TestServiceEnvironment,
+        test::{ResultTest, TestServiceEnvironment, utils::read_json_file},
     };
     use tokio::sync::RwLock;
+
+    use super::*;
+    use crate::{
+        dao::{EdificioDAO, InfissoDAO, StanzaDAO},
+        dto::{EdificioDTO, InfissoDTO, StanzaDTO},
+    };
 
     const SELECTED_EDIFICIO_ID: &str = "6192-81";
 
@@ -226,7 +230,7 @@ mod tests {
                 }
                 Ok(())
             })
-                .await?;
+            .await?;
 
         let select_edificio = SelectedEdificioState::new(RwLock::new(EdificioSelected::new()));
         select_edificio

@@ -1,7 +1,8 @@
-use crate::service::TypeDTO;
 use app_models::models::{Climatizzazione, Illuminazione};
 use app_utils::app_interface::dto_interface::DTO;
 use serde::{Deserialize, Serialize};
+
+use crate::service::TypeDTO;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct TipoDTO {
@@ -41,7 +42,6 @@ impl From<TipoDTO> for Climatizzazione {
         }
     }
 }
-
 
 impl From<Illuminazione> for TipoDTO {
     fn from(value: Illuminazione) -> Self {

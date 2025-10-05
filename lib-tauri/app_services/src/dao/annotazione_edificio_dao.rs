@@ -1,12 +1,20 @@
+use app_models::{
+    models::{AnnotazioneEdificio, NewAnnotazioneEdificio},
+    schema::annotazione_edificio,
+};
+use app_utils::{
+    app_error::DomainError,
+    app_interface::{
+        dao_interface::{
+            DAO,
+            crud_operations::{GetAll, Insert},
+        },
+        database_interface::PostgresPooled,
+    },
+};
+use diesel::{RunQueryDsl, result::Error};
+
 use crate::dao::utils::map_error_annotazione;
-use app_models::models::{AnnotazioneEdificio, NewAnnotazioneEdificio};
-use app_models::schema::annotazione_edificio;
-use app_utils::app_error::DomainError;
-use app_utils::app_interface::dao_interface::crud_operations::{GetAll, Insert};
-use app_utils::app_interface::dao_interface::DAO;
-use app_utils::app_interface::database_interface::PostgresPooled;
-use diesel::result::Error;
-use diesel::RunQueryDsl;
 
 pub struct AnnotazioneEdificioDAO;
 
@@ -14,6 +22,7 @@ impl DAO for AnnotazioneEdificioDAO {}
 
 impl GetAll<AnnotazioneEdificio> for AnnotazioneEdificioDAO {
     type Output = AnnotazioneEdificio;
+
     fn get_all(conn: &mut PostgresPooled) -> Result<Vec<Self::Output>, DomainError> {
         annotazione_edificio::table.load(conn).map_err(|e| match e {
             Error::NotFound => DomainError::AnnotazioneNotFound,
@@ -24,6 +33,7 @@ impl GetAll<AnnotazioneEdificio> for AnnotazioneEdificioDAO {
 
 impl Insert<NewAnnotazioneEdificio> for AnnotazioneEdificioDAO {
     type Output = AnnotazioneEdificio;
+
     fn insert(
         conn: &mut PostgresPooled,
         item: NewAnnotazioneEdificio,

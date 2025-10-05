@@ -32,16 +32,13 @@ where
     }
 }
 
-
 #[derive(Serialize, Clone)]
 pub struct EdificioChangePayload {
     chiave: String,
 }
 
 impl EdificioChangePayload {
-    pub fn new(chiave: String) -> Self {
-        Self { chiave }
-    }
+    pub fn new(chiave: String) -> Self { Self { chiave } }
 }
 
 #[derive(Serialize, Clone)]
@@ -58,4 +55,3 @@ impl NewEdificioPayload {
         }
     }
 }
-

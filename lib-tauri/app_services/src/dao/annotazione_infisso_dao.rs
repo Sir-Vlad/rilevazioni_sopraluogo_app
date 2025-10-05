@@ -1,11 +1,20 @@
-use crate::dao::utils::map_error_annotazione;
-use app_models::models::{AnnotazioneInfisso, NewAnnotazioneInfisso};
-use app_models::schema::annotazione_infisso;
-use app_utils::app_error::DomainError;
-use app_utils::app_interface::dao_interface::crud_operations::{GetAll, Insert};
-use app_utils::app_interface::dao_interface::DAO;
-use app_utils::app_interface::database_interface::PostgresPooled;
+use app_models::{
+    models::{AnnotazioneInfisso, NewAnnotazioneInfisso},
+    schema::annotazione_infisso,
+};
+use app_utils::{
+    app_error::DomainError,
+    app_interface::{
+        dao_interface::{
+            DAO,
+            crud_operations::{GetAll, Insert},
+        },
+        database_interface::PostgresPooled,
+    },
+};
 use diesel::RunQueryDsl;
+
+use crate::dao::utils::map_error_annotazione;
 
 pub struct AnnotazioneInfissoDAO;
 
@@ -13,6 +22,7 @@ impl DAO for AnnotazioneInfissoDAO {}
 
 impl GetAll<AnnotazioneInfisso> for AnnotazioneInfissoDAO {
     type Output = AnnotazioneInfisso;
+
     fn get_all(conn: &mut PostgresPooled) -> Result<Vec<Self::Output>, DomainError> {
         annotazione_infisso::table
             .load(conn)
@@ -22,6 +32,7 @@ impl GetAll<AnnotazioneInfisso> for AnnotazioneInfissoDAO {
 
 impl Insert<NewAnnotazioneInfisso> for AnnotazioneInfissoDAO {
     type Output = AnnotazioneInfisso;
+
     fn insert(
         conn: &mut PostgresPooled,
         item: NewAnnotazioneInfisso,

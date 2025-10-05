@@ -1,11 +1,20 @@
-use crate::dao::utils::map_error_annotazione;
-use app_models::models::{AnnotazioneStanza, NewAnnotazioneStanza};
-use app_models::schema::annotazione_stanza;
-use app_utils::app_error::DomainError;
-use app_utils::app_interface::dao_interface::crud_operations::{GetAll, Insert};
-use app_utils::app_interface::dao_interface::DAO;
-use app_utils::app_interface::database_interface::PostgresPooled;
+use app_models::{
+    models::{AnnotazioneStanza, NewAnnotazioneStanza},
+    schema::annotazione_stanza,
+};
+use app_utils::{
+    app_error::DomainError,
+    app_interface::{
+        dao_interface::{
+            DAO,
+            crud_operations::{GetAll, Insert},
+        },
+        database_interface::PostgresPooled,
+    },
+};
 use diesel::RunQueryDsl;
+
+use crate::dao::utils::map_error_annotazione;
 
 pub struct AnnotazioneStanzaDAO;
 
@@ -13,6 +22,7 @@ impl DAO for AnnotazioneStanzaDAO {}
 
 impl GetAll<AnnotazioneStanza> for AnnotazioneStanzaDAO {
     type Output = AnnotazioneStanza;
+
     fn get_all(conn: &mut PostgresPooled) -> Result<Vec<Self::Output>, DomainError> {
         annotazione_stanza::table
             .load(conn)
@@ -22,6 +32,7 @@ impl GetAll<AnnotazioneStanza> for AnnotazioneStanzaDAO {
 
 impl Insert<NewAnnotazioneStanza> for AnnotazioneStanzaDAO {
     type Output = AnnotazioneStanza;
+
     fn insert(
         conn: &mut PostgresPooled,
         item: NewAnnotazioneStanza,
@@ -35,12 +46,14 @@ impl Insert<NewAnnotazioneStanza> for AnnotazioneStanzaDAO {
 
 #[cfg(test)]
 mod test {
-    use crate::dao::AnnotazioneStanzaDAO;
     use app_models::models::NewAnnotazioneStanza;
-    use app_utils::app_error::DomainError;
-    use app_utils::app_error::ErrorKind::EmptyField;
-    use app_utils::app_interface::dao_interface::crud_operations::Insert;
-    use app_utils::test::create_postgres_pool;
+    use app_utils::{
+        app_error::{DomainError, ErrorKind::EmptyField},
+        app_interface::dao_interface::crud_operations::Insert,
+        test::create_postgres_pool,
+    };
+
+    use crate::dao::AnnotazioneStanzaDAO;
 
     #[tokio::test]
     async fn test_insert() {

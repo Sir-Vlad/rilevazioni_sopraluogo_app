@@ -1,4 +1,6 @@
-pub use app_utils::app_interface::service_interface::{SelectedEdificioState, SelectedEdificioTrait};
+pub use app_utils::app_interface::service_interface::{
+    SelectedEdificioState, SelectedEdificioTrait,
+};
 
 #[derive(Debug)]
 pub struct EdificioSelected {
@@ -6,25 +8,15 @@ pub struct EdificioSelected {
 }
 
 impl Default for EdificioSelected {
-    fn default() -> Self {
-        Self::new()
-    }
+    fn default() -> Self { Self::new() }
 }
 
 impl SelectedEdificioTrait for EdificioSelected {
-    fn new() -> Self {
-        Self { chiave: None }
-    }
+    fn new() -> Self { Self { chiave: None } }
 
-    fn set_chiave(&mut self, chiave: String) {
-        self.chiave = Some(chiave);
-    }
+    fn set_chiave(&mut self, chiave: String) { self.chiave = Some(chiave); }
 
-    fn get_chiave(&self) -> Option<String> {
-        self.chiave.clone()
-    }
+    fn get_chiave(&self) -> Option<String> { self.chiave.clone() }
 
-    fn clear_chiave(&mut self) {
-        self.chiave = None;
-    }
+    fn clear_chiave(&mut self) { self.chiave = None; }
 }

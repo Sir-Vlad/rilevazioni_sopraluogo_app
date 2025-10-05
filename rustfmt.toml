@@ -1,0 +1,23 @@
+unstable_features = true
+
+style_edition = "2024"
+max_width = 100
+hard_tabs = false
+tab_spaces = 4
+newline_style = "Unix"
+
+combine_control_expr = false
+condense_wildcard_suffixes = true
+
+fn_single_line = true
+
+reorder_imports = true
+reorder_modules = true
+
+reorder_impl_items = true
+group_imports = "StdExternalCrate"
+imports_granularity = "Crate"
+
+use_field_init_shorthand = true
+
+wrap_comments = true

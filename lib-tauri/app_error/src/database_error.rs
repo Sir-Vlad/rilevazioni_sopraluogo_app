@@ -18,16 +18,12 @@ pub enum DbError {
 }
 
 impl From<tokio::time::error::Elapsed> for DbError {
-    fn from(_: tokio::time::error::Elapsed) -> Self {
-        DbError::ConnectionTimeout
-    }
+    fn from(_: tokio::time::error::Elapsed) -> Self { DbError::ConnectionTimeout }
 }
 
 // Per integrazione con Tauri
 impl From<DbError> for String {
-    fn from(error: DbError) -> Self {
-        error.to_string()
-    }
+    fn from(error: DbError) -> Self { error.to_string() }
 }
 
 impl From<std::env::VarError> for DbError {

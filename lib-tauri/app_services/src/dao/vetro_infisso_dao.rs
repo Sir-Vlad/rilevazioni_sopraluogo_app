@@ -1,9 +1,11 @@
-use app_models::models::VetroInfisso;
-use app_models::schema::vetro_infisso;
-use app_utils::app_error::DomainError;
-use app_utils::app_interface::dao_interface::crud_operations::GetAll;
-use app_utils::app_interface::dao_interface::DAO;
-use app_utils::app_interface::database_interface::PostgresPooled;
+use app_models::{models::VetroInfisso, schema::vetro_infisso};
+use app_utils::{
+    app_error::DomainError,
+    app_interface::{
+        dao_interface::{DAO, crud_operations::GetAll},
+        database_interface::PostgresPooled,
+    },
+};
 use diesel::RunQueryDsl;
 
 pub struct VetroInfissoDAO;
@@ -12,6 +14,7 @@ impl DAO for VetroInfissoDAO {}
 
 impl GetAll<VetroInfisso> for VetroInfissoDAO {
     type Output = VetroInfisso;
+
     fn get_all(conn: &mut PostgresPooled) -> Result<Vec<Self::Output>, DomainError> {
         vetro_infisso::table.load(conn).map_err(DomainError::from)
     }

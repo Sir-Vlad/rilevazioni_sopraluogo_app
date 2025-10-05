@@ -1,15 +1,17 @@
+use std::fmt::Debug;
+
+use chrono::NaiveDateTime;
+use diesel::{
+    AsChangeset, Associations, Identifiable, Insertable, Queryable, QueryableByName, Selectable,
+    sql_types::{Integer, Nullable, SmallInt, Text},
+};
+use serde::{Deserialize, Serialize};
+
 use crate::schema::{
     annotazione_edificio, annotazione_infisso, annotazione_stanza, climatizzazione, edificio,
     fotovoltaico, illuminazione, infisso, materiale_infisso, stanza, stanza_con_infissi,
     tipo_infisso, utenze, vetro_infisso,
 };
-use chrono::NaiveDateTime;
-use diesel::sql_types::{Integer, Nullable, SmallInt, Text};
-use diesel::{
-    AsChangeset, Associations, Identifiable, Insertable, Queryable, QueryableByName, Selectable,
-};
-use serde::{Deserialize, Serialize};
-use std::fmt::Debug;
 
 #[derive(Queryable, Selectable, Insertable, Debug, PartialEq)]
 #[diesel(table_name = illuminazione)]
@@ -108,9 +110,7 @@ pub struct Stanza {
 }
 
 impl AsRef<Stanza> for Stanza {
-    fn as_ref(&self) -> &Self {
-        self
-    }
+    fn as_ref(&self) -> &Self { self }
 }
 
 #[derive(Insertable, Debug, PartialEq)]
@@ -348,12 +348,14 @@ pub struct DatiStanza {
 
 #[cfg(test)]
 mod test {
-    use super::*;
-    use diesel::{dsl::sql, prelude::*, sql_types::Integer, PgConnection, RunQueryDsl};
-    use diesel_migrations::{embed_migrations, EmbeddedMigrations, MigrationHarness};
     use std::error::Error;
-    use testcontainers::{runners::SyncRunner, Container};
+
+    use diesel::{PgConnection, RunQueryDsl, dsl::sql, prelude::*, sql_types::Integer};
+    use diesel_migrations::{EmbeddedMigrations, MigrationHarness, embed_migrations};
+    use testcontainers::{Container, runners::SyncRunner};
     use testcontainers_modules::postgres::Postgres;
+
+    use super::*;
 
     fn setup_postgresql_database() -> Result<(PgConnection, Container<Postgres>), Box<dyn Error>> {
         let image = Postgres::default().start()?;
@@ -699,10 +701,10 @@ mod test {
             update.edificio_id,
             update.stanza_id,
         )))
-            .set(stanza_con_infissi::num_infisso.eq(
-                sql::<Integer>("COALESCE(num_infisso, 0) + ").bind::<Integer, _>(update.num_infisso),
-            ))
-            .get_result(&mut conn)?;
+        .set(stanza_con_infissi::num_infisso.eq(
+            sql::<Integer>("COALESCE(num_infisso, 0) + ").bind::<Integer, _>(update.num_infisso),
+        ))
+        .get_result(&mut conn)?;
         assert_eq!(updated.num_infisso, 20);
         println!("{updated:#?}");
 

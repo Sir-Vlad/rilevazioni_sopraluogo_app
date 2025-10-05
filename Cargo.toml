@@ -19,7 +19,7 @@ serde_json = "1.0"
 serde = { version = "1.0", features = ["derive"] }
 
 # Database
-diesel = { version = "2.2.11", features = ["postgres", "r2d2", "chrono", "sqlite"] }
+diesel = { version = "2.2.11", features = ["postgres", "r2d2", "chrono"] }
 diesel_migrations = "2.2.0"
 dotenvy = "0.15.7"
 diesel-derive-enum = { version = "2.1.0", features = ["postgres"] }

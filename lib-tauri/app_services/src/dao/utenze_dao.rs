@@ -1,13 +1,20 @@
+use app_models::{
+    models::{NewUtenza, UpdateUtenza, Utenza},
+    schema::utenze,
+};
+use app_utils::{
+    app_error::DomainError,
+    app_interface::{
+        dao_interface::{
+            DAO,
+            crud_operations::{GetAll, Insert, Update},
+        },
+        database_interface::PostgresPooled,
+    },
+};
+use diesel::{ExpressionMethods, QueryDsl, RunQueryDsl, result::Error};
+
 use crate::service::Get;
-use app_models::models::{NewUtenza, UpdateUtenza, Utenza};
-use app_models::schema::utenze;
-use app_utils::app_error::DomainError;
-use app_utils::app_interface::dao_interface::crud_operations::{GetAll, Insert, Update};
-use app_utils::app_interface::dao_interface::DAO;
-use app_utils::app_interface::database_interface::PostgresPooled;
-use diesel::result::Error;
-use diesel::RunQueryDsl;
-use diesel::{ExpressionMethods, QueryDsl};
 
 pub struct UtenzeDAO;
 
@@ -15,6 +22,7 @@ impl DAO for UtenzeDAO {}
 
 impl GetAll<Utenza> for UtenzeDAO {
     type Output = Utenza;
+
     fn get_all(conn: &mut PostgresPooled) -> Result<Vec<Self::Output>, DomainError> {
         utenze::table.load(conn).map_err(DomainError::from)
     }
@@ -37,6 +45,7 @@ impl Get<Utenza, String> for UtenzeDAO {
 
 impl Insert<NewUtenza> for UtenzeDAO {
     type Output = Utenza;
+
     fn insert(conn: &mut PostgresPooled, item: NewUtenza) -> Result<Self::Output, DomainError> {
         diesel::insert_into(utenze::table)
             .values(&item)

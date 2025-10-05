@@ -1,21 +1,29 @@
-use crate::dao::{
-    ClimatizzazioneDAO, IlluminazioneDAO, MaterialeInfissoDAO, TipoInfissoDAO, VetroInfissoDAO,
+use std::collections::HashMap;
+
+use app_utils::{
+    app_error::{AppResult, ApplicationError},
+    app_interface::{
+        dao_interface::crud_operations::{GetAll, Insert},
+        database_interface::DatabaseManagerTrait,
+        dto_interface::DTO,
+        service_interface::RetrieveManyService,
+    },
 };
-use crate::dto::{
-    ClimatizzazioneDTO, IlluminazioneDTO, MaterialeInfissoDTO, TipoDTO, TipoInfissiDTO,
-    VetroInfissoDTO,
-};
-use crate::service::DomainError;
-use app_utils::app_error::{AppResult, ApplicationError};
-use app_utils::app_interface::dao_interface::crud_operations::{GetAll, Insert};
-use app_utils::app_interface::database_interface::DatabaseManagerTrait;
-use app_utils::app_interface::dto_interface::DTO;
-use app_utils::app_interface::service_interface::RetrieveManyService;
 use async_trait::async_trait;
 use serde::{Deserialize, Deserializer, Serialize};
 use serde_json::Value;
-use std::collections::HashMap;
 use tauri::State;
+
+use crate::{
+    dao::{
+        ClimatizzazioneDAO, IlluminazioneDAO, MaterialeInfissoDAO, TipoInfissoDAO, VetroInfissoDAO,
+    },
+    dto::{
+        ClimatizzazioneDTO, IlluminazioneDTO, MaterialeInfissoDTO, TipoDTO, TipoInfissiDTO,
+        VetroInfissoDTO,
+    },
+    service::DomainError,
+};
 
 #[derive(Debug, Serialize, Clone)]
 pub enum TypeDTO {
@@ -25,6 +33,7 @@ pub enum TypeDTO {
 
 impl TryFrom<String> for TypeDTO {
     type Error = DomainError;
+
     fn try_from(value: String) -> Result<Self, Self::Error> {
         match value.to_ascii_lowercase().as_str() {
             "climatizzazione" | "riscaldamento" | "raffrescamento" => Ok(TypeDTO::Climatizzazione),
@@ -213,10 +222,13 @@ impl RetrieveManyService<TipoInfissiDTO> for TipoInfissoService {
 
 #[cfg(test)]
 mod test {
-    use crate::dto::TipoDTO;
-    use crate::service::{TypeDTO, TypeService, TypeServiceImpl};
     use app_state::database::DatabaseManager;
     use app_utils::test::{ResultTest, TestServiceEnvironment};
+
+    use crate::{
+        dto::TipoDTO,
+        service::{TypeDTO, TypeService, TypeServiceImpl},
+    };
 
     async fn setup_env_type() -> ResultTest<TestServiceEnvironment<DatabaseManager>> {
         TestServiceEnvironment::new::<_, _>(|_db_manager: DatabaseManager| async { Ok(()) }).await
@@ -257,7 +269,6 @@ mod test {
         Ok(())
     }
 
-
     #[tokio::test(flavor = "multi_thread", worker_threads = 1)]
     async fn test_insert_new_illuminazione_type() -> ResultTest {
         let env = setup_env_type().await?;
@@ -278,7 +289,6 @@ mod test {
 
         Ok(())
     }
-
 
     #[test]
     #[should_panic(expected = "TipoInvalid(\"MaterialeInfisso\")")]

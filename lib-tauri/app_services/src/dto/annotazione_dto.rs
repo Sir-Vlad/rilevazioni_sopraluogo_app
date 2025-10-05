@@ -1,10 +1,11 @@
+use std::fmt::{Display, Formatter};
+
 use app_models::models::{
     AnnotazioneEdificio, AnnotazioneInfisso, AnnotazioneStanza, NewAnnotazioneEdificio,
     NewAnnotazioneInfisso, NewAnnotazioneStanza,
 };
 use app_utils::app_interface::dto_interface::DTO;
 use serde::{Deserialize, Serialize};
-use std::fmt::{Display, Formatter};
 
 #[derive(Serialize, Deserialize)]
 pub enum TableWithPrimaryKey {

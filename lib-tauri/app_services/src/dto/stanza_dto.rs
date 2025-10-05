@@ -63,8 +63,7 @@ impl From<StanzaDTO> for Stanza {
     }
 }
 
-impl From<StanzaDTO> for NewStanza
-{
+impl From<StanzaDTO> for NewStanza {
     fn from(value: StanzaDTO) -> Self {
         Self {
             edificio_id: value.edificio_id,

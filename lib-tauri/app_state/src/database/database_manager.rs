@@ -1,14 +1,3 @@
-use app_utils::app_error::database_error::DbError;
-pub use app_utils::app_interface::database_interface::{
-    ConnectorDatabase, DatabaseConnector, DatabaseManagerTrait,
-    PostgresPool, PostgresPooled,
-};
-use async_trait::async_trait;
-use diesel::{
-    r2d2::{ConnectionManager, Pool},
-    PgConnection,
-};
-use log::debug;
 use std::{
     any::Any,
     env,
@@ -16,6 +5,17 @@ use std::{
     path::Path,
     sync::Arc,
 };
+
+use app_utils::app_error::database_error::DbError;
+pub use app_utils::app_interface::database_interface::{
+    ConnectorDatabase, DatabaseConnector, DatabaseManagerTrait, PostgresPool, PostgresPooled,
+};
+use async_trait::async_trait;
+use diesel::{
+    PgConnection,
+    r2d2::{ConnectionManager, Pool},
+};
+use log::debug;
 use tokio::sync::{Mutex, RwLock, RwLockReadGuard};
 
 pub struct RealDatabaseConnector;
@@ -23,7 +23,7 @@ pub struct RealDatabaseConnector;
 #[async_trait]
 impl DatabaseConnector for RealDatabaseConnector {
     async fn create_postgres_pool(&self) -> PostgresPool {
-        println!("{}", std::env::current_dir().unwrap().display());
+        debug!("{}", env::current_dir().unwrap().display());
 
         let possible_paths = vec![
             "./lib-tauri/app_state/.env",
@@ -52,17 +52,16 @@ impl DatabaseConnector for RealDatabaseConnector {
             .expect("Failed to create pool")
     }
 
-    fn as_any_mut(&mut self) -> &mut dyn Any {
-        self
-    }
+    fn as_any_mut(&mut self) -> &mut dyn Any { self }
 }
 
-/// A struct that manages database connections and operations in a thread-safe manner.
+/// A struct that manages database connections and operations in a thread-safe
+/// manner.
 ///
-/// The `DatabaseManager` encapsulates the necessary components to manage a database connection pool
-/// and interact with a specific type of database using an appropriate connector. It ensures thread safety
-/// by using `Arc` and `Mutex` where shared access is needed.
-///
+/// The `DatabaseManager` encapsulates the necessary components to manage a
+/// database connection pool and interact with a specific type of database using
+/// an appropriate connector. It ensures thread safety by using `Arc` and
+/// `Mutex` where shared access is needed.
 pub struct DatabaseManager {
     /// Manages a postgres pool of database connections.
     postgres_pool: Arc<Mutex<PostgresPool>>,
@@ -91,9 +90,7 @@ impl DatabaseManagerTrait for DatabaseManager {
 }
 
 impl DatabaseManager {
-    pub async fn new() -> Self {
-        Self::with_connector(Box::new(RealDatabaseConnector)).await
-    }
+    pub async fn new() -> Self { Self::with_connector(Box::new(RealDatabaseConnector)).await }
 
     pub async fn get_connector(&self) -> RwLockReadGuard<'_, ConnectorDatabase> {
         self.connector.read().await
@@ -114,7 +111,7 @@ impl DatabaseManager {
                 "Failed to downcast connector to type: {}",
                 std::any::type_name::<T>()
             )
-                .into())
+            .into())
         }
     }
 }
@@ -138,14 +135,15 @@ impl Debug for DatabaseManager {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use std::{any::Any, sync::Arc};
+
     use app_utils::test::{get_postgres_container, impl_database_connector::MockDatabaseConnector};
     use async_trait::async_trait;
     use diesel::r2d2::R2D2Connection;
-    use std::any::Any;
-    use std::sync::Arc;
     use testcontainers::ContainerAsync;
     use testcontainers_modules::postgres::Postgres;
+
+    use super::*;
 
     async fn create_database_manager(connector: MockDatabaseConnector) -> Arc<DatabaseManager> {
         Arc::new(DatabaseManager::with_connector(Box::new(connector)).await)
@@ -224,9 +222,7 @@ mod tests {
             //     self
             // }
             //
-            fn as_any_mut(&mut self) -> &mut dyn Any {
-                self
-            }
+            fn as_any_mut(&mut self) -> &mut dyn Any { self }
         }
 
         let container = get_postgres_container().await;

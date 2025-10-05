@@ -1,10 +1,13 @@
 #[cfg(feature = "database")]
 pub mod database_interface {
+    use std::any::Any;
+
     use app_error::database_error::DbError;
     use async_trait::async_trait;
-    use diesel::r2d2::{ConnectionManager, Pool, PooledConnection};
-    use diesel::PgConnection;
-    use std::any::Any;
+    use diesel::{
+        PgConnection,
+        r2d2::{ConnectionManager, Pool, PooledConnection},
+    };
 
     pub type PostgresPool = Pool<ConnectionManager<PgConnection>>;
     pub type PostgresPooled = PooledConnection<ConnectionManager<PgConnection>>;
@@ -29,9 +32,9 @@ pub mod dao_interface {
     pub trait DAO {}
 
     pub mod crud_operations {
-        use crate::dao_interface::DAO;
-        use crate::database_interface::PostgresPooled;
         use app_error::DomainError;
+
+        use crate::{dao_interface::DAO, database_interface::PostgresPooled};
 
         pub trait Get<T, K>: DAO {
             type Output;
@@ -72,13 +75,14 @@ pub mod dto_interface {
 
 #[cfg(feature = "services")]
 pub mod service_interface {
-    use crate::database_interface::DatabaseManagerTrait;
-    use crate::dto_interface::DTO;
+    use std::sync::Arc;
+
     use app_error::AppResult;
     use async_trait::async_trait;
-    use std::sync::Arc;
     use tauri::State;
     use tokio::sync::RwLock;
+
+    use crate::{database_interface::DatabaseManagerTrait, dto_interface::DTO};
 
     pub trait SelectedEdificioTrait {
         fn new() -> Self
@@ -130,7 +134,7 @@ pub mod service_interface {
         T: DTO,
     {
         type Output;
-        
+
         async fn retrieve_by(
             db_state: State<'_, impl DatabaseManagerTrait + Send + Sync>,
             where_field: &str,
@@ -139,7 +143,7 @@ pub mod service_interface {
     }
 
     #[async_trait]
-    pub trait RetrieveByEdificioSelected<T> : RetrieveBy<T>
+    pub trait RetrieveByEdificioSelected<T>: RetrieveBy<T>
     where
         T: DTO,
     {

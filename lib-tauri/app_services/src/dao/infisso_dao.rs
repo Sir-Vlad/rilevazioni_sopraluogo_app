@@ -1,11 +1,20 @@
-use crate::dao::utils::{map_error_for_entity, EntityType};
-use app_models::models::{Infisso, NewInfisso, UpdateInfisso};
-use app_models::schema::infisso;
-use app_utils::app_error::DomainError;
-use app_utils::app_interface::dao_interface::crud_operations::{Get, GetAll, Insert, Update};
-use app_utils::app_interface::dao_interface::DAO;
-use app_utils::app_interface::database_interface::PostgresPooled;
+use app_models::{
+    models::{Infisso, NewInfisso, UpdateInfisso},
+    schema::infisso,
+};
+use app_utils::{
+    app_error::DomainError,
+    app_interface::{
+        dao_interface::{
+            DAO,
+            crud_operations::{Get, GetAll, Insert, Update},
+        },
+        database_interface::PostgresPooled,
+    },
+};
 use diesel::{ExpressionMethods, QueryDsl, RunQueryDsl};
+
+use crate::dao::utils::{EntityType, map_error_for_entity};
 
 pub struct InfissoDAO;
 
@@ -13,6 +22,7 @@ impl DAO for InfissoDAO {}
 
 impl GetAll<Infisso> for InfissoDAO {
     type Output = Infisso;
+
     fn get_all(conn: &mut PostgresPooled) -> Result<Vec<Self::Output>, DomainError> {
         infisso::table
             .load(conn)
@@ -33,6 +43,7 @@ impl Get<Infisso, String> for InfissoDAO {
 
 impl Insert<NewInfisso> for InfissoDAO {
     type Output = Infisso;
+
     fn insert(conn: &mut PostgresPooled, item: NewInfisso) -> Result<Self::Output, DomainError> {
         diesel::insert_into(infisso::table)
             .values(&item)

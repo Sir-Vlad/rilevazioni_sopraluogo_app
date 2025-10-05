@@ -1,7 +1,11 @@
-use std::error::Error;
-use crate::database_error::DbError;
-use std::fmt::{Display, Formatter};
+use std::{
+    error::Error,
+    fmt::{Display, Formatter},
+};
+
 use thiserror::Error;
+
+use crate::database_error::DbError;
 
 pub mod database_error;
 
@@ -37,8 +41,6 @@ macro_rules! define_domain_errors {
     };
 }
 
-
-
 #[derive(Error, Debug)]
 pub enum ApplicationError {
     #[error("Domain error: {0}")]
@@ -54,7 +56,7 @@ pub enum ApplicationError {
     #[error("Task error: {0}")]
     BackgroundTask(#[from] ErrorTask),
     #[error("Tauri error: {0}")]
-    Tauri(TauriError)
+    Tauri(TauriError),
 }
 
 impl From<DbError> for ApplicationError {
@@ -84,7 +86,6 @@ define_domain_errors! {
         Unexpected(diesel::result::Error) => "Unexpected error: {0}",
     ]
 }
-
 
 impl From<diesel::result::Error> for DomainError {
     fn from(value: diesel::result::Error) -> Self {
@@ -135,7 +136,7 @@ pub enum InfrastructureError {
 #[derive(Error, Debug)]
 pub enum ErrorTask {
     #[error("Error: {0}")]
-    Generic(String)
+    Generic(String),
 }
 
 #[derive(Error, Debug)]

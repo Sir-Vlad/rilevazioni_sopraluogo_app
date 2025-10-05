@@ -1,9 +1,11 @@
-use app_models::models::TipoInfisso;
-use app_models::schema::tipo_infisso;
-use app_utils::app_error::DomainError;
-use app_utils::app_interface::dao_interface::crud_operations::GetAll;
-use app_utils::app_interface::dao_interface::DAO;
-use app_utils::app_interface::database_interface::PostgresPooled;
+use app_models::{models::TipoInfisso, schema::tipo_infisso};
+use app_utils::{
+    app_error::DomainError,
+    app_interface::{
+        dao_interface::{DAO, crud_operations::GetAll},
+        database_interface::PostgresPooled,
+    },
+};
 use diesel::RunQueryDsl;
 
 pub struct TipoInfissoDAO;

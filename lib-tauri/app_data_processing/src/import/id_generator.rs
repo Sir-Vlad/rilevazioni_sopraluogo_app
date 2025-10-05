@@ -1,7 +1,10 @@
+use std::{
+    collections::HashMap,
+    fmt::{Display, Formatter},
+};
+
 use app_models::models::Stanza;
 use app_utils::app_error::{AppResult, DomainError, ErrorKind};
-use std::collections::HashMap;
-use std::fmt::{Display, Formatter};
 
 #[derive(Debug)]
 pub enum Error {
@@ -30,9 +33,7 @@ pub struct IdGeneratorStanza {
 }
 
 impl Default for IdGeneratorStanza {
-    fn default() -> Self {
-        Self::new()
-    }
+    fn default() -> Self { Self::new() }
 }
 
 impl IdGeneratorStanza {
@@ -46,13 +47,21 @@ impl IdGeneratorStanza {
         let piano = if let Some(piano) = self.format_piano(stanza.piano.as_str()) {
             piano
         } else {
-            return Err(DomainError::InvalidInput(ErrorKind::InvalidFormat, "Piano non valido o vuoto".to_string()).into());
+            return Err(DomainError::InvalidInput(
+                ErrorKind::InvalidFormat,
+                "Piano non valido o vuoto".to_string(),
+            )
+            .into());
         };
 
         let des_uso = if let Some(des_uso) = self.format_uso(stanza.destinazione_uso.as_str()) {
             des_uso
         } else {
-            return Err(DomainError::InvalidInput(ErrorKind::InvalidFormat, "Destinazione d'uso non valido o vuoto".to_string()).into());
+            return Err(DomainError::InvalidInput(
+                ErrorKind::InvalidFormat,
+                "Destinazione d'uso non valido o vuoto".to_string(),
+            )
+            .into());
         };
 
         let key_hash = (stanza.edificio_id.clone(), piano.clone());
@@ -102,7 +111,8 @@ impl IdGeneratorStanza {
 
         // Get the first letter of each word
         let mut v: Vec<char> = split.iter().filter_map(|s| s.chars().next()).collect();
-        // If the first word is longer than 3 chars, add the remaining chars to the first word
+        // If the first word is longer than 3 chars, add the remaining chars to the
+        // first word
         if v.len() < 3 {
             if let Some(last_word) = split.last() {
                 let remaining_chars = last_word.chars().skip(1);
@@ -122,9 +132,10 @@ impl IdGeneratorStanza {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use app_models::models::Stanza;
     use app_utils::app_error::ApplicationError;
+
+    use super::*;
 
     fn init_stanza(piano: Piano, cod_stanza: String, dest_uso: DestUso) -> Stanza {
         Stanza {
@@ -214,7 +225,11 @@ mod tests {
     #[test]
     fn test_generate_id_multipla_parola() {
         let mut id_gen = IdGeneratorStanza::new();
-        let stanza = init_stanza("3".to_string(), "_".to_string(), "Sala Convegli".to_string());
+        let stanza = init_stanza(
+            "3".to_string(),
+            "_".to_string(),
+            "Sala Convegli".to_string(),
+        );
 
         let id = id_gen.generate_id(stanza).unwrap();
         assert_eq!(id.cod_stanza, "P03_SCO_01");
@@ -223,10 +238,18 @@ mod tests {
     #[test]
     fn test_generate_id_multipli() {
         let mut id_gen = IdGeneratorStanza::new();
-        let stanza = init_stanza("3".to_string(), "_".to_string(), "Sala Convegli".to_string());
+        let stanza = init_stanza(
+            "3".to_string(),
+            "_".to_string(),
+            "Sala Convegli".to_string(),
+        );
         let _ = id_gen.generate_id(stanza);
 
-        let stanza = init_stanza("3".to_string(), "_".to_string(), "Sala Convegli".to_string());
+        let stanza = init_stanza(
+            "3".to_string(),
+            "_".to_string(),
+            "Sala Convegli".to_string(),
+        );
         let id = id_gen.generate_id(stanza).unwrap();
         assert_eq!(id.cod_stanza, "P03_SCO_02");
     }

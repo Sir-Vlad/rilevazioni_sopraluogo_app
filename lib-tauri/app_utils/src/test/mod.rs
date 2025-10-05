@@ -1,30 +1,37 @@
 pub mod utils;
 
-use crate::path_data_fake;
-use crate::test::impl_database_connector::IsolatedTestDatabaseConnector;
-use crate::test::utils::read_json_file;
-use app_interface::dao_interface::crud_operations::Insert;
-use app_interface::dao_interface::DAO as DAOTrait;
-use app_interface::database_interface::{DatabaseManagerTrait, PostgresPooled};
-use diesel::{
-    r2d2::{ConnectionManager, Pool},
-    PgConnection,
-};
-use diesel_migrations::{embed_migrations, EmbeddedMigrations, MigrationHarness};
-use serde::de::DeserializeOwned;
-use std::marker::PhantomData;
-use std::sync::atomic::{AtomicBool, Ordering};
-use std::sync::Arc;
 use std::{
     error::Error,
-    sync::{Once, OnceLock},
+    marker::PhantomData,
+    sync::{
+        Arc, Once, OnceLock,
+        atomic::{AtomicBool, Ordering},
+    },
     time::Duration,
 };
-use tauri::test::{mock_app, MockRuntime};
-use tauri::{AppHandle, Manager, State};
+
+use app_interface::{
+    dao_interface::{DAO as DAOTrait, crud_operations::Insert},
+    database_interface::{DatabaseManagerTrait, PostgresPooled},
+};
+use diesel::{
+    PgConnection,
+    r2d2::{ConnectionManager, Pool},
+};
+use diesel_migrations::{EmbeddedMigrations, MigrationHarness, embed_migrations};
+use serde::de::DeserializeOwned;
+use tauri::{
+    AppHandle, Manager, State,
+    test::{MockRuntime, mock_app},
+};
 use testcontainers::ContainerAsync;
 use testcontainers_modules::postgres::Postgres;
 use tokio::sync::OnceCell;
+
+use crate::{
+    path_data_fake,
+    test::{impl_database_connector::IsolatedTestDatabaseConnector, utils::read_json_file},
+};
 
 pub type ResultTest<T = ()> = Result<T, Box<dyn Error + Send + Sync>>;
 
@@ -35,18 +42,20 @@ static POSTGRES_CONTAINER: OnceCell<ContainerAsync<Postgres>> = OnceCell::const_
 pub const MIGRATIONS: EmbeddedMigrations = embed_migrations!("../app_models/migrations/");
 
 pub mod impl_database_connector {
-    use crate::test::{create_test_postgres_container, get_connection_string, MIGRATIONS};
+    use std::{any::Any, sync::Arc, time::Duration};
+
     use app_interface::database_interface::{DatabaseConnector, PostgresPool};
     use async_trait::async_trait;
-    use diesel::r2d2::{ConnectionManager, Pool};
-    use diesel::PgConnection;
+    use diesel::{
+        PgConnection,
+        r2d2::{ConnectionManager, Pool},
+    };
     use diesel_migrations::MigrationHarness;
-    use std::any::Any;
-    use std::sync::Arc;
-    use std::time::Duration;
     use testcontainers::ContainerAsync;
     use testcontainers_modules::postgres::Postgres;
     use tokio::sync::RwLock;
+
+    use crate::test::{MIGRATIONS, create_test_postgres_container, get_connection_string};
 
     // Mock del connector
     #[derive(Clone)]
@@ -80,9 +89,7 @@ pub mod impl_database_connector {
         //     self
         // }
 
-        fn as_any_mut(&mut self) -> &mut dyn Any {
-            self
-        }
+        fn as_any_mut(&mut self) -> &mut dyn Any { self }
     }
 
     pub struct IsolatedTestDatabaseConnector {
@@ -143,9 +150,7 @@ pub mod impl_database_connector {
             pool
         }
 
-        fn as_any_mut(&mut self) -> &mut dyn Any {
-            self
-        }
+        fn as_any_mut(&mut self) -> &mut dyn Any { self }
     }
 
     impl Clone for Box<IsolatedTestDatabaseConnector> {
@@ -174,8 +179,8 @@ extern "C" fn cleanup() {
             }
         });
     })
-        .join() // aspetta che il thread finisca prima di ritornare
-        .expect("Cleanup thread panicked");
+    .join() // aspetta che il thread finisca prima di ritornare
+    .expect("Cleanup thread panicked");
 }
 
 pub async fn get_postgres_container() -> &'static ContainerAsync<Postgres> {
@@ -224,25 +229,27 @@ pub async fn create_postgres_pool() -> &'static Pool<ConnectionManager<PgConnect
     })
 }
 
-/// A structure representing the test environment used for integration or unit tests.
+/// A structure representing the test environment used for integration or unit
+/// tests.
 ///
 /// This struct encapsulates the components required for setting up and running
-/// isolated tests, such as a database connector and an application instance with
-/// a mock runtime.
+/// isolated tests, such as a database connector and an application instance
+/// with a mock runtime.
 ///
 /// # Fields
 ///
-/// * `connector` - A boxed instance of `IsolatedTestDatabaseConnector`, which provides
-///   an isolated database connection for running tests without affecting the primary
-///   database or other tests.
+/// * `connector` - A boxed instance of `IsolatedTestDatabaseConnector`, which
+///   provides an isolated database connection for running tests without
+///   affecting the primary database or other tests.
 ///
-/// * `app` - An instance of `App` configured to use a `MockRuntime`. This represents
-///   the application under test, allowing mock interactions or controlled runtime behavior.
+/// * `app` - An instance of `App` configured to use a `MockRuntime`. This
+///   represents the application under test, allowing mock interactions or
+///   controlled runtime behavior.
 ///
 /// # Usage
 ///
-/// The `TestEnvironment` is typically used to initialize and configure the test setup,
-/// ensuring a consistent and reliable testing framework.
+/// The `TestEnvironment` is typically used to initialize and configure the test
+/// setup, ensuring a consistent and reliable testing framework.
 ///
 /// ```
 pub struct TestServiceEnvironment<D> {
@@ -259,7 +266,7 @@ where
     pub async fn new<T, F>(insert_data: T) -> ResultTest<Self>
     where
         T: Fn(D) -> F + Send + 'static,
-        F: std::future::Future<Output=ResultTest<()>> + Send + 'static,
+        F: std::future::Future<Output = ResultTest<()>> + Send + 'static,
         D: Clone,
     {
         let connector = Box::new(IsolatedTestDatabaseConnector::new().await);
@@ -298,13 +305,9 @@ where
         })
     }
 
-    pub fn app(&self) -> Arc<AppHandle<MockRuntime>> {
-        self.app.clone()
-    }
+    pub fn app(&self) -> Arc<AppHandle<MockRuntime>> { self.app.clone() }
 
-    pub fn database(&self) -> State<'_, D> {
-        self.app.state::<D>()
-    }
+    pub fn database(&self) -> State<'_, D> { self.app.state::<D>() }
 
     pub fn set_state_app<T>(&self, state: T) -> bool
     where
@@ -421,9 +424,7 @@ impl TestDaoEnvironment {
         Ok(())
     }
 
-    pub fn get_pooled_connection(&self) -> ResultTest<PostgresPooled> {
-        Ok(self.pool.get()?)
-    }
+    pub fn get_pooled_connection(&self) -> ResultTest<PostgresPooled> { Ok(self.pool.get()?) }
 
     pub async fn cleanup(&self) -> ResultTest {
         if !self.container_close_done.load(Ordering::Acquire) {

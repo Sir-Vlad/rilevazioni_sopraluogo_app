@@ -1,17 +1,21 @@
-use crate::dao::UtenzeDAO;
-use crate::dto::UtenzaDTO;
-use crate::service::DomainError;
+use std::ops::Deref;
+
 use app_state::selected_edificio::SelectedEdificioTrait;
-use app_utils::app_error::{AppResult, ApplicationError, ErrorKind};
-use app_utils::app_interface::dao_interface::crud_operations::{Get, GetAll, Insert};
-use app_utils::app_interface::database_interface::DatabaseManagerTrait;
-use app_utils::app_interface::service_interface::{
-    CreateService, RetrieveBy, RetrieveByEdificioSelected, RetrieveManyService,
-    SelectedEdificioState,
+use app_utils::{
+    app_error::{AppResult, ApplicationError, ErrorKind},
+    app_interface::{
+        dao_interface::crud_operations::{Get, GetAll, Insert},
+        database_interface::DatabaseManagerTrait,
+        service_interface::{
+            CreateService, RetrieveBy, RetrieveByEdificioSelected, RetrieveManyService,
+            SelectedEdificioState,
+        },
+    },
 };
 use async_trait::async_trait;
-use std::ops::Deref;
 use tauri::State;
+
+use crate::{dao::UtenzeDAO, dto::UtenzaDTO, service::DomainError};
 
 pub struct UtenzeService;
 
@@ -44,7 +48,7 @@ impl RetrieveBy<UtenzaDTO> for UtenzeService {
                     ErrorKind::InvalidField,
                     where_field.to_string(),
                 )
-                    .into())
+                .into());
             }
         };
 
@@ -84,19 +88,21 @@ impl CreateService<UtenzaDTO> for UtenzeService {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-    use crate::dao::EdificioDAO;
-    use crate::dto::EdificioDTO;
-    use app_models::models::TipoUtenza;
-    use app_state::database::DatabaseManager;
-    use app_state::selected_edificio::EdificioSelected;
-    use app_utils::app_interface::database_interface::DatabaseManagerTrait;
-    use app_utils::app_interface::service_interface::SelectedEdificioTrait;
-    use app_utils::path_data_fake;
-    use app_utils::test::utils::read_json_file;
-    use app_utils::test::{ResultTest, TestServiceEnvironment};
     use std::ops::Deref;
+
+    use app_models::models::TipoUtenza;
+    use app_state::{database::DatabaseManager, selected_edificio::EdificioSelected};
+    use app_utils::{
+        app_interface::{
+            database_interface::DatabaseManagerTrait, service_interface::SelectedEdificioTrait,
+        },
+        path_data_fake,
+        test::{ResultTest, TestServiceEnvironment, utils::read_json_file},
+    };
     use tokio::sync::RwLock;
+
+    use super::*;
+    use crate::{dao::EdificioDAO, dto::EdificioDTO};
 
     async fn setup_utenze_env() -> ResultTest<TestServiceEnvironment<DatabaseManager>> {
         let test_service_env =
@@ -119,7 +125,7 @@ mod tests {
 
                 Ok(())
             })
-                .await?;
+            .await?;
 
         let select_edificio = SelectedEdificioState::new(RwLock::new(EdificioSelected::new()));
         select_edificio

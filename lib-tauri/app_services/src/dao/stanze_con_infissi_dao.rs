@@ -6,13 +6,13 @@ use app_utils::{
     app_error::DomainError,
     app_interface::{
         dao_interface::{
-            crud_operations::{Get, Insert, Update},
             DAO,
+            crud_operations::{Get, Insert, Update},
         },
         database_interface::PostgresPooled,
     },
 };
-use diesel::{result::Error, ExpressionMethods, QueryDsl, RunQueryDsl};
+use diesel::{ExpressionMethods, QueryDsl, RunQueryDsl, result::Error};
 
 pub struct StanzaConInfissiDao;
 
@@ -35,6 +35,7 @@ impl<'a> Get<StanzaConInfissi, &'a str> for StanzaConInfissiDao {
 
 impl Get<StanzaConInfissi, (String, i32)> for StanzaConInfissiDao {
     type Output = Vec<StanzaConInfissi>;
+
     /// L'id è una tuple di id che corrispondono -> (edificio, stanza)
     /// Recupera tutti gli infissi che sono collegati a una stanza
     fn get(conn: &mut PostgresPooled, id: (String, i32)) -> Result<Self::Output, DomainError> {
@@ -51,6 +52,7 @@ impl Get<StanzaConInfissi, (String, i32)> for StanzaConInfissiDao {
 
 impl Insert<StanzaConInfissi> for StanzaConInfissiDao {
     type Output = StanzaConInfissi;
+
     fn insert(
         conn: &mut PostgresPooled,
         item: StanzaConInfissi,
@@ -64,6 +66,7 @@ impl Insert<StanzaConInfissi> for StanzaConInfissiDao {
 
 impl Update<UpdateStanzaConInfissi, (String, i32, String)> for StanzaConInfissiDao {
     type Output = StanzaConInfissi;
+
     /// id -> (edificio, stanza, infisso)
     fn update(
         conn: &mut PostgresPooled,
@@ -102,12 +105,15 @@ impl Update<UpdateStanzaConInfissi, (String, i32, String)> for StanzaConInfissiD
 
 #[cfg(test)]
 mod test {
-    use super::*;
-    use crate::dao::{EdificioDAO, InfissoDAO, StanzaDAO};
-    use crate::dto::{EdificioDTO, InfissoDTO, StanzaDTO};
     use app_models::models::{NewEdificio, NewInfisso, NewStanza};
     use app_utils::test::{ResultTest, TestDaoEnvironment};
     use serde::Deserialize;
+
+    use super::*;
+    use crate::{
+        dao::{EdificioDAO, InfissoDAO, StanzaDAO},
+        dto::{EdificioDTO, InfissoDTO, StanzaDTO},
+    };
 
     const ID_EDIFICIO: &str = "4693-182";
     const ID_STANZA: i32 = 27;

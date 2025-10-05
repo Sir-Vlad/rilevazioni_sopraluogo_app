@@ -1,11 +1,15 @@
-use app_models::models::Illuminazione;
-use app_models::schema::illuminazione;
-use app_utils::app_error::DomainError;
-use app_utils::app_interface::dao_interface::crud_operations::{GetAll, Insert};
-use app_utils::app_interface::dao_interface::DAO;
-use app_utils::app_interface::database_interface::PostgresPooled;
-use diesel::result::Error;
-use diesel::RunQueryDsl;
+use app_models::{models::Illuminazione, schema::illuminazione};
+use app_utils::{
+    app_error::DomainError,
+    app_interface::{
+        dao_interface::{
+            DAO,
+            crud_operations::{GetAll, Insert},
+        },
+        database_interface::PostgresPooled,
+    },
+};
+use diesel::{RunQueryDsl, result::Error};
 
 pub struct IlluminazioneDAO;
 
@@ -13,6 +17,7 @@ impl DAO for IlluminazioneDAO {}
 
 impl GetAll<Illuminazione> for IlluminazioneDAO {
     type Output = Illuminazione;
+
     fn get_all(conn: &mut PostgresPooled) -> Result<Vec<Self::Output>, DomainError> {
         illuminazione::table
             .load::<Illuminazione>(conn)

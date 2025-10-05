@@ -1,34 +1,42 @@
-use crate::events_payload::{EdificioChangePayload, EventWrapper, NewEdificioPayload, TypeEvent};
-use crate::{get_chiave_selected_edificio, is_selected_edificio};
+use std::{
+    collections::{HashMap, HashSet},
+    error::Error,
+};
+
 use app_data_processing::{IdGeneratorStanza, SimpleDataFrame, TransposedDataFrame};
-use app_services::dto::{StanzaDTOBuilder, TableWithPrimaryKey};
 use app_services::{
     dto::{
         AnnotazioneDTO, AnnotazioneEdificioDTO, AnnotazioneInfissoDTO, AnnotazioneStanzaDTO,
-        EdificioDTO, FotovoltaicoDTO, InfissoDTO, StanzaDTO, TipoDTO, UtenzaDTO,
+        EdificioDTO, FotovoltaicoDTO, InfissoDTO, StanzaDTO, StanzaDTOBuilder, TableWithPrimaryKey,
+        TipoDTO, UtenzaDTO,
     },
     service::{
         AnnotazioneService, CreateService, EdificioService, FotovoltaicoService, InfissoService,
         StanzaService, TypeService, TypeServiceImpl, UpdateService, UtenzeService,
     },
 };
-use app_state::database::DatabaseManager;
-use app_state::selected_edificio::EdificioSelected;
+use app_state::{database::DatabaseManager, selected_edificio::EdificioSelected};
 use app_utils::app_interface::service_interface::{
     CreateBatchService, RetrieveByEdificioSelected, RetrieveManyService, SelectedEdificioState,
     SelectedEdificioTrait,
 };
 use log::info;
 use serde_json::Value;
-use std::collections::{HashMap, HashSet};
-use std::error::Error;
 use tauri::{AppHandle, Emitter, Runtime, State};
+
+use crate::{
+    events_payload::{EdificioChangePayload, EventWrapper, NewEdificioPayload, TypeEvent},
+    get_chiave_selected_edificio, is_selected_edificio,
+};
 
 pub(crate) type ResultCommand<T> = Result<T, String>;
 
-/**************************************************************************************************/
-/******************************* COMMAND PER MISCELLANEOUS **********************************/
-/**************************************************************************************************/
+/***************************************************************************
+ * ********************** */
+/******************************* COMMAND PER MISCELLANEOUS
+ * ********************************* */
+/***************************************************************************
+ * ********************** */
 
 #[tauri::command]
 pub async fn get_fascicoli(db: State<'_, DatabaseManager>) -> ResultCommand<Vec<i32>> {
@@ -45,9 +53,12 @@ pub async fn get_fascicoli(db: State<'_, DatabaseManager>) -> ResultCommand<Vec<
     }
 }
 
-/**************************************************************************************************/
-/******************************* COMMAND PER GESTIRE IL DATABASE **********************************/
-/**************************************************************************************************/
+/***************************************************************************
+ * ********************** */
+/******************************* COMMAND PER GESTIRE IL DATABASE
+ * ********************************* */
+/***************************************************************************
+ * ********************** */
 
 #[tauri::command]
 pub async fn set_edificio(
@@ -85,9 +96,12 @@ pub async fn clear_edificio(
     Ok(())
 }
 
-/**************************************************************************************************/
-/************************** COMMAND PER AGGIUNGERE UN NUOVO FASCICOLO *****************************/
-/**************************************************************************************************/
+/***************************************************************************
+ * ********************** */
+/************************** COMMAND PER AGGIUNGERE UN NUOVO FASCICOLO
+ * **************************** */
+/***************************************************************************
+ * ********************** */
 
 fn get_field(row: &HashMap<&str, &str>, name: &str) -> Result<String, Box<dyn Error>> {
     match row.get(name) {
@@ -174,15 +188,19 @@ pub async fn add_new_fascicolo_from_xlsx<R: Runtime>(
                         .await
                         .unwrap(),
                 ),
-            ))
+            ),
+        )
         .map_err(|e| e.to_string())?;
 
     Ok(())
 }
 
-/**************************************************************************************************/
-/************************************** COMMAND PER INFISSI ***************************************/
-/**************************************************************************************************/
+/***************************************************************************
+ * ********************** */
+/************************************** COMMAND PER INFISSI
+ * ************************************** */
+/***************************************************************************
+ * ********************** */
 
 #[tauri::command]
 pub async fn get_infissi(
@@ -214,9 +232,12 @@ pub async fn update_infisso(
         .map_err(|e| e.to_string())
 }
 
-/**************************************************************************************************/
-/************************************** COMMAND PER STANZE ****************************************/
-/**************************************************************************************************/
+/***************************************************************************
+ * ********************** */
+/************************************** COMMAND PER STANZE
+ * *************************************** */
+/***************************************************************************
+ * ********************** */
 
 #[tauri::command]
 pub async fn get_stanze(
@@ -248,9 +269,12 @@ pub async fn update_stanza(
         .map_err(|e| e.to_string())
 }
 
-/**************************************************************************************************/
-/************************************** COMMAND PER TIPI ******************************************/
-/**************************************************************************************************/
+/***************************************************************************
+ * ********************** */
+/************************************** COMMAND PER TIPI
+ * ***************************************** */
+/***************************************************************************
+ * ********************** */
 
 #[tauri::command]
 pub async fn get_all_tipi(
@@ -268,9 +292,12 @@ pub async fn insert_tipo(db: State<'_, DatabaseManager>, tipo: TipoDTO) -> Resul
         .map_err(|e| e.to_string())
 }
 
-/**************************************************************************************************/
-/************************************** COMMAND PER EXPORT ******************************************/
-/**************************************************************************************************/
+/***************************************************************************
+ * ********************** */
+/************************************** COMMAND PER EXPORT
+ * ***************************************** */
+/***************************************************************************
+ * ********************** */
 /*
 #[tauri::command]
 pub async fn export_data_to_excel(
@@ -280,9 +307,12 @@ name_file: Option<String>,
 ExportDatiStanzaToExcel::export(db, name_file).map_err(|e| e.to_string())
 }
 */
-/**************************************************************************************************/
-/************************************ COMMAND PER EDIFICIO ****************************************/
-/**************************************************************************************************/
+/***************************************************************************
+ * ********************** */
+/************************************ COMMAND PER EDIFICIO
+ * *************************************** */
+/***************************************************************************
+ * ********************** */
 #[tauri::command]
 pub async fn get_edifici(db: State<'_, DatabaseManager>) -> ResultCommand<Vec<EdificioDTO>> {
     EdificioService::retrieve_many(db)
@@ -300,9 +330,12 @@ pub async fn update_edificio(
         .map_err(|e| e.to_string())
 }
 
-/**************************************************************************************************/
-/************************************ COMMAND PER UTENZE ****************************************/
-/**************************************************************************************************/
+/***************************************************************************
+ * ********************** */
+/************************************ COMMAND PER UTENZE
+ * *************************************** */
+/***************************************************************************
+ * ********************** */
 
 #[tauri::command]
 pub async fn get_utenze(
@@ -341,9 +374,12 @@ pub async fn insert_utenza(
         .map_err(|e| e.to_string())
 }
 
-/**************************************************************************************************/
-/******************************** COMMAND PER FOTOVOLTAICO ****************************************/
-/**************************************************************************************************/
+/***************************************************************************
+ * ********************** */
+/******************************** COMMAND PER FOTOVOLTAICO
+ * *************************************** */
+/***************************************************************************
+ * ********************** */
 #[tauri::command]
 pub async fn get_fotovoltaico(
     db: State<'_, DatabaseManager>,
@@ -381,9 +417,12 @@ pub async fn insert_fotovoltaico(
         .map_err(|e| e.to_string())
 }
 
-/**************************************************************************************************/
-/********************************** COMMAND PER ANNOTAZIONI ***************************************/
-/**************************************************************************************************/
+/***************************************************************************
+ * ********************** */
+/********************************** COMMAND PER ANNOTAZIONI
+ * ************************************** */
+/***************************************************************************
+ * ********************** */
 #[tauri::command]
 pub async fn get_annotazioni(
     db: State<'_, DatabaseManager>,
@@ -393,27 +432,27 @@ pub async fn get_annotazioni(
         TableWithPrimaryKey::Edificio(..) => Ok(<AnnotazioneService as RetrieveManyService<
             AnnotazioneEdificioDTO,
         >>::retrieve_many(db)
-            .await
-            .map_err(|e| e.to_string())?
-            .into_iter()
-            .map(AnnotazioneDTO::from)
-            .collect::<Vec<AnnotazioneDTO>>()),
+        .await
+        .map_err(|e| e.to_string())?
+        .into_iter()
+        .map(AnnotazioneDTO::from)
+        .collect::<Vec<AnnotazioneDTO>>()),
         TableWithPrimaryKey::Stanza(..) => Ok(<AnnotazioneService as RetrieveManyService<
             AnnotazioneStanzaDTO,
         >>::retrieve_many(db)
-            .await
-            .map_err(|e| e.to_string())?
-            .into_iter()
-            .map(AnnotazioneDTO::from)
-            .collect::<Vec<AnnotazioneDTO>>()),
+        .await
+        .map_err(|e| e.to_string())?
+        .into_iter()
+        .map(AnnotazioneDTO::from)
+        .collect::<Vec<AnnotazioneDTO>>()),
         TableWithPrimaryKey::Infisso(..) => Ok(<AnnotazioneService as RetrieveManyService<
             AnnotazioneInfissoDTO,
         >>::retrieve_many(db)
-            .await
-            .map_err(|e| e.to_string())?
-            .into_iter()
-            .map(AnnotazioneDTO::from)
-            .collect::<Vec<AnnotazioneDTO>>()),
+        .await
+        .map_err(|e| e.to_string())?
+        .into_iter()
+        .map(AnnotazioneDTO::from)
+        .collect::<Vec<AnnotazioneDTO>>()),
     }
 }
 
@@ -426,32 +465,36 @@ pub async fn insert_annotazione(
         TableWithPrimaryKey::Edificio(..) => Ok(<AnnotazioneService as CreateService<
             AnnotazioneEdificioDTO,
         >>::create(db, annotazione.into())
-            .await
-            .map_err(|e| e.to_string())?
-            .into()),
+        .await
+        .map_err(|e| e.to_string())?
+        .into()),
         TableWithPrimaryKey::Stanza(..) => Ok(<AnnotazioneService as CreateService<
             AnnotazioneStanzaDTO,
         >>::create(db, annotazione.into())
-            .await
-            .map_err(|e| e.to_string())?
-            .into()),
+        .await
+        .map_err(|e| e.to_string())?
+        .into()),
         TableWithPrimaryKey::Infisso(..) => Ok(<AnnotazioneService as CreateService<
             AnnotazioneInfissoDTO,
         >>::create(db, annotazione.into())
-            .await
-            .map_err(|e| e.to_string())?
-            .into()),
+        .await
+        .map_err(|e| e.to_string())?
+        .into()),
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-    use app_utils::app_interface::database_interface::DatabaseManagerTrait;
-    use app_utils::app_interface::service_interface::SelectedEdificioTrait;
-    use app_utils::test::impl_database_connector::IsolatedTestDatabaseConnector;
+    use app_utils::{
+        app_interface::{
+            database_interface::DatabaseManagerTrait, service_interface::SelectedEdificioTrait,
+        },
+        test::impl_database_connector::IsolatedTestDatabaseConnector,
+    };
     use tauri::{Listener, Manager};
     use tokio::sync::RwLock;
+
+    use super::*;
 
     #[tokio::test]
     async fn test_add_new_fascicolo_from_xlsx() {
@@ -481,7 +524,7 @@ mod tests {
             selected_edificio.clone(),
             path.to_string(),
         )
-            .await
+        .await
         {
             Ok(_) => {}
             Err(e) => panic!("{e}"),

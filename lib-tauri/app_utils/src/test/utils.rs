@@ -1,6 +1,8 @@
-use crate::test::ResultTest;
-use serde::de::DeserializeOwned;
 use std::fs::File;
+
+use serde::de::DeserializeOwned;
+
+use crate::test::ResultTest;
 
 #[macro_export]
 macro_rules! path_data_fake {

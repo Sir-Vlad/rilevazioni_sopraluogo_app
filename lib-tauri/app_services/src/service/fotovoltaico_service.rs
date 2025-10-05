@@ -1,16 +1,21 @@
-use crate::dao::FotovoltaicoDAO;
-use crate::dto::FotovoltaicoDTO;
+use std::ops::Deref;
+
 use app_state::selected_edificio::SelectedEdificioTrait;
-use app_utils::app_error::{AppResult, ApplicationError, DomainError, ErrorKind};
-use app_utils::app_interface::dao_interface::crud_operations::{Get, GetAll, Insert};
-use app_utils::app_interface::database_interface::DatabaseManagerTrait;
-use app_utils::app_interface::service_interface::{
-    CreateService, RetrieveBy, RetrieveByEdificioSelected, RetrieveManyService,
-    SelectedEdificioState,
+use app_utils::{
+    app_error::{AppResult, ApplicationError, DomainError, ErrorKind},
+    app_interface::{
+        dao_interface::crud_operations::{Get, GetAll, Insert},
+        database_interface::DatabaseManagerTrait,
+        service_interface::{
+            CreateService, RetrieveBy, RetrieveByEdificioSelected, RetrieveManyService,
+            SelectedEdificioState,
+        },
+    },
 };
 use async_trait::async_trait;
-use std::ops::Deref;
 use tauri::State;
+
+use crate::{dao::FotovoltaicoDAO, dto::FotovoltaicoDTO};
 
 pub struct FotovoltaicoService;
 
@@ -43,7 +48,7 @@ impl RetrieveBy<FotovoltaicoDTO> for FotovoltaicoService {
                     ErrorKind::InvalidField,
                     where_field.to_string(),
                 )
-                    .into())
+                .into());
             }
         };
 

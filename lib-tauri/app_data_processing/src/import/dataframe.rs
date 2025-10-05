@@ -1,6 +1,9 @@
-use calamine::{open_workbook, Reader, Xlsx};
-use std::collections::{HashMap, HashSet};
-use std::fmt::{Display, Formatter};
+use std::{
+    collections::{HashMap, HashSet},
+    fmt::{Display, Formatter},
+};
+
+use calamine::{Reader, Xlsx, open_workbook};
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct SimpleDataFrame {
@@ -101,7 +104,7 @@ impl SimpleDataFrame {
             .filter(|(index, _)| indices.contains(index))
             .map(|(_, row)| row.iter().map(|cell| cell.to_string()).collect())
             .collect();
-        
+
         self.headers = new_headers;
         self.columns = new_rows;
         Ok(())
@@ -130,9 +133,7 @@ impl SimpleDataFrame {
         self.columns = unique_rows;
     }
 
-    pub fn traspose(&self) -> TransposedDataFrame {
-        TransposedDataFrame::from_dataframe(self)
-    }
+    pub fn traspose(&self) -> TransposedDataFrame { TransposedDataFrame::from_dataframe(self) }
 }
 
 impl Display for SimpleDataFrame {
@@ -207,12 +208,10 @@ impl Display for TransposedDataFrame {
 }
 
 impl<'a> IntoIterator for &'a TransposedDataFrame {
-    type Item = HashMap<&'a str, &'a str>;
     type IntoIter = DataFrameIterator<'a>;
+    type Item = HashMap<&'a str, &'a str>;
 
-    fn into_iter(self) -> Self::IntoIter {
-        self.iter_rows()
-    }
+    fn into_iter(self) -> Self::IntoIter { self.iter_rows() }
 }
 
 pub struct DataFrameIterator<'a> {
@@ -236,16 +235,18 @@ impl<'a> Iterator for DataFrameIterator<'a> {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-    use app_utils::test::ResultTest;
     use std::iter;
+
+    use app_utils::test::ResultTest;
+
+    use super::*;
 
     #[test]
     fn test_import() {
         let df = SimpleDataFrame::from_xlsx(
             "/home/maty/Downloads/Telegram Desktop/scuole massalongo e coccinelle.xlsx",
         )
-            .unwrap();
+        .unwrap();
         assert_eq!(df.headers.len(), 11);
         assert_eq!(df.columns[0].len(), 68);
         println!("{df}")
@@ -257,7 +258,6 @@ mod tests {
             "/home/maty/Downloads/Telegram Desktop/scuole massalongo e coccinelle.xlsx",
         )?;
         df.select(&["fascicolo", "nome_via", "chiave", "piano"])?;
-
 
         let old_column = df.column("chiave")?;
         let new_column: Vec<String> =
@@ -277,7 +277,7 @@ mod tests {
         let mut df = SimpleDataFrame::from_xlsx(
             "/home/maty/Downloads/Telegram Desktop/scuole massalongo e coccinelle.xlsx",
         )
-            .unwrap();
+        .unwrap();
         df.select(&["fascicolo", "nome_via", "chiave"]).unwrap();
         assert_eq!(df.headers.len(), 3);
         assert_eq!(df.columns.len(), 3);
@@ -289,9 +289,8 @@ mod tests {
         let mut df = SimpleDataFrame::from_xlsx(
             "/home/maty/Downloads/Telegram Desktop/scuole massalongo e coccinelle.xlsx",
         )
-            .unwrap();
-        df
-            .select(&["fascicolo", "nome_via", "chiave", "piano"])
+        .unwrap();
+        df.select(&["fascicolo", "nome_via", "chiave", "piano"])
             .unwrap();
         df.unique();
         assert_eq!(df.columns[0].len(), 4);
@@ -303,9 +302,8 @@ mod tests {
         let mut df = SimpleDataFrame::from_xlsx(
             "/home/maty/Downloads/Telegram Desktop/scuole massalongo e coccinelle.xlsx",
         )
-            .unwrap();
-         df
-            .select(&["fascicolo", "nome_via", "chiave", "piano"])
+        .unwrap();
+        df.select(&["fascicolo", "nome_via", "chiave", "piano"])
             .unwrap();
         let df = TransposedDataFrame::from_dataframe(&df);
         println!("{df}")
@@ -316,7 +314,7 @@ mod tests {
         let df = SimpleDataFrame::from_xlsx(
             "/home/maty/Downloads/Telegram Desktop/scuole massalongo e coccinelle.xlsx",
         )
-            .unwrap();
+        .unwrap();
         let df = df.traspose();
         for row in df.iter_rows() {
             println!("{row:?}");
@@ -328,9 +326,8 @@ mod tests {
         let mut df = SimpleDataFrame::from_xlsx(
             "/home/maty/Downloads/Telegram Desktop/scuole massalongo e coccinelle.xlsx",
         )
-            .unwrap();
-        df
-            .select(&["fascicolo", "nome_via", "chiave", "piano"])
+        .unwrap();
+        df.select(&["fascicolo", "nome_via", "chiave", "piano"])
             .unwrap();
         let df_t = df.clone().traspose();
         let df_t_t = df_t.traspose();

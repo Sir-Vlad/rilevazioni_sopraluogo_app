@@ -1,11 +1,18 @@
-use crate::dao::utils::{map_error_for_entity, EntityType};
-use app_models::models::{Edificio, NewEdificio, UpdateEdificio};
-use app_models::schema::edificio;
+use app_models::{
+    models::{Edificio, NewEdificio, UpdateEdificio},
+    schema::edificio,
+};
 use app_state::database::database_manager::PostgresPooled;
-use app_utils::app_error::DomainError;
-use app_utils::app_interface::dao_interface::crud_operations::{Get, GetAll, Insert, Update};
-use app_utils::app_interface::dao_interface::DAO;
+use app_utils::{
+    app_error::DomainError,
+    app_interface::dao_interface::{
+        DAO,
+        crud_operations::{Get, GetAll, Insert, Update},
+    },
+};
 use diesel::{QueryDsl, RunQueryDsl};
+
+use crate::dao::utils::{EntityType, map_error_for_entity};
 
 pub struct EdificioDAO;
 
@@ -13,6 +20,7 @@ impl DAO for EdificioDAO {}
 
 impl GetAll<Edificio> for EdificioDAO {
     type Output = Edificio;
+
     fn get_all(conn: &mut PostgresPooled) -> Result<Vec<Self::Output>, DomainError> {
         edificio::table
             .load::<Edificio>(conn)
@@ -22,6 +30,7 @@ impl GetAll<Edificio> for EdificioDAO {
 
 impl Get<Edificio, String> for EdificioDAO {
     type Output = Edificio;
+
     fn get(conn: &mut PostgresPooled, id: String) -> Result<Self::Output, DomainError> {
         edificio::table
             .find(id)
@@ -32,6 +41,7 @@ impl Get<Edificio, String> for EdificioDAO {
 
 impl Insert<NewEdificio> for EdificioDAO {
     type Output = Edificio;
+
     fn insert(conn: &mut PostgresPooled, item: NewEdificio) -> Result<Self::Output, DomainError> {
         diesel::insert_into(edificio::table)
             .values(&item)
@@ -42,6 +52,7 @@ impl Insert<NewEdificio> for EdificioDAO {
 
 impl Update<UpdateEdificio, String> for EdificioDAO {
     type Output = Edificio;
+
     fn update(
         conn: &mut PostgresPooled,
         id: String,
@@ -56,8 +67,9 @@ impl Update<UpdateEdificio, String> for EdificioDAO {
 
 #[cfg(test)]
 mod test {
-    use super::*;
     use app_utils::test::create_postgres_pool;
+
+    use super::*;
 
     #[tokio::test]
     async fn test_get_all() {

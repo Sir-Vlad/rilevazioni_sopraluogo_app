@@ -1,25 +1,34 @@
-use crate::dao::EdificioDAO;
-use crate::dto::EdificioDTO;
 use app_state::selected_edificio::EdificioSelected;
-use app_utils::app_error::{AppResult, ApplicationError};
-use app_utils::app_interface::service_interface::{SelectedEdificioState, SelectedEdificioTrait};
-use app_utils::app_interface::{
-    dao_interface::crud_operations::{Get, GetAll, Insert, Update},
-    database_interface::DatabaseManagerTrait,
-    service_interface::{CreateService, RetrieveManyService, RetrieveOneService, UpdateService},
+use app_utils::{
+    app_error::{AppResult, ApplicationError},
+    app_interface::{
+        dao_interface::crud_operations::{Get, GetAll, Insert, Update},
+        database_interface::DatabaseManagerTrait,
+        service_interface::{
+            CreateService, RetrieveManyService, RetrieveOneService, SelectedEdificioState,
+            SelectedEdificioTrait, UpdateService,
+        },
+    },
 };
 use async_trait::async_trait;
 use tauri::State;
 
+use crate::{dao::EdificioDAO, dto::EdificioDTO};
+
 pub struct EdificioService;
 
 impl EdificioService {
-    pub async fn select_edificio(stato: State<'_, SelectedEdificioState<EdificioSelected>>, chiave: String) {
+    pub async fn select_edificio(
+        stato: State<'_, SelectedEdificioState<EdificioSelected>>,
+        chiave: String,
+    ) {
         let mut stato_lock = stato.write().await;
         stato_lock.set_chiave(chiave);
     }
 
-    pub async fn get_edificio(stato: State<'_, SelectedEdificioState<EdificioSelected>>) -> AppResult<String> {
+    pub async fn get_edificio(
+        stato: State<'_, SelectedEdificioState<EdificioSelected>>,
+    ) -> AppResult<String> {
         let stato_lock = stato.read().await;
         match stato_lock.get_chiave() {
             Some(stato) => Ok(stato),
@@ -84,17 +93,19 @@ impl UpdateService<EdificioDTO> for EdificioService {
 mod tests {
     //! The tests were created based on the data in the `dataFake` folder.
 
-    use crate::dao::EdificioDAO;
-    use crate::dto::EdificioDTO;
-    use crate::service::EdificioService;
     use app_state::database::DatabaseManager;
-    use app_utils::app_interface::dao_interface::crud_operations::Insert;
-    use app_utils::app_interface::database_interface::DatabaseManagerTrait as DatabaseManagerInterface;
-    use app_utils::app_interface::service_interface::{
-        CreateService, RetrieveManyService, RetrieveOneService, UpdateService,
+    use app_utils::{
+        app_interface::{
+            dao_interface::crud_operations::Insert,
+            database_interface::DatabaseManagerTrait as DatabaseManagerInterface,
+            service_interface::{
+                CreateService, RetrieveManyService, RetrieveOneService, UpdateService,
+            },
+        },
+        test::{ResultTest, TestServiceEnvironment, utils::read_json_file},
     };
-    use app_utils::test::utils::read_json_file;
-    use app_utils::test::{ResultTest, TestServiceEnvironment};
+
+    use crate::{dao::EdificioDAO, dto::EdificioDTO, service::EdificioService};
 
     const FILE_PATH_DATA_FAKE: &str = "../dataFake/edificiFake.json";
 
@@ -110,7 +121,7 @@ mod tests {
             }
             Ok(())
         })
-            .await
+        .await
     }
 
     #[tokio::test(flavor = "multi_thread", worker_threads = 1)]
