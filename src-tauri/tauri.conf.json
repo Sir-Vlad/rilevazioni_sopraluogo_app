@@ -20,14 +20,15 @@
     ]
   },
   "bundle": {
-    "active": true,
+    "active": false,
     "publisher": "Mattia Frigiola",
     "copyright": "",
     "category": "Utility",
     "longDescription": "App per l'inserimento dati dei sopralluoghi",
     "targets": [
-      "app"
+      "nsis"
     ],
+    "createUpdaterArtifacts": false,
     "icon": [
       "icons/32x32.png",
       "icons/128x128.png",
