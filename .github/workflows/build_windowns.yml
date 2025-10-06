@@ -24,6 +24,12 @@ jobs:
       - name: Install Rust (Stable)
         uses: dtolnay/rust-toolchain@stable
 
+      - name: Install libpq via vcpkg
+        run: |
+          vcpkg install libpq:x64-windows
+          echo "PQ_LIB_DIR=C:\vcpkg\installed\x64-windows\lib" >> $env:GITHUB_ENV
+        shell: powershell
+
       - name: Install frontend dependencies
         run: npm install
 
