@@ -1,0 +1,191 @@
+[
+  {
+    "id": "A",
+    "id_edificio": "8361-122",
+    "tipo": "Finestra",
+    "altezza": 120,
+    "larghezza": 80,
+    "materiale": "PVC",
+    "vetro": "Doppio"
+  },
+  {
+    "id": "A",
+    "id_edificio": "5257-184",
+    "tipo": "Finestra",
+    "altezza": 140,
+    "larghezza": 90,
+    "materiale": "Legno",
+    "vetro": "Triplo"
+  },
+  {
+    "id": "A",
+    "id_edificio": "8518-34",
+    "tipo": "Finestra",
+    "altezza": 130,
+    "larghezza": 85,
+    "materiale": "Alluminio",
+    "vetro": "Camera"
+  },
+  {
+    "id": "A",
+    "id_edificio": "5435-160",
+    "tipo": "Finestra",
+    "altezza": 110,
+    "larghezza": 75,
+    "materiale": "Ferro",
+    "vetro": "Singolo"
+  },
+  {
+    "id": "A",
+    "id_edificio": "5340-179",
+    "tipo": "Finestra",
+    "altezza": 150,
+    "larghezza": 95,
+    "materiale": "PVC",
+    "vetro": "Doppio"
+  },
+  {
+    "id": "A",
+    "id_edificio": "4693-182",
+    "tipo": "Finestra",
+    "altezza": 125,
+    "larghezza": 80,
+    "materiale": "Legno",
+    "vetro": "Camera"
+  },
+  {
+    "id": "A",
+    "id_edificio": "8799-138",
+    "tipo": "Finestra",
+    "altezza": 135,
+    "larghezza": 88,
+    "materiale": "Alluminio",
+    "vetro": "Triplo"
+  },
+  {
+    "id": "A",
+    "id_edificio": "7835-174",
+    "tipo": "Finestra",
+    "altezza": 115,
+    "larghezza": 70,
+    "materiale": "PVC",
+    "vetro": "Plexiglas"
+  },
+  {
+    "id": "A",
+    "id_edificio": "8351-198",
+    "tipo": "Finestra",
+    "altezza": 160,
+    "larghezza": 100,
+    "materiale": "Ferro",
+    "vetro": "Doppio"
+  },
+  {
+    "id": "A",
+    "id_edificio": "6192-81",
+    "tipo": "Finestra",
+    "altezza": 120,
+    "larghezza": 82,
+    "materiale": "Legno",
+    "vetro": "Camera"
+  },
+  {
+    "id": "B",
+    "id_edificio": "8361-122",
+    "tipo": "Finestra",
+    "altezza": 145,
+    "larghezza": 92,
+    "materiale": "Alluminio",
+    "vetro": "Singolo"
+  },
+  {
+    "id": "B",
+    "id_edificio": "5257-184",
+    "tipo": "Finestra",
+    "altezza": 128,
+    "larghezza": 84,
+    "materiale": "PVC",
+    "vetro": "Triplo"
+  },
+  {
+    "id": "B",
+    "id_edificio": "8518-34",
+    "tipo": "Finestra",
+    "altezza": 118,
+    "larghezza": 76,
+    "materiale": "Ferro",
+    "vetro": "Doppio"
+  },
+  {
+    "id": "B",
+    "id_edificio": "5435-160",
+    "tipo": "Finestra",
+    "altezza": 155,
+    "larghezza": 98,
+    "materiale": "Legno",
+    "vetro": "Camera"
+  },
+  {
+    "id": "B",
+    "id_edificio": "5340-179",
+    "tipo": "Finestra",
+    "altezza": 132,
+    "larghezza": 86,
+    "materiale": "Alluminio",
+    "vetro": "Plexiglas"
+  },
+  {
+    "id": "B",
+    "id_edificio": "4693-182",
+    "tipo": "Finestra",
+    "altezza": 142,
+    "larghezza": 90,
+    "materiale": "PVC",
+    "vetro": "Singolo"
+  },
+  {
+    "id": "B",
+    "id_edificio": "8799-138",
+    "tipo": "Finestra",
+    "altezza": 122,
+    "larghezza": 78,
+    "materiale": "Ferro",
+    "vetro": "Doppio"
+  },
+  {
+    "id": "B",
+    "id_edificio": "7835-174",
+    "tipo": "Finestra",
+    "altezza": 138,
+    "larghezza": 89,
+    "materiale": "Legno",
+    "vetro": "Triplo"
+  },
+  {
+    "id": "B",
+    "id_edificio": "8351-198",
+    "tipo": "Finestra",
+    "altezza": 148,
+    "larghezza": 94,
+    "materiale": "Alluminio",
+    "vetro": "Camera"
+  },
+  {
+    "id": "B",
+    "id_edificio": "6192-81",
+    "tipo": "Finestra",
+    "altezza": 126,
+    "larghezza": 81,
+    "materiale": "PVC",
+    "vetro": "Doppio"
+  },
+  {
+    "id": "C",
+    "id_edificio": "4693-182",
+    "tipo": "Finestra",
+    "altezza": 126,
+    "larghezza": 81,
+    "materiale": "PVC",
+    "vetro": "Doppio"
+  }
+]

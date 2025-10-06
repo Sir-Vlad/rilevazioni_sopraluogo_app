@@ -1,0 +1,57 @@
+[
+  {
+    "id": 1,
+    "stanza_id": 1,
+    "content": "Contenuto di test"
+  },
+  {
+    "id": 2,
+    "stanza_id": 1,
+    "content": "Necessaria manutenzione infissi"
+  },
+  {
+    "id": 3,
+    "stanza_id": 1,
+    "content": "Verificare isolamento termico"
+  },
+  {
+    "id": 4,
+    "stanza_id": 1,
+    "content": "Programmare sostituzione vetri"
+  },
+  {
+    "id": 5,
+    "stanza_id": 1,
+    "content": "Controllo tenuta aria/acqua"
+  },
+  {
+    "id": 6,
+    "stanza_id": 1,
+    "content": "Pulizia guarnizioni da eseguire"
+  },
+  {
+    "id": 7,
+    "stanza_id": 1,
+    "content": "Valutare sostituzione materiale"
+  },
+  {
+    "id": 8,
+    "stanza_id": 1,
+    "content": "Segnalati spifferi d'aria"
+  },
+  {
+    "id": 9,
+    "stanza_id": 1,
+    "content": "Richiedere preventivo riparazione"
+  },
+  {
+    "id": 10,
+    "stanza_id": 1,
+    "content": "Infiltrazioni da verificare"
+  },
+  {
+    "id": 11,
+    "stanza_id": 1,
+    "content": "Aggiornare scheda manutenzione"
+  }
+]

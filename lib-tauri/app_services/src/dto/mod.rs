@@ -1,0 +1,25 @@
+mod annotazione_dto;
+mod climatizzazione_dto;
+mod edificio_dto;
+mod fotovoltaico_dto;
+mod illuminazione_dto;
+mod infisso_dto;
+mod materiali_infisso_dto;
+mod stanza_dto;
+mod tipo_dto;
+mod tipo_infisso_dto;
+mod utenze_dto;
+mod vetro_infisso_dto;
+
+pub use annotazione_dto::*;
+pub use climatizzazione_dto::*;
+pub use edificio_dto::*;
+pub use fotovoltaico_dto::*;
+pub use illuminazione_dto::*;
+pub use infisso_dto::*;
+pub use materiali_infisso_dto::*;
+pub use stanza_dto::*;
+pub use tipo_dto::*;
+pub use tipo_infisso_dto::*;
+pub use utenze_dto::*;
+pub use vetro_infisso_dto::*;

@@ -1,12 +1,8 @@
-import { Card, CardContent, CardHeader } from "@/components/ui/card.tsx";
-import { Fragment, ReactNode } from "react";
-import { useDatabase, useEdifici } from "@/context/UseProvider.tsx";
-import { CheckIcon, Pencil, PlusIcon, XIcon } from "lucide-react";
 import TitleCard from "@/components/title-card.tsx";
-import { capitalize, handleInputNumericChange, sanitizeString } from "@/helpers/helpers.ts";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
-import { zodResolver } from "@hookform/resolvers/zod";
+import {Button} from "@/components/ui/button.tsx";
+import {Card, CardContent, CardHeader} from "@/components/ui/card.tsx";
+import {Form, FormField, FormItem, FormLabel, FormMessage} from "@/components/ui/form.tsx";
+import {Input} from "@/components/ui/input.tsx";
 import {
     Sheet,
     SheetClose,
@@ -17,12 +13,17 @@ import {
     SheetTitle,
     SheetTrigger
 } from "@/components/ui/sheet.tsx";
-import { Button } from "@/components/ui/button.tsx";
-import { Form, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form.tsx";
-import { Input } from "@/components/ui/input.tsx";
-import { Textarea } from "@/components/ui/textarea.tsx";
-import { Switch } from "@/components/ui/switch.tsx";
-import { IEdificio } from "@/models/models.tsx";
+import {Switch} from "@/components/ui/switch.tsx";
+import {Textarea} from "@/components/ui/textarea.tsx";
+import {useSelectedEdificio} from "@/context/SelectedEdificioProvider.tsx";
+import {useEdifici} from "@/context/UseProvider.tsx";
+import {capitalize, handleInputNumericChange, sanitizeString} from "@/helpers/helpers.ts";
+import {IEdificio} from "@/models/models.tsx";
+import {zodResolver} from "@hookform/resolvers/zod";
+import {CheckIcon, Pencil, PlusIcon, XIcon} from "lucide-react";
+import {Fragment, ReactNode} from "react";
+import {useForm} from "react-hook-form";
+import {z} from "zod";
 
 const FormSchema = z.object({
     anno_costruzione     : z.number().min(1900, {
@@ -39,22 +40,22 @@ const FormSchema = z.object({
         message: "Le note devono essere composte da almeno 2 caratteri"
     }).optional(),
     isolamento_tetto     : z.boolean().optional(),
-    cappotto             : z.boolean().optional(),
-})
+    cappotto             : z.boolean().optional()
+});
 
 
 const CardDataEdificio = () => {
     const {
-        data,
-        selectedEdificio
+        data
     } = useEdifici();
+    const {edificio} = useSelectedEdificio();
 
     const valueElement = (value: unknown) => {
         if (typeof value === "boolean") {
             return value ? <CheckIcon className="text-green-500"/> : <XIcon className="text-red-500"/>;
         } else {
             const v: ReactNode = value as ReactNode ?? "Dato non disponibile";
-            return <p className="font-semibold">{ v }</p>;
+            return <p className="font-semibold">{v}</p>;
         }
     };
 
@@ -67,25 +68,27 @@ const CardDataEdificio = () => {
         </CardHeader>
         <CardContent>
             <div className="grid grid-cols-2 justify-start items-center gap-6">
-                { data.length > 0 ? (data
-                    .filter(value => value.chiave === selectedEdificio)
-                    .map((value) => {
-                        return Object.entries(value)
-                            .filter(([ key, _ ]) => key !== "note_riqualificazione")
-                            .map(([ key, value ]) => {
-                                return <Fragment key={ key }>
+                {data.length > 0 ? (
+                    data
+                        .filter(value => value.chiave === edificio?.chiave)
+                        .map((value) => {
+                            return Object.entries(value)
+                                         .filter(([key]) => key !== "note_riqualificazione")
+                                         .map(([key, value]) => {
+                                             return <Fragment key={key}>
                                     <div>
-                                        <p className="font-medium">{ capitalize(sanitizeString(key)) }</p>
+                                        <p className="font-medium">{capitalize(sanitizeString(key))}</p>
                                     </div>
                                     <div className="flex items-center justify-center">
-                                        { valueElement(value) }
+                                        {valueElement(value)}
                                     </div>
                                 </Fragment>;
-                            });
+                                         });
 
-                    })) : (<div className="col-span-2 h-34 flex items-center justify-center rounded-md border p-4">
+                        })) : (
+                    <div className="col-span-2 h-34 flex items-center justify-center rounded-md border p-4">
                     <span>No results</span>
-                </div>) }
+                </div>)}
             </div>
         </CardContent>
     </Card>;
@@ -93,10 +96,10 @@ const CardDataEdificio = () => {
 
 const InsertEdificio = () => {
     const {
-        selectedEdificio,
         modifyEdificio
     } = useEdifici();
-    const { databaseName } = useDatabase();
+    const {edificio} = useSelectedEdificio();
+
 
     const form = useForm<z.infer<typeof FormSchema>>({
         resolver     : zodResolver(FormSchema),
@@ -107,32 +110,35 @@ const InsertEdificio = () => {
     });
 
     function onSubmit(dataForm: z.infer<typeof FormSchema>) {
-        if (!selectedEdificio) {
-            return
+        if (!edificio) {
+            return;
         }
         const newEdificio: IEdificio = {
-            chiave               : selectedEdificio,
-            fascicolo            : "",
-            indirizzo            : "",
-            anno_costruzione     : dataForm.anno_costruzione === undefined ? undefined : dataForm.anno_costruzione.toString(),
-            anno_riqualificazione: dataForm.anno_riqualificazione === undefined ? undefined : dataForm.anno_riqualificazione.toString(),
-            note_riqualificazione: dataForm.note_riqualificazione === undefined ? undefined : dataForm.note_riqualificazione.toString(),
+            chiave               : edificio.chiave,
+            fascicolo            : edificio.fascicolo,
+            indirizzo            : edificio.indirizzo,
+            anno_costruzione     : dataForm.anno_costruzione ===
+                                   undefined ? undefined : dataForm.anno_costruzione,
+            anno_riqualificazione: dataForm.anno_riqualificazione ===
+                                   undefined ? undefined : dataForm.anno_riqualificazione,
+            note_riqualificazione: dataForm.note_riqualificazione ===
+                                   undefined ? undefined : dataForm.note_riqualificazione.toString(),
             isolamento_tetto     : dataForm.isolamento_tetto,
-            cappotto             : dataForm.cappotto,
-        }
+            cappotto             : dataForm.cappotto
+        };
         modifyEdificio(newEdificio).catch(console.error);
         form.reset({
             anno_costruzione     : undefined,
             anno_riqualificazione: undefined,
             note_riqualificazione: undefined,
             isolamento_tetto     : false,
-            cappotto             : false,
+            cappotto             : false
         });
     }
 
     return <Sheet>
         <SheetTrigger asChild>
-            <Button variant="ghost" size={ "sm" } disabled={ databaseName === null }><PlusIcon/></Button>
+            <Button variant="ghost" size={"sm"} disabled={edificio === undefined}><PlusIcon/></Button>
         </SheetTrigger>
         <SheetContent className="w-[400px]">
             <SheetHeader>
@@ -141,88 +147,88 @@ const InsertEdificio = () => {
                     Compila il form per aggiungere un nuovo tipo a
                 </SheetDescription>
             </SheetHeader>
-            <Form { ...form }>
+            <Form {...form}>
                 <form>
                     <div className="flex flex-col gap-6 px-4">
                         <FormField
-                            control={ form.control }
-                            name={ "anno_costruzione" }
-                            render={ ({ field }) => {
+                            control={form.control}
+                            name={"anno_costruzione"}
+                            render={({field}) => {
                                 return <FormItem>
                                     <FormLabel>Anno di costruzione</FormLabel>
-                                    <Input value={ field.value }
-                                           onChange={ (e) => handleInputNumericChange(e, field.onChange) }
+                                    <Input value={field.value}
+                                           onChange={(e) => handleInputNumericChange(e, field.onChange)}
                                     />
                                     <FormMessage/>
-                                </FormItem>
-                            } }
+                                </FormItem>;
+                            }}
                         />
                         <FormField
-                            control={ form.control }
-                            name={ "anno_riqualificazione" }
-                            render={ ({ field }) => {
+                            control={form.control}
+                            name={"anno_riqualificazione"}
+                            render={({field}) => {
                                 return <FormItem>
                                     <FormLabel>Anno di riqualificazione</FormLabel>
-                                    <Input value={ field.value }
-                                           onChange={ (e) => handleInputNumericChange(e, field.onChange) }
+                                    <Input value={field.value}
+                                           onChange={(e) => handleInputNumericChange(e, field.onChange)}
                                     />
                                     <FormMessage/>
-                                </FormItem>
-                            } }
+                                </FormItem>;
+                            }}
                         />
                         <FormField
-                            control={ form.control }
-                            name={ "note_riqualificazione" }
-                            render={ ({ field }) => {
+                            control={form.control}
+                            name={"note_riqualificazione"}
+                            render={({field}) => {
                                 return <FormItem>
                                     <FormLabel>Note sulla riqualificazione</FormLabel>
-                                    <Textarea rows={ 5 }
-                                              value={ field.value }
-                                              onChange={ field.onChange }
-                                              style={ { resize: "none" } }
+                                    <Textarea rows={5}
+                                              value={field.value}
+                                              onChange={field.onChange}
+                                              style={{resize: "none"}}
                                     />
                                     <FormMessage/>
-                                </FormItem>
-                            } }
+                                </FormItem>;
+                            }}
                         />
                         <FormField
-                            control={ form.control }
-                            name={ "isolamento_tetto" }
-                            render={ ({ field }) => {
+                            control={form.control}
+                            name={"isolamento_tetto"}
+                            render={({field}) => {
                                 return <FormItem className="flex items-center justify-between gap-2">
                                     <FormLabel>Isolamento del tetto</FormLabel>
-                                    <Switch onCheckedChange={ field.onChange } checked={ field.value }
+                                    <Switch onCheckedChange={field.onChange} checked={field.value}
                                             className="mr-3"/>
                                     <FormMessage/>
-                                </FormItem>
-                            } }
+                                </FormItem>;
+                            }}
                         />
                         <FormField
-                            control={ form.control }
-                            name={ "cappotto" }
-                            render={ ({ field }) => {
+                            control={form.control}
+                            name={"cappotto"}
+                            render={({field}) => {
                                 return <FormItem className="flex items-center justify-between gap-2">
                                     <FormLabel>Cappotto</FormLabel>
-                                    <Switch onCheckedChange={ field.onChange } checked={ field.value }
+                                    <Switch onCheckedChange={field.onChange} checked={field.value}
                                             className="mr-3"/>
                                     <FormMessage/>
-                                </FormItem>
-                            } }
+                                </FormItem>;
+                            }}
                         />
                     </div>
                 </form>
             </Form>
             <SheetFooter className="mt-0">
                 <SheetClose asChild>
-                    <Button type="button" className="text-white" onClick={ async () => {
+                    <Button type="button" className="text-white" onClick={async () => {
                         await form.handleSubmit(onSubmit)();
-                    } }>
+                    }}>
                         <Pencil/>Aggiungi
                     </Button>
                 </SheetClose>
             </SheetFooter>
         </SheetContent>
-    </Sheet>
-}
+    </Sheet>;
+};
 
 export default CardDataEdificio;

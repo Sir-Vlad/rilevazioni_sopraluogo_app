@@ -1,0 +1,29 @@
+[package]
+name = "app_services"
+version = "0.1.0"
+description.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+app_state = { path = "../app_state" }
+app_models = { path = "../app_models" }
+app_utils = { path = "../app_utils", features = ["dao", "service"] }
+app_macro = { path = "../app_macro" }
+
+
+serde = { workspace = true }
+serde_json = { workspace = true }
+chrono = { workspace = true }
+diesel = { workspace = true }
+tauri = { workspace = true }
+async-trait = { workspace = true }
+tokio = { workspace = true }
+log = { workspace = true }
+
+[dev-dependencies]
+app_models = { path = "../app_models", features = ["test-models"] }
+app_utils = { path = "../app_utils", features = ["test-utils"] }

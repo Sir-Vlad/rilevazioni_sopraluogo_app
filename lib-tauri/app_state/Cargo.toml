@@ -1,0 +1,19 @@
+[package]
+name = "app_state"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+app_utils = { path = "../app_utils", features = ["database", "error"] }
+
+serde = { workspace = true }
+diesel = { workspace = true }
+tokio = { workspace = true }
+async-trait = { workspace = true }
+dotenvy = { workspace = true }
+log = { workspace = true }
+
+[dev-dependencies]
+testcontainers = { workspace = true }
+testcontainers-modules = { workspace = true }
+app_utils = { path = "../app_utils", features = ["test-utils"] }

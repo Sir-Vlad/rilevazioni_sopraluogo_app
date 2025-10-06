@@ -1,0 +1,20 @@
+[package]
+name = "app_models"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+serde = { workspace = true }
+diesel = { workspace = true }
+diesel-derive-enum = { workspace = true }
+diesel_migrations = { workspace = true }
+
+chrono = { workspace = true }
+
+[dev-dependencies]
+testcontainers = { workspace = true }
+testcontainers-modules = { workspace = true }
+
+[features]
+default = []
+test-models = []

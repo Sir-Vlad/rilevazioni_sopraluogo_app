@@ -1,0 +1,139 @@
+use app_models::{
+    models::{Fotovoltaico, NewFotovoltaico, UpdateFotovoltaico},
+    schema::fotovoltaico,
+};
+use app_utils::{
+    app_error::DomainError,
+    app_interface::{
+        dao_interface::{
+            DAO,
+            crud_operations::{GetAll, Insert, Update},
+        },
+        database_interface::PostgresPooled,
+    },
+};
+use diesel::{ExpressionMethods, QueryDsl, RunQueryDsl, result::Error};
+
+use crate::service::Get;
+
+pub struct FotovoltaicoDAO;
+
+impl DAO for FotovoltaicoDAO {}
+
+impl GetAll<Fotovoltaico> for FotovoltaicoDAO {
+    type Output = Fotovoltaico;
+
+    fn get_all(conn: &mut PostgresPooled) -> Result<Vec<Self::Output>, DomainError> {
+        fotovoltaico::table.load(conn).map_err(DomainError::from)
+    }
+}
+
+impl Get<Fotovoltaico, String> for FotovoltaicoDAO {
+    type Output = Vec<Fotovoltaico>;
+
+    fn get(conn: &mut PostgresPooled, id: String) -> Result<Self::Output, DomainError> {
+        fotovoltaico::table
+            .filter(fotovoltaico::edificio_id.eq(id))
+            .get_results(conn)
+            .map_err(|e| match e {
+                Error::NotFound => DomainError::UtenzaNotFound,
+                _ => DomainError::Unexpected(e),
+            })
+    }
+}
+
+impl Insert<NewFotovoltaico<'_>> for FotovoltaicoDAO {
+    type Output = Fotovoltaico;
+
+    fn insert(
+        conn: &mut PostgresPooled,
+        item: NewFotovoltaico,
+    ) -> Result<Self::Output, DomainError> {
+        diesel::insert_into(fotovoltaico::table)
+            .values(&item)
+            .get_result(conn)
+            .map_err(|e| match e {
+                Error::NotFound => DomainError::FotovoltaicoNotFound,
+                Error::DatabaseError(kind, ..) => {
+                    if matches!(kind, diesel::result::DatabaseErrorKind::UniqueViolation) {
+                        DomainError::FotovoltaicoAlreadyExists
+                    } else {
+                        DomainError::from(e)
+                    }
+                }
+                _ => DomainError::Unexpected(e),
+            })
+    }
+}
+
+impl Update<UpdateFotovoltaico<'_>, i32> for FotovoltaicoDAO {
+    type Output = Fotovoltaico;
+
+    fn update(
+        conn: &mut PostgresPooled,
+        id: i32,
+        item: UpdateFotovoltaico,
+    ) -> Result<Self::Output, DomainError> {
+        diesel::update(fotovoltaico::table.find(id))
+            .set(&item)
+            .get_result(conn)
+            .map_err(|e| match e {
+                Error::NotFound => DomainError::FotovoltaicoNotFound,
+                _ => DomainError::Unexpected(e),
+            })
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use app_models::models::{NewFotovoltaico, UpdateFotovoltaico};
+    use app_utils::{
+        app_interface::dao_interface::crud_operations::{Insert, Update},
+        test::create_postgres_pool,
+    };
+    use diesel::RunQueryDsl;
+
+    use super::super::*;
+
+    #[tokio::test]
+    async fn test_insert_and_update_data() {
+        let pool = create_postgres_pool().await;
+        let mut conn = pool.get().unwrap();
+
+        let insert_data = NewFotovoltaico {
+            edificio_id: "9338-14".into(),
+            potenza: 55f32,
+            proprietario: "Ugo Ugolini".into(),
+        };
+
+        let result = match FotovoltaicoDAO::insert(&mut conn, insert_data.clone()) {
+            Ok(res) => {
+                assert_eq!(res.edificio_id, insert_data.edificio_id);
+                println!("{res:#?}");
+                res
+            }
+            Err(e) => {
+                panic!("{}", e);
+            }
+        };
+
+        let update_data = UpdateFotovoltaico {
+            potenza: Some(85f32),
+            proprietario: Some("Ugo Ugolini".into()),
+        };
+        match FotovoltaicoDAO::update(&mut conn, result.id, update_data.clone()) {
+            Ok(res) => {
+                assert_eq!(res.potenza, update_data.potenza.unwrap());
+                println!("{res:#?}");
+            }
+            Err(e) => {
+                panic!("{}", e);
+            }
+        }
+
+        diesel::sql_query("DELETE FROM fotovoltaico WHERE ID = $1")
+            .bind::<diesel::sql_types::Integer, _>(result.id)
+            .execute(&mut conn)
+            .unwrap();
+    }
+}

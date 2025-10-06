@@ -1,22 +1,24 @@
 import TitleCard from "@/components/title-card";
-import { Card, CardContent, CardHeader } from "@/components/ui/card.tsx";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table.tsx";
-import { useEdifici, useStanze } from "@/context/UseProvider.tsx";
-import { useMemo } from "react";
+import {Card, CardContent, CardHeader} from "@/components/ui/card.tsx";
+import {Table, TableBody, TableCell, TableHead, TableHeader, TableRow} from "@/components/ui/table.tsx";
+import {useSelectedEdificio} from "@/context/SelectedEdificioProvider.tsx";
+import {useStanze} from "@/context/UseProvider.tsx";
+import {useMemo} from "react";
 
 const CardTableStanze = () => {
     const stanzeContext = useStanze();
-    const { selectedEdificio } = useEdifici();
+    const {edificio} = useSelectedEdificio();
+
     const stanze = useMemo(() => {
         const piani = [
             ...new Set(stanzeContext.data
-                .filter(value => value.chiave === selectedEdificio)
-                .map(stanza => stanza.piano))
+                                    .filter(value => value.edificio_id === edificio?.chiave)
+                                    .map(stanza => stanza.piano))
         ];
         return piani.map(piano => {
             const stanzaPerPiano = stanzeContext.data
-                .filter(value => value.chiave === selectedEdificio)
-                .filter(stanza => stanza.piano === piano);
+                                                .filter(value => value.edificio_id === edificio?.chiave)
+                                                .filter(stanza => stanza.piano === piano);
             const stanzeVisitate = stanzaPerPiano.filter(stanza => {
                 if (stanza.altezza === undefined) return false; else return stanza.altezza >= 0;
             }).length;
@@ -28,7 +30,7 @@ const CardTableStanze = () => {
             };
         });
 
-    }, [ selectedEdificio, stanzeContext.data ]);
+    }, [edificio?.chiave, stanzeContext.data]);
 
 
     return <Card className="@container/card col-span-5">
@@ -47,20 +49,21 @@ const CardTableStanze = () => {
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        { stanze.length > 0 ?
-                            (stanze.map(value => {
-                                const visitPercentage = Math.ceil(value.visitate / value.stanze * 100);
-                                return <TableRow key={ value.piano }>
-                                    <TableCell className="text-center">{ value.piano }</TableCell>
-                                    <TableCell className="text-center">{ value.stanze }</TableCell>
-                                    <TableCell className="text-center">{ value.visitate }</TableCell>
-                                    <TableCell className="text-center">{ visitPercentage } %</TableCell>
+                        {stanze.length > 0 ?
+                            (
+                                stanze.map(value => {
+                                    const visitPercentage = Math.ceil(value.visitate / value.stanze * 100);
+                                    return <TableRow key={value.piano}>
+                                    <TableCell className="text-center">{value.piano}</TableCell>
+                                    <TableCell className="text-center">{value.stanze}</TableCell>
+                                    <TableCell className="text-center">{value.visitate}</TableCell>
+                                    <TableCell className="text-center">{visitPercentage} %</TableCell>
                                 </TableRow>;
-                            })) : (
+                                })) : (
                                 <TableRow>
-                                    <TableCell colSpan={ 5 } className="h-24 text-center">No results</TableCell>
+                                    <TableCell colSpan={5} className="h-24 text-center">No results</TableCell>
                                 </TableRow>
-                            ) }
+                            )}
                     </TableBody>
                 </Table>
             </div>

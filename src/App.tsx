@@ -1,16 +1,16 @@
-import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar.tsx";
 import SiteHeader from "@/components/app-header.tsx";
-import { AppSidebar } from "@/components/app-sidebar.tsx";
-import { Route, Routes } from "react-router-dom";
-import PageDashboard from "./pages/DashboardPage/page-dashboard.tsx";
+import {AppSidebar} from "@/components/app-sidebar.tsx";
+import {SidebarInset, SidebarProvider} from "@/components/ui/sidebar.tsx";
+import {Toaster} from "@/components/ui/sonner.tsx";
+import {useNotification} from "@/context/NotificationProvider.tsx";
 import PageInserimentoData from "@/pages/InserimentoDataPage/page-inserimento-data.tsx";
 import Panoramica from "@/pages/page-panoramica.tsx";
-import { ThemeProvider } from "./theme/theme-provider";
-import { Toaster } from "@/components/ui/sonner.tsx";
-import { useEffect, useRef } from "react";
-import { invoke } from "@tauri-apps/api/core";
-import { useNotification } from "@/context/NotificationProvider.tsx";
-import { toast } from "sonner";
+import {invoke} from "@tauri-apps/api/core";
+import {useEffect, useRef} from "react";
+import {Route, Routes} from "react-router-dom";
+import {toast} from "sonner";
+import PageDashboard from "./pages/DashboardPage/page-dashboard.tsx";
+import {ThemeProvider} from "./theme/theme-provider";
 
 function App() {
     const notificationContext = useNotification();
@@ -54,21 +54,20 @@ function App() {
                     if (db.name) indexedDB.deleteDatabase(db.name);
                 });
             }).catch(console.error);
-        }
+        };
 
-        const closeDatabaseHandler = async () => {
+        const handleClearSelectedEdificio = async () => {
             try {
-                await invoke("close_database");
-                console.log("Chiusura database ....");
+                await invoke("clear_edificio");
             } catch (e) {
-                console.error("Errore durante la chiusura del database: ", e);
+                console.error(e);
             }
         };
 
         const handleBeforeUnload = async () => {
+            await handleClearSelectedEdificio();
             cleanupStorage();
-            await closeDatabaseHandler();
-        }
+        };
 
         window.addEventListener("beforeunload", handleBeforeUnload);
 
@@ -79,17 +78,17 @@ function App() {
 
     return <ThemeProvider>
         <div className="[--header-height:calc(theme(spacing.14))]">
-            <SidebarProvider className="flex flex-col" defaultOpen={ false }>
+            <SidebarProvider className="flex flex-col" defaultOpen={false}>
                 <SiteHeader/>
                 <div className="flex flex-1">
                     <AppSidebar/>
                     <SidebarInset>
                         <Routes>
-                            <Route path="/" element={ <PageDashboard/> }/>
-                            <Route path="/inserimento" element={ <PageInserimentoData/> }/>
-                            <Route path="/panoramica" element={ <Panoramica/> }/>
+                            <Route path="/" element={<PageDashboard/>}/>
+                            <Route path="/inserimento" element={<PageInserimentoData/>}/>
+                            <Route path="/panoramica" element={<Panoramica/>}/>
                         </Routes>
-                        <Toaster richColors expand={ true } closeButton/>
+                        <Toaster richColors expand={true} closeButton/>
                     </SidebarInset>
                 </div>
             </SidebarProvider>

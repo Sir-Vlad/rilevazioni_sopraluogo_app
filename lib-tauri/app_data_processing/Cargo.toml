@@ -1,0 +1,15 @@
+[package]
+name = "app_data_processing"
+version.workspace = true
+description.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+app_models = { path = "../app_models" }
+app_utils = { path = "../app_utils", features = ["error", "test-utils"], default-features = false }
+
+calamine = "0.30"

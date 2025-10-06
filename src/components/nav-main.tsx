@@ -1,139 +1,160 @@
 "use client";
 
+import {Collapsible, CollapsibleContent, CollapsibleTrigger} from "@/components/ui/collapsible.tsx";
 import {
     SidebarGroup,
     SidebarGroupAction,
     SidebarGroupLabel,
     SidebarMenu,
-    SidebarMenuAction,
     SidebarMenuButton,
-    SidebarMenuItem
+    SidebarMenuItem,
+    SidebarMenuSub
 } from "@/components/ui/sidebar";
-import { useCallback, useEffect, useState } from "react";
-import { useDatabase } from "@/context/UseProvider.tsx";
-import { invoke } from "@tauri-apps/api/core";
-import { open } from "@tauri-apps/plugin-dialog";
-import { toast } from "sonner";
-import { Check, FileSpreadsheet, MoreHorizontal, Plus } from "lucide-react";
-import { getFileName, getFileNameWithExtension } from "@/helpers/helpers.ts";
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuTrigger
-} from "@/components/ui/dropdown-menu";
-import { useNotification } from "@/context/NotificationProvider.tsx";
+import {useNotification} from "@/context/NotificationProvider.tsx";
+import {useSelectedEdificio} from "@/context/SelectedEdificioProvider.tsx";
+import {useEdifici} from "@/context/UseProvider.tsx";
+import {IEdificio} from "@/models/models.tsx";
+import {invoke} from "@tauri-apps/api/core";
+import {open} from "@tauri-apps/plugin-dialog";
+import {Building, Check, ChevronRight, FileText, Plus} from "lucide-react";
+import {useEffect, useMemo, useState} from "react";
 
-export function NavMain({ valueSearch }: Readonly<{ valueSearch: string | null }>) {
-    const database = useDatabase();
-    const { addNotification } = useNotification();
-    const [ databasesNameFiles, setDatabasesNameFiles ] = useState<string[]>([]);
-    const [ selectedDatabase, setSelectedDatabase ] = useState<string>(database.databaseName);
-    const [ filteredDatabases, setFilteredDatabases ] = useState<string[]>([]);
+export function NavMain({valueSearch}: Readonly<{ valueSearch: string | null }>) {
+    const selectedEdificio = useSelectedEdificio();
+    const edificiContext = useEdifici();
+    const {addNotification} = useNotification();
 
-
-    const retrieveNameDatabases = useCallback(async () => {
-        const dbs: string[] = await invoke("get_all_name_database");
-        setDatabasesNameFiles(dbs);
-    }, []);
+    const [fascicoli, setFascicoli] = useState(new Map<number, IEdificio[]>());
+    const [filteredFascicolo, setFilteredFascicolo] = useState(new Map<number, IEdificio[]>);
+    const fascicoliRender = useMemo(() => {
+        if (valueSearch !== null) {
+            return Array.from(filteredFascicolo);
+        }
+        return Array.from(fascicoli);
+    }, [valueSearch, fascicoli, filteredFascicolo]);
+    const [selectedFascicolo, setSelectedFascicolo] = useState<number>();
 
     useEffect(() => {
-        retrieveNameDatabases().catch(console.error);
-    }, [ retrieveNameDatabases ]);
+        const newFascicoli = new Map<number, IEdificio[]>();
 
-    useEffect(() => {
-        setSelectedDatabase(database.databaseName);
-    }, [ database.databaseName ]);
+        edificiContext.data
+                      .toSorted((a, b) => a.fascicolo - b.fascicolo)
+                      .forEach(value => {
+                          const chiave = value.fascicolo;
+
+                          if (!newFascicoli.has(chiave)) {
+                              newFascicoli.set(chiave, []);
+                          }
+                          newFascicoli.get(chiave)!.push(value);
+                      });
+
+        setFascicoli(newFascicoli);
+    }, [edificiContext.data]);
+
 
     useEffect(() => {
         if (valueSearch) {
-            const filtered = databasesNameFiles.filter((file) => {
-                return Number(getFileName(file).toLowerCase()).toString().startsWith(valueSearch.toLowerCase());
-            });
-            setFilteredDatabases(filtered);
+            const fascicoli_filtered = new Map([...fascicoli].filter(([fascicolo]) => {
+                return fascicolo.toString().startsWith(valueSearch);
+            }));
+
+            setFilteredFascicolo(fascicoli_filtered);
+
         } else {
-            setFilteredDatabases([]);
+            setFilteredFascicolo(new Map<number, IEdificio[]>);
         }
-    }, [ valueSearch, databasesNameFiles ])
+    }, [fascicoli, valueSearch]);
 
     const addNewFascicolo = async () => {
-        const file = await open({
+        const path_file = await open({
             title    : "Seleziona il file da caricare",
             multiple : false,
             directory: false,
-            filters  : [ {
-                name      : "Excel file",
-                extensions: [ "xlsx", "xls" ]
-            } ]
+            filters  : [
+                {
+                    name      : "Excel file",
+                    extensions: ["xlsx", "xls"]
+                }
+            ]
         });
-        if (!file) {
+        if (!path_file) {
             return;
         }
+        console.log(path_file);
+
 
         /* Passare il path a rust che ne elabora il contenuto (con polars) e imposta il database */
         try {
-            const path_db: string = await invoke("init_to_excel", {
-                path: file
+            await invoke("add_new_fascicolo_from_xlsx", {
+                path: path_file
             });
-            const name_db: string = getFileNameWithExtension(path_db);
-            setDatabasesNameFiles((prev) => [ ...prev, name_db ]);
             addNotification("Inserimento avvenuto con successo", "success");
         } catch (e) {
             addNotification(e as string, "error");
         }
     };
 
-    const handleExcelExport = async () => {
-        try {
-            await invoke("export_data_to_excel");
-            toast.success("Esportazione avvenuta con successo");
-        } catch (e) {
-            console.error(e);
-            toast.error("Esportazione fallita");
-        }
+    const renderCheckedEdificio = (edificio: IEdificio) => {
+        const visibilityClass = selectedEdificio.edificio?.chiave === edificio.chiave ? "" : "hidden";
+
+        return (
+            <div className={`flex justify-end ${visibilityClass}`}>
+                <Check/>
+            </div>);
     };
 
+    const renderLoadingEdificio = () => {
+        return (
+            <div className="flex justify-end">
+                <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white"></div>
+            </div>);
+    };
 
-    return (<SidebarGroup>
+    return (
+        <SidebarGroup>
         <SidebarGroupLabel>Fascicoli</SidebarGroupLabel>
-        <SidebarGroupAction title="Aggiungi Fascicolo" onClick={ () => void addNewFascicolo() }>
+        <SidebarGroupAction title="Aggiungi Fascicolo" onClick={() => void addNewFascicolo()}>
             <Plus/> <span className="sr-only">Aggiungi Fascicolo</span>
         </SidebarGroupAction>
         <SidebarMenu>
-            { (valueSearch === null ? databasesNameFiles : filteredDatabases).map((file) => {
-                const nameDatabase = getFileName(file);
-                return <SidebarMenuItem key={ file }>
-                    <div className="flex grow-1">
-                        <SidebarMenuButton asChild tooltip={ file }
-                                           onClick={ async () => {
-                                               await database.changeDatabase(nameDatabase);
-                                               setSelectedDatabase(nameDatabase);
-                                           } }>
-                            <div className="flex items-center">
-                                <FileSpreadsheet/>
-                                <span>{ Number(nameDatabase) }</span>
-                                <div
-                                    className={ `flex w-full justify-end ${ selectedDatabase === nameDatabase ? "" : "hidden" }` }>
-                                    <Check/>
-                                </div>
-                            </div>
-                        </SidebarMenuButton>
-                    </div>
-                    <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                            <SidebarMenuAction>
-                                <MoreHorizontal/>
-                            </SidebarMenuAction>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent side="right" align="start">
-                            <DropdownMenuItem onClick={ () => void handleExcelExport() }
-                                              disabled={ selectedDatabase !== nameDatabase }>
-                                <span>Esporta in excel</span>
-                            </DropdownMenuItem>
-                        </DropdownMenuContent>
-                    </DropdownMenu>
-                </SidebarMenuItem>;
-            }) }
+            {fascicoliRender.map(([fascicolo, edifici]) => {
+                return <Collapsible defaultOpen={false} className="group/collapsible" key={fascicolo}>
+                        <SidebarMenuItem>
+                            <CollapsibleTrigger asChild>
+                                <SidebarMenuButton tooltip={fascicolo.toString()}>
+                                    <FileText/>
+                                    <div className="flex flex-row justify-between content-center w-full">
+                                        <p>{fascicolo}</p>
+                                        {selectedFascicolo === fascicolo && <Check/>}
+                                    </div>
+                                    <ChevronRight
+                                        className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90"/>
+                                </SidebarMenuButton>
+                            </CollapsibleTrigger>
+                            <CollapsibleContent>
+                                <SidebarMenuSub>
+                                    {edifici.map(edificio => {
+                                        return <SidebarMenuItem key={edificio.chiave}>
+                                                    <SidebarMenuButton asChild tooltip={fascicolo.toString()}
+                                                                       onClick={async () => {
+                                                                           setSelectedFascicolo(fascicolo);
+                                                                           await selectedEdificio.changeEdificio(edificio);
+                                                                       }}>
+                                                        <div className="flex items-center justify-between">
+                                                            <div className="flex items-center gap-2">
+                                                                <Building size="16"/>
+                                                                <span>{edificio.chiave}</span>
+                                                            </div>
+                                                            {selectedEdificio.isLoading ? renderLoadingEdificio() : renderCheckedEdificio(edificio)}
+                                                        </div>
+                                                    </SidebarMenuButton>
+                                            </SidebarMenuItem>;
+                                    })}
+                                </SidebarMenuSub>
+                            </CollapsibleContent>
+                        </SidebarMenuItem>
+                    </Collapsible>;
+            })}
         </SidebarMenu>
     </SidebarGroup>);
 }

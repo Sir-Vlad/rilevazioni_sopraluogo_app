@@ -1,0 +1,29 @@
+[package]
+name = "app_interface"
+version.workspace = true
+description.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+app_error = { path = "../app_error" }
+
+async-trait = { workspace = true }
+diesel = { workspace = true }
+tauri = { workspace = true }
+tokio = { workspace = true }
+
+[features]
+default = [
+    "database",
+    "dao",
+    "dto",
+    "services"
+]
+database = []
+dao = []
+dto = []
+services = []

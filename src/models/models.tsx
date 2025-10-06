@@ -1,5 +1,5 @@
 export interface IInfisso {
-    id?: string;
+    id: string;
     id_edificio: string;
     tipo: string;
     altezza: number;
@@ -10,10 +10,10 @@ export interface IInfisso {
 
 export interface IStanza {
     id: number;
-    chiave: string;
+    edificio_id: string;
     piano: string;
     id_spazio: string;
-    stanza: string;
+    cod_stanza: string;
     destinazione_uso: string;
     altezza?: number,
     spessore_muro?: number,
@@ -25,10 +25,10 @@ export interface IStanza {
 
 export interface IEdificio {
     chiave: string,
-    fascicolo: string,
+    fascicolo: number,
     indirizzo: string,
-    anno_costruzione?: string,
-    anno_riqualificazione?: string,
+    anno_costruzione?: number,
+    anno_riqualificazione?: number,
     note_riqualificazione?: string,
     isolamento_tetto?: boolean,
     cappotto?: boolean,
@@ -41,22 +41,22 @@ export interface IStanzaConInfissi {
 
 export interface VetroInfisso {
     vetro: string;
-    efficienza_energetica: number;
+    eff_energetica: number;
 }
 
 export interface MaterialeInfisso {
     materiale: string;
-    efficienza_energetica: number;
+    eff_energetica: number;
 }
 
 export interface Illuminazione {
     lampadina: string;
-    efficienza_energetica: number;
+    eff_energetica: number;
 }
 
 export interface Climatizzazione {
     climatizzazione: string;
-    efficienza_energetica: number;
+    eff_energetica: number;
 }
 
 export interface TipoInfisso {
@@ -66,7 +66,7 @@ export interface TipoInfisso {
 export interface NuovoTipo {
     tipo: TipoKey;
     name: string;
-    efficienza_energetica: number;
+    eff_energetica: number;
 }
 
 export type TipoKey = "riscaldamento" | "raffrescamento" | "illuminazione" | "climatizzazione";
@@ -87,7 +87,7 @@ export interface IFotovoltaico {
     proprietario: string,
 }
 
-type PrimaryKey = | { Edificio: string } | { Stanza: number } | { Infisso: [ string, string ] }
+type PrimaryKey = | { Edificio: string } | { Stanza: number } | { Infisso: [string, string] }
 
 export interface IAnnotazione {
     id: number,
