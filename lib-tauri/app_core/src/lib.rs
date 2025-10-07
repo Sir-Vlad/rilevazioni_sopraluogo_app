@@ -12,13 +12,10 @@ use app_state::{
     database::DatabaseManager,
     selected_edificio::{EdificioSelected, SelectedEdificioTrait},
 };
-use app_task_background::BackgroundManager;
+use app_task_background::get_background_manager;
 use dirs_next::document_dir;
 use log::{error, info, warn};
-use tauri::{
-    App, Builder, Manager, Wry,
-    async_runtime::{Mutex, RwLock},
-};
+use tauri::{App, Builder, Manager, Wry, async_runtime::RwLock};
 use tauri_plugin_log::{RotationStrategy, Target, TargetKind};
 use tauri_plugin_notification::NotificationExt;
 use tokio::time::timeout;
@@ -58,20 +55,17 @@ pub fn initialize_tauri() -> Builder<Wry> {
             app.manage(stato_edificio);
 
             // Starting the task in background
-            let bg_manager = Arc::new(Mutex::new(BackgroundManager::new()));
-            let bg_manager_clone = bg_manager.clone();
+            let bg_manager = get_background_manager();
             let app_handle = app.handle().clone();
 
             tauri::async_runtime::spawn(async move {
-                let mut manager = bg_manager_clone.lock().await;
+                let mut manager = bg_manager.lock().await;
                 let app_handle_arc = Arc::new(app_handle);
 
                 if let Err(e) = manager.start(app_handle_arc).await {
                     eprintln!("Errore during starting the Background Manager: {}", e);
                 }
             });
-
-            app.manage(bg_manager);
 
             info!("Started application!!!");
             Ok(())
@@ -123,10 +117,7 @@ fn handle_window_events(windows: &tauri::Window, event: &tauri::WindowEvent) {
         api.prevent_close();
 
         let windows_clone = windows.clone();
-        let bg_manager_state = windows
-            .app_handle()
-            .state::<Arc<Mutex<BackgroundManager>>>();
-        let bg_manager = bg_manager_state.inner().clone();
+        let bg_manager = get_background_manager();
 
         tauri::async_runtime::spawn(async move {
             if let Err(e) = windows_clone

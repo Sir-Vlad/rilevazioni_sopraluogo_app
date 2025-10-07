@@ -8,7 +8,6 @@ app_state = { path = "../app_state" }
 app_api = { path = "../app_api" }
 app_task_background = { path = "../app_task_background" }
 
-
 # Tauri e plagins
 tauri = { workspace = true }
 tauri-plugin-dialog = { workspace = true }
@@ -23,6 +22,7 @@ dirs-next = { workspace = true }
 # Logging
 log = { workspace = true }
 
+# Async
 tokio = { workspace = true }
 
 [target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
