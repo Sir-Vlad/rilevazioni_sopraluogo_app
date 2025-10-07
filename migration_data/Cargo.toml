@@ -6,8 +6,8 @@ edition = "2024"
 [dependencies]
 app_models = { path = "../lib-tauri/app_models" }
 
-diesel = { version = "2.2.12", features = ["r2d2", "postgres", "sqlite"] }
-diesel_migrations = "2.2.0"
+diesel = { version = "2.2", features = ["r2d2", "postgres", "sqlite"] }
+diesel_migrations = "2.2"
 dotenvy = "0.15.7"
 tokio = "1.47.0"
 dirs-next = "2.0.0"
@@ -17,7 +17,7 @@ thiserror = "2.0.12"
 
 # Logging
 tracing = "0.1.41"
-tracing-subscriber = { version = "0.3.19", features = ["env-filter"] }
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 
 [dev-dependencies]
 testcontainers = "0.24.0"

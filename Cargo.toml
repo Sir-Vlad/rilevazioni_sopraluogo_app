@@ -19,32 +19,32 @@ serde_json = "1.0"
 serde = { version = "1.0", features = ["derive"] }
 
 # Database
-diesel = { version = "2.2.11", features = ["postgres", "r2d2", "chrono"] }
-diesel_migrations = "2.2.0"
+diesel = { version = "2.2", features = ["postgres", "r2d2", "chrono"] }
+diesel_migrations = "2.2"
 dotenvy = "0.15.7"
 diesel-derive-enum = { version = "2.1.0", features = ["postgres"] }
 
 # Tauri and plugins
-tauri = { version = "2.3.1", features = ["devtools", "test"] }
+tauri = { version = "2.8", features = ["devtools", "test"] }
 tauri-plugin-dialog = "2"
 tauri-plugin-fs = "2"
-tauri-plugin-log = "2.0.0-rc"
+tauri-plugin-log = "2"
 tauri-plugin-notification = "2"
 tauri-plugin-store = "2"
 
 # Logging
-log = "0.4.27"
+log = "0.4"
 
 # File system
 dirs-next = "2.0.0"
 
 # Errors
-thiserror = "2.0.12"
+thiserror = "2.0"
 
 # Miscelaneous
-tokio = { version = "1.46.1", features = ["time"] }
-async-trait = "0.1.88"
-chrono = "0.4.41"
+tokio = { version = "1.46", features = ["time"] }
+async-trait = "0.1"
+chrono = "0.4"
 
 # Testing
 testcontainers = "0.24.0"
